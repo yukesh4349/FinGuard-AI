@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, FileText, CreditCard, Receipt, Package, TrendingUp,
   Users, ShoppingBag, ArrowLeftRight, ShieldAlert, FileCheck, Bot,
@@ -41,7 +42,10 @@ export default function BusinessOwnerDashboard({
   onOpenUploadPage,
   onOpenBillingPage,
 }) {
-  const [activeModule, setActiveModule] = useState('overview');
+  const { moduleId } = useParams();
+  const navigate = useNavigate();
+
+  const [activeModule, setActiveModule] = useState(moduleId || 'overview');
   const [moduleSearch, setModuleSearch] = useState('');
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [aiMessages, setAiMessages] = useState([
@@ -66,6 +70,17 @@ export default function BusinessOwnerDashboard({
   useEffect(() => {
     setDbUsersList(getStoredUsers());
   }, []);
+
+  useEffect(() => {
+    if (moduleId && modulesList.some(m => m.id === moduleId)) {
+      setActiveModule(moduleId);
+    }
+  }, [moduleId]);
+
+  const handleModuleClick = (id) => {
+    setActiveModule(id);
+    navigate(`/dashboard/${id}`);
+  };
 
   const filteredModules = modulesList.filter(m =>
     m.title.toLowerCase().includes(moduleSearch.toLowerCase()) ||
@@ -114,33 +129,33 @@ export default function BusinessOwnerDashboard({
   return (
     <div style={{
       display: 'flex', width: '100vw', height: '100vh',
-      backgroundColor: '#FAF8F3', color: '#1A1610',
+      backgroundColor: '#F8FAFC', color: '#0F172A',
       fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* ── FIXED LEFT SIDEBAR NAVIGATION (PERFECT FIXED LAYOUT) ──────── */}
+      {/* ── FIXED LEFT SIDEBAR NAVIGATION (TEAL/OCEAN BLUE DESIGN) ──────── */}
       <aside style={{
-        width: 280, backgroundColor: '#FFFFFF',
-        borderRight: '1px solid rgba(201,185,154,0.4)',
+        width: 280, backgroundColor: '#0F172A', color: '#FFFFFF',
+        borderRight: '1px solid rgba(255,255,255,0.1)',
         display: 'flex', flexDirection: 'column',
         height: '100vh', flexShrink: 0, zIndex: 50,
       }}>
         {/* Brand Header */}
         <div style={{
-          padding: '20px 24px', borderBottom: '1px solid rgba(201,185,154,0.3)',
+          padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               width: 36, height: 36, borderRadius: 10,
-              backgroundColor: '#1A1610',
+              backgroundColor: '#0D9488',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Shield size={20} color="#FFFFFF" />
             </div>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#1A1610' }}>FinGuard AI</div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#8A7558', fontFamily: 'monospace' }}>OWNER DASHBOARD</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#FFFFFF' }}>FinGuard AI</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#0EA5E9', fontFamily: 'monospace' }}>OWNER DASHBOARD</div>
             </div>
           </div>
         </div>
@@ -149,10 +164,10 @@ export default function BusinessOwnerDashboard({
         <div style={{ padding: '14px 16px 8px' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.4)',
+            backgroundColor: '#1E293B', border: '1px solid rgba(13,148,136,0.3)',
             borderRadius: 10, padding: '8px 12px',
           }}>
-            <Search size={14} color="#8A7558" />
+            <Search size={14} color="#0D9488" />
             <input
               type="text"
               placeholder="Search 21 Modules..."
@@ -160,7 +175,7 @@ export default function BusinessOwnerDashboard({
               onChange={e => setModuleSearch(e.target.value)}
               style={{
                 border: 'none', backgroundColor: 'transparent', outline: 'none',
-                width: '100%', fontSize: 12, color: '#1A1610', fontFamily: 'inherit',
+                width: '100%', fontSize: 12, color: '#FFFFFF', fontFamily: 'inherit',
               }}
             />
           </div>
@@ -174,20 +189,20 @@ export default function BusinessOwnerDashboard({
             return (
               <button
                 key={m.id}
-                onClick={() => setActiveModule(m.id)}
+                onClick={() => handleModuleClick(m.id)}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                   padding: '9px 12px', borderRadius: 10, marginBottom: 3,
-                  backgroundColor: active ? '#1A1610' : 'transparent',
-                  color: active ? '#FFFFFF' : '#1A1610',
+                  backgroundColor: active ? '#0D9488' : 'transparent',
+                  color: active ? '#FFFFFF' : '#94A3B8',
                   border: 'none', cursor: 'pointer', textAlign: 'left',
                   fontFamily: 'inherit', fontSize: 12, fontWeight: active ? 700 : 600,
                   transition: 'all 0.18s ease',
                 }}
-                onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = '#FAF8F3'; }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = '#1E293B'; }}
                 onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
-                <Icon size={16} color={active ? '#FFFFFF' : '#8A7558'} />
+                <Icon size={16} color={active ? '#FFFFFF' : '#0D9488'} />
                 <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {m.title}
                 </span>
@@ -203,22 +218,22 @@ export default function BusinessOwnerDashboard({
 
         {/* Sidebar Footer User Info */}
         <div style={{
-          padding: 16, borderTop: '1px solid rgba(201,185,154,0.3)',
+          padding: 16, borderTop: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
             <div style={{
-              width: 34, height: 34, borderRadius: 17, backgroundColor: '#A88660',
+              width: 34, height: 34, borderRadius: 17, backgroundColor: '#0284C7',
               color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: 800, fontSize: 14, flexShrink: 0,
             }}>
               👑
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#1A1610', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {ownerName || 'Business Owner'}
               </div>
-              <div style={{ fontSize: 10, color: '#6E6455', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: 10, color: '#94A3B8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {companyName}
               </div>
             </div>
@@ -241,15 +256,15 @@ export default function BusinessOwnerDashboard({
         {/* Top Header */}
         <header style={{
           height: 64, padding: '0 28px', backgroundColor: '#FFFFFF',
-          borderBottom: '1px solid rgba(201,185,154,0.3)',
+          borderBottom: '1px solid rgba(13,148,136,0.15)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           position: 'sticky', top: 0, zIndex: 40, flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1A1610' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
               {modulesList.find(m => m.id === activeModule)?.title}
             </h2>
-            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, backgroundColor: 'rgba(92,112,94,0.12)', color: '#5C705E', fontWeight: 700 }}>
+            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, backgroundColor: '#F0FDFA', color: '#0D9488', border: '1px solid rgba(13,148,136,0.3)', fontWeight: 700 }}>
               POSTGRESQL DB CONNECTED
             </span>
           </div>
@@ -261,24 +276,24 @@ export default function BusinessOwnerDashboard({
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: '8px 14px', borderRadius: 99,
-                backgroundColor: aiPanelOpen ? '#1A1610' : '#FAF8F3',
-                border: '1px solid rgba(201,185,154,0.5)',
-                color: aiPanelOpen ? '#FFFFFF' : '#1A1610',
+                backgroundColor: aiPanelOpen ? '#0F172A' : '#F0FDFA',
+                border: '1px solid rgba(13,148,136,0.3)',
+                color: aiPanelOpen ? '#FFFFFF' : '#0D9488',
                 fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              <Sparkles size={14} color={aiPanelOpen ? '#FFFFFF' : '#8A7558'} />
+              <Sparkles size={14} color={aiPanelOpen ? '#FFFFFF' : '#0D9488'} />
               <span>AI Chat Assistant</span>
             </button>
 
             {/* Notifications Button */}
             <button
-              onClick={() => setActiveModule('notifications')}
+              onClick={() => handleModuleClick('notifications')}
               style={{
                 position: 'relative', width: 38, height: 38, borderRadius: 10,
-                backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.4)',
+                backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', color: '#1A1610',
+                cursor: 'pointer', color: '#0F172A',
               }}
             >
               <Bell size={18} />
@@ -300,7 +315,7 @@ export default function BusinessOwnerDashboard({
           {activeModule === 'overview' && (
             <OverviewModule
               companyName={companyName}
-              onNavigate={setActiveModule}
+              onNavigate={handleModuleClick}
               empList={empList}
               dbUsersList={dbUsersList}
               onOpenAddEmp={() => setShowAddEmpModal(true)}
@@ -340,22 +355,22 @@ export default function BusinessOwnerDashboard({
         {aiPanelOpen && (
           <div style={{
             width: 360, height: 460, backgroundColor: '#FFFFFF',
-            borderRadius: 20, border: '1.5px solid rgba(201,185,154,0.6)',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.18)',
+            borderRadius: 20, border: '1.5px solid rgba(13,148,136,0.3)',
+            boxShadow: '0 20px 40px rgba(15,23,42,0.18)',
             display: 'flex', flexDirection: 'column', overflow: 'hidden',
             marginBottom: 12, animation: 'fadeInUp 0.25s ease',
           }}>
             <div style={{
-              padding: '14px 18px', backgroundColor: '#1A1610', color: '#FFFFFF',
+              padding: '14px 18px', backgroundColor: '#0F172A', color: '#FFFFFF',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: '#A88660', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: '#0D9488', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Bot size={16} color="#FFFFFF" />
                 </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800 }}>FinGuard AI Assistant</div>
-                  <div style={{ fontSize: 10, color: '#C9B99A' }}>Always active for {companyName}</div>
+                  <div style={{ fontSize: 10, color: '#CCFBF1' }}>Always active for {companyName}</div>
                 </div>
               </div>
               <button
@@ -366,18 +381,18 @@ export default function BusinessOwnerDashboard({
               </button>
             </div>
 
-            <div style={{ flex: 1, padding: 14, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#FAF8F3' }}>
+            <div style={{ flex: 1, padding: 14, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: '#F8FAFC' }}>
               {aiMessages.map((m, idx) => (
                 <div
                   key={idx}
                   style={{
                     alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                    backgroundColor: m.sender === 'user' ? '#1A1610' : '#FFFFFF',
-                    color: m.sender === 'user' ? '#FFFFFF' : '#1A1610',
+                    backgroundColor: m.sender === 'user' ? '#0F172A' : '#FFFFFF',
+                    color: m.sender === 'user' ? '#FFFFFF' : '#0F172A',
                     borderRadius: 14, padding: '10px 14px', maxWidth: '85%',
                     fontSize: 12, lineHeight: 1.5,
                     boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-                    border: m.sender === 'ai' ? '1px solid rgba(201,185,154,0.4)' : 'none',
+                    border: m.sender === 'ai' ? '1px solid rgba(13,148,136,0.2)' : 'none',
                   }}
                 >
                   {m.text}
@@ -385,7 +400,7 @@ export default function BusinessOwnerDashboard({
               ))}
             </div>
 
-            <form onSubmit={handleSendAiMessage} style={{ padding: 10, backgroundColor: '#FFFFFF', borderTop: '1px solid rgba(201,185,154,0.3)', display: 'flex', gap: 8 }}>
+            <form onSubmit={handleSendAiMessage} style={{ padding: 10, backgroundColor: '#FFFFFF', borderTop: '1px solid rgba(13,148,136,0.2)', display: 'flex', gap: 8 }}>
               <input
                 type="text"
                 placeholder="Ask about sales, GST, stock..."
@@ -393,14 +408,14 @@ export default function BusinessOwnerDashboard({
                 onChange={e => setInputQuery(e.target.value)}
                 style={{
                   flex: 1, padding: '9px 12px', borderRadius: 8,
-                  border: '1px solid rgba(201,185,154,0.4)', backgroundColor: '#FAF8F3',
+                  border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#F8FAFC',
                   fontSize: 12, outline: 'none', fontFamily: 'inherit',
                 }}
               />
               <button
                 type="submit"
                 style={{
-                  padding: '9px 12px', borderRadius: 8, backgroundColor: '#1A1610',
+                  padding: '9px 12px', borderRadius: 8, backgroundColor: '#0D9488',
                   color: '#FFF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
                 }}
               >
@@ -414,9 +429,9 @@ export default function BusinessOwnerDashboard({
           onClick={() => setAiPanelOpen(!aiPanelOpen)}
           style={{
             height: 52, padding: '0 20px', borderRadius: 99,
-            backgroundColor: '#1A1610', color: '#FFFFFF',
-            border: '2px solid #C9B99A',
-            boxShadow: '0 10px 25px rgba(26,22,16,0.3)',
+            backgroundColor: '#0D9488', color: '#FFFFFF',
+            border: '2px solid #CCFBF1',
+            boxShadow: '0 10px 25px rgba(13,148,136,0.35)',
             display: 'flex', alignItems: 'center', gap: 10,
             cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 800,
             transition: 'all 0.22s ease',
@@ -424,7 +439,7 @@ export default function BusinessOwnerDashboard({
           onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
           onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
         >
-          <Bot size={22} color="#C9B99A" />
+          <Bot size={22} color="#FFFFFF" />
           <span>FinGuard AI Chatbot</span>
           <span style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ade80' }} />
         </button>
@@ -433,16 +448,16 @@ export default function BusinessOwnerDashboard({
       {/* MODALS */}
       {showAddEmpModal && (
         <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.6)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000,
         }}>
           <div style={{
             backgroundColor: '#FFFFFF', borderRadius: 16, padding: 28,
-            width: 440, maxWidth: '90%', border: '1px solid rgba(201,185,154,0.4)',
+            width: 440, maxWidth: '90%', border: '1px solid rgba(13,148,136,0.3)',
             boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1A1610' }}>➕ Add New Employee</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>➕ Add New Employee</h3>
               <button onClick={() => setShowAddEmpModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
             </div>
             <form onSubmit={handleAddEmployeeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -454,7 +469,7 @@ export default function BusinessOwnerDashboard({
                   placeholder="e.g. Ramesh Kumar"
                   value={empName}
                   onChange={e => setEmpName(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(201,185,154,0.5)', outline: 'none', fontSize: 13 }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none', fontSize: 13 }}
                 />
               </div>
               <div>
@@ -465,7 +480,7 @@ export default function BusinessOwnerDashboard({
                   placeholder="e.g. Billing Executive / Store Manager"
                   value={empRole}
                   onChange={e => setEmpRole(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(201,185,154,0.5)', outline: 'none', fontSize: 13 }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none', fontSize: 13 }}
                 />
               </div>
               <div>
@@ -478,7 +493,7 @@ export default function BusinessOwnerDashboard({
                   placeholder="e.g. 9876543210"
                   value={empPhone}
                   onChange={e => setEmpPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(201,185,154,0.5)', outline: 'none', fontSize: 13 }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none', fontSize: 13 }}
                 />
               </div>
               <div>
@@ -488,12 +503,12 @@ export default function BusinessOwnerDashboard({
                   placeholder="e.g. 35000"
                   value={empSalary}
                   onChange={e => setEmpSalary(e.target.value.replace(/\D/g, ''))}
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(201,185,154,0.5)', outline: 'none', fontSize: 13 }}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none', fontSize: 13 }}
                 />
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-                <button type="button" onClick={() => setShowAddEmpModal(false)} style={{ flex: 1, padding: 12, borderRadius: 8, border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FAF8F3', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
-                <button type="submit" style={{ flex: 1, padding: 12, borderRadius: 8, border: 'none', backgroundColor: '#1A1610', color: '#FFF', cursor: 'pointer', fontWeight: 700 }}>Save to DB</button>
+                <button type="button" onClick={() => setShowAddEmpModal(false)} style={{ flex: 1, padding: 12, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#F8FAFC', cursor: 'pointer', fontWeight: 700 }}>Cancel</button>
+                <button type="submit" style={{ flex: 1, padding: 12, borderRadius: 8, border: 'none', backgroundColor: '#0D9488', color: '#FFF', cursor: 'pointer', fontWeight: 700 }}>Save to DB</button>
               </div>
             </form>
           </div>
@@ -501,11 +516,11 @@ export default function BusinessOwnerDashboard({
       )}
 
       {showReportModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 28, width: 440, maxWidth: '90%', border: '1px solid rgba(201,185,154,0.4)', textAlign: 'center' }}>
-            <BarChart3 size={40} color="#8A7558" style={{ marginBottom: 10 }} />
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1A1610', marginBottom: 6 }}>📊 Business Report Generator</h3>
-            <p style={{ fontSize: 13, color: '#6E6455', marginBottom: 20 }}>Generate instant profit &amp; loss, sales, stock, and tax summary report in simple English.</p>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 28, width: 440, maxWidth: '90%', border: '1px solid rgba(13,148,136,0.3)', textAlign: 'center' }}>
+            <BarChart3 size={40} color="#0D9488" style={{ marginBottom: 10 }} />
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>📊 Business Report Generator</h3>
+            <p style={{ fontSize: 13, color: '#475569', marginBottom: 20 }}>Generate instant profit &amp; loss, sales, stock, and tax summary report in simple English.</p>
             <button
               onClick={() => {
                 setReportGenerated(true);
@@ -515,7 +530,7 @@ export default function BusinessOwnerDashboard({
                   setReportGenerated(false);
                 }, 1000);
               }}
-              style={{ width: '100%', padding: 12, borderRadius: 8, backgroundColor: '#1A1610', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}
+              style={{ width: '100%', padding: 12, borderRadius: 8, backgroundColor: '#0D9488', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}
             >
               {reportGenerated ? 'Downloading PDF Report...' : '⬇️ Download Instant Summary Report'}
             </button>
@@ -527,7 +542,7 @@ export default function BusinessOwnerDashboard({
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   1. OVERVIEW MODULE (RESTRUCTURED & BANNER REMOVED ENTIRELY)
+   1. OVERVIEW MODULE
    ═════════════════════════════════════════════════════════════════════ */
 function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenAddEmp, onOpenUpload, onOpenCreateInvoice, onOpenReport }) {
   return (
@@ -537,19 +552,19 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1A1610' }}>📊 Business Performance Graphs</h3>
-            <p style={{ fontSize: 12, color: '#6E6455', marginTop: 2 }}>Easy to understand visual charts for profit, revenue, and pending works</p>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>📊 Business Performance Graphs</h3>
+            <p style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>Easy to understand visual charts for profit, revenue, and pending works</p>
           </div>
-          <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, backgroundColor: '#1A1610', color: '#FFF', fontWeight: 700 }}>
+          <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, backgroundColor: '#0D9488', color: '#FFF', fontWeight: 700 }}>
             LIVE STORE STATS
           </span>
         </div>
 
         {/* 4 Interactive Easy Visual Graphs Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(201,185,154,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(13,148,136,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 12, color: '#6E6455', fontWeight: 700 }}>Profit &amp; Loss Graph</div>
+              <div style={{ fontSize: 12, color: '#475569', fontWeight: 700 }}>Profit &amp; Loss Graph</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#16a34a', marginTop: 4 }}>+₹ 19,15,300</div>
               <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 700, marginTop: 2 }}>▲ +18.8% Net Profit</div>
             </div>
@@ -560,22 +575,22 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
             </div>
           </div>
 
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(201,185,154,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(13,148,136,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 12, color: '#6E6455', fontWeight: 700 }}>Revenue (Money Earned)</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#1A1610', marginTop: 4 }}>₹ 48,29,500</div>
+              <div style={{ fontSize: 12, color: '#475569', fontWeight: 700 }}>Revenue (Money Earned)</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A', marginTop: 4 }}>₹ 48,29,500</div>
               <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 700, marginTop: 2 }}>▲ +12.4% Sales Growth</div>
             </div>
             <div style={{ height: 60, display: 'flex', alignItems: 'flex-end', gap: 6, marginTop: 14 }}>
               {[50, 65, 80, 75, 90, 100].map((val, i) => (
-                <div key={i} style={{ flex: 1, backgroundColor: '#1A1610', height: `${val}%`, borderRadius: '3px 3px 0 0' }} title={`Revenue: ${val}%`} />
+                <div key={i} style={{ flex: 1, backgroundColor: '#0D9488', height: `${val}%`, borderRadius: '3px 3px 0 0' }} title={`Revenue: ${val}%`} />
               ))}
             </div>
           </div>
 
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(201,185,154,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(13,148,136,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 12, color: '#6E6455', fontWeight: 700 }}>Pending Bills &amp; Works</div>
+              <div style={{ fontSize: 12, color: '#475569', fontWeight: 700 }}>Pending Bills &amp; Works</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: '#d97706', marginTop: 4 }}>₹ 3,45,000</div>
               <div style={{ fontSize: 11, color: '#d97706', fontWeight: 700, marginTop: 2 }}>⌛ 6 Supplier Bills Pending</div>
             </div>
@@ -586,119 +601,119 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
             </div>
           </div>
 
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(201,185,154,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(13,148,136,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
-              <div style={{ fontSize: 12, color: '#6E6455', fontWeight: 700 }}>Sales vs Expenses</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#1A1610', marginTop: 4 }}>₹ 29,14,200</div>
+              <div style={{ fontSize: 12, color: '#475569', fontWeight: 700 }}>Sales vs Expenses</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A', marginTop: 4 }}>₹ 29,14,200</div>
               <div style={{ fontSize: 11, color: '#16a34a', fontWeight: 700, marginTop: 2 }}>▼ -3.1% Expenses Cut</div>
             </div>
             <div style={{ height: 60, display: 'flex', alignItems: 'flex-end', gap: 6, marginTop: 14 }}>
               {[35, 45, 30, 50, 40, 30].map((val, i) => (
-                <div key={i} style={{ flex: 1, backgroundColor: '#C9B99A', height: `${val}%`, borderRadius: '3px 3px 0 0' }} title={`Expense: ${val}%`} />
+                <div key={i} style={{ flex: 1, backgroundColor: '#0284C7', height: `${val}%`, borderRadius: '3px 3px 0 0' }} title={`Expense: ${val}%`} />
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── MIDDLE SECTION: LEFT BUTTONS & DETAILS | RIGHT FRAUD ALERTS CHAT HISTORY ─ */}
+      {/* ── MIDDLE SECTION ──────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 20 }}>
         
         {/* LEFT COLUMN */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, border: '1px solid rgba(201,185,154,0.4)' }}>
-            <h4 style={{ fontSize: 15, fontWeight: 800, color: '#1A1610', marginBottom: 14 }}>⚡ Quick Action Buttons</h4>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, border: '1px solid rgba(13,148,136,0.2)' }}>
+            <h4 style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', marginBottom: 14 }}>⚡ Quick Action Buttons</h4>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <button onClick={onOpenUpload} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#1A1610', color: '#FFFFFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Upload size={16} color="#C9B99A" />
+              <button onClick={onOpenUpload} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#0D9488', color: '#FFFFFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Upload size={16} color="#FFFFFF" />
                 <span>Upload Invoice (Supplier)</span>
               </button>
 
-              <button onClick={onOpenCreateInvoice} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#FAF8F3', color: '#1A1610', border: '1.5px solid rgba(201,185,154,0.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <FileText size={16} color="#8A7558" />
+              <button onClick={onOpenCreateInvoice} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#F0FDFA', color: '#0F172A', border: '1.5px solid rgba(13,148,136,0.4)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FileText size={16} color="#0D9488" />
                 <span>Create Customer Bill</span>
               </button>
 
-              <button onClick={onOpenAddEmp} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#FAF8F3', color: '#1A1610', border: '1.5px solid rgba(201,185,154,0.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <UserCheck size={16} color="#5C705E" />
+              <button onClick={onOpenAddEmp} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#F0FDFA', color: '#0F172A', border: '1.5px solid rgba(13,148,136,0.4)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <UserCheck size={16} color="#0284C7" />
                 <span>➕ Add New Employee</span>
               </button>
 
-              <button onClick={onOpenReport} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#A88660', color: '#FFFFFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button onClick={onOpenReport} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#0284C7', color: '#FFFFFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <BarChart3 size={16} color="#FFFFFF" />
                 <span>📊 Report Generator</span>
               </button>
             </div>
           </div>
 
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(201,185,154,0.4)' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(13,148,136,0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Package size={18} color="#8A7558" />
-                <h4 style={{ fontSize: 14, fontWeight: 800, color: '#1A1610' }}>📦 Shop Stock Details</h4>
+                <Package size={18} color="#0D9488" />
+                <h4 style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>📦 Shop Stock Details</h4>
               </div>
               <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 700, backgroundColor: '#fee2e2', padding: '2px 8px', borderRadius: 99 }}>
                 3 Low Stock Items
               </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, fontSize: 12 }}>
-              <div style={{ backgroundColor: '#FAF8F3', padding: 10, borderRadius: 8, border: '1px solid rgba(201,185,154,0.3)' }}>
-                <div style={{ color: '#6E6455', fontSize: 11 }}>Cooking Oil</div>
+              <div style={{ backgroundColor: '#F8FAFC', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.15)' }}>
+                <div style={{ color: '#475569', fontSize: 11 }}>Cooking Oil</div>
                 <div style={{ fontWeight: 800, color: '#ef4444', marginTop: 2 }}>12 Packs Left</div>
               </div>
-              <div style={{ backgroundColor: '#FAF8F3', padding: 10, borderRadius: 8, border: '1px solid rgba(201,185,154,0.3)' }}>
-                <div style={{ color: '#6E6455', fontSize: 11 }}>Rice Bags (25kg)</div>
+              <div style={{ backgroundColor: '#F8FAFC', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.15)' }}>
+                <div style={{ color: '#475569', fontSize: 11 }}>Rice Bags (25kg)</div>
                 <div style={{ fontWeight: 800, color: '#ef4444', marginTop: 2 }}>8 Bags Left</div>
               </div>
-              <div style={{ backgroundColor: '#FAF8F3', padding: 10, borderRadius: 8, border: '1px solid rgba(201,185,154,0.3)' }}>
-                <div style={{ color: '#6E6455', fontSize: 11 }}>Refined Sugar</div>
+              <div style={{ backgroundColor: '#F8FAFC', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.15)' }}>
+                <div style={{ color: '#475569', fontSize: 11 }}>Refined Sugar</div>
                 <div style={{ fontWeight: 800, color: '#ef4444', marginTop: 2 }}>15 kg Left</div>
               </div>
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, border: '1px solid rgba(201,185,154,0.4)' }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, border: '1px solid rgba(13,148,136,0.2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Users size={16} color="#8A7558" />
+                <Users size={16} color="#0D9488" />
                 <span style={{ fontSize: 13, fontWeight: 800 }}>Suppliers (6 Active)</span>
               </div>
-              <div style={{ fontSize: 11, color: '#6E6455', lineHeight: 1.5 }}>
+              <div style={{ fontSize: 11, color: '#475569', lineHeight: 1.5 }}>
                 • Apex Wholesale Distributors<br />
                 • Global FMCG Supplies<br />
                 • National Logistics Corp
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, border: '1px solid rgba(201,185,154,0.4)' }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, border: '1px solid rgba(13,148,136,0.2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <Receipt size={16} color="#d97706" />
                 <span style={{ fontSize: 13, fontWeight: 800 }}>Remaining Unpaid Bills</span>
               </div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#d97706' }}>₹ 3,45,000</div>
-              <div style={{ fontSize: 11, color: '#6E6455', marginTop: 2 }}>Due in next 7 to 15 days</div>
+              <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>Due in next 7 to 15 days</div>
             </div>
           </div>
 
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(201,185,154,0.4)' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(13,148,136,0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <UserCheck size={18} color="#5C705E" />
-                <h4 style={{ fontSize: 14, fontWeight: 800, color: '#1A1610' }}>👥 Employees ({empList.length} Staff Members)</h4>
+                <UserCheck size={18} color="#0284C7" />
+                <h4 style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>👥 Employees ({empList.length} Staff Members)</h4>
               </div>
-              <button onClick={onOpenAddEmp} style={{ fontSize: 11, color: '#1A1610', fontWeight: 700, backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.5)', padding: '4px 10px', borderRadius: 8, cursor: 'pointer' }}>
+              <button onClick={onOpenAddEmp} style={{ fontSize: 11, color: '#0D9488', fontWeight: 700, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', padding: '4px 10px', borderRadius: 8, cursor: 'pointer' }}>
                 + Add Staff
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {empList.slice(0, 4).map((emp, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 8, backgroundColor: '#FAF8F3', fontSize: 12 }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 8, backgroundColor: '#F8FAFC', fontSize: 12 }}>
                   <div>
-                    <strong style={{ color: '#1A1610' }}>{emp.name}</strong>
-                    <span style={{ color: '#6E6455', marginLeft: 8 }}>({emp.role})</span>
+                    <strong style={{ color: '#0F172A' }}>{emp.name}</strong>
+                    <span style={{ color: '#475569', marginLeft: 8 }}>({emp.role})</span>
                   </div>
-                  <div style={{ fontWeight: 700, color: '#5C705E' }}>{emp.salary}</div>
+                  <div style={{ fontWeight: 700, color: '#0D9488' }}>{emp.salary}</div>
                 </div>
               ))}
             </div>
@@ -707,13 +722,13 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
         </div>
 
         {/* RIGHT COLUMN: FRAUD ALERTS AS CHAT HISTORY */}
-        <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, border: '1px solid rgba(201,185,154,0.4)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid rgba(201,185,154,0.3)' }}>
+        <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, border: '1px solid rgba(13,148,136,0.2)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid rgba(13,148,136,0.15)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <ShieldAlert size={20} color="#ef4444" />
               <div>
-                <h4 style={{ fontSize: 15, fontWeight: 800, color: '#1A1610' }}>🛡️ Fraud Alerts Chat History</h4>
-                <div style={{ fontSize: 11, color: '#6E6455' }}>Real-time AI Security &amp; Fake Bill Chat Feed</div>
+                <h4 style={{ fontSize: 15, fontWeight: 800, color: '#0F172A' }}>🛡️ Fraud Alerts Chat History</h4>
+                <div style={{ fontSize: 11, color: '#475569' }}>Real-time AI Security &amp; Fake Bill Chat Feed</div>
               </div>
             </div>
             <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, backgroundColor: '#fee2e2', color: '#b91c1c', fontWeight: 800 }}>
@@ -767,13 +782,13 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
       </div>
 
       {/* ── BOTTOM SECTION: CASHFLOW HISTORY ─────────────────────────── */}
-      <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 22, border: '1px solid rgba(201,185,154,0.4)' }}>
+      <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 22, border: '1px solid rgba(13,148,136,0.2)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1A1610' }}>📜 Cashflow History (Money In vs Money Out)</h3>
-            <p style={{ fontSize: 12, color: '#6E6455', marginTop: 2 }}>Complete history of every rupee entering and leaving your store account</p>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0F172A' }}>📜 Cashflow History (Money In vs Money Out)</h3>
+            <p style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>Complete history of every rupee entering and leaving your store account</p>
           </div>
-          <button style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', color: '#0D9488', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Download size={14} /> Download Cashflow Statement
           </button>
         </div>
@@ -804,10 +819,10 @@ function InvoiceManagementModule({ onOpenCreateInvoice, onOpenUpload }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: 16, fontWeight: 800 }}>Invoice Management Terminal</h3>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onOpenUpload} style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={onOpenUpload} style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', color: '#0D9488', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Upload size={14} /> Scan Supplier Invoice
           </button>
-          <button onClick={onOpenCreateInvoice} style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#1A1610', color: '#FFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={onOpenCreateInvoice} style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#0D9488', color: '#FFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Plus size={14} /> Create Customer Bill
           </button>
         </div>
@@ -850,7 +865,7 @@ function ExpenseManagementModule() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: 16, fontWeight: 800 }}>Shop Expenses &amp; Employee Claims</h3>
-        <button style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#1A1610', color: '#FFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+        <button style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#0D9488', color: '#FFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
           + Add New Expense Claim
         </button>
       </div>
@@ -871,7 +886,7 @@ function InventoryManagementModule() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: 16, fontWeight: 800 }}>Stock &amp; Inventory Management</h3>
-        <button style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#1A1610', color: '#FFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+        <button style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#0D9488', color: '#FFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
           + Add New Product Item
         </button>
       </div>
@@ -981,24 +996,24 @@ function ComplianceModule() {
 
 function AiAdvisorModule({ aiMessages, onSend, inputQuery, setInputQuery }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 160px)', backgroundColor: '#FFFFFF', borderRadius: 16, border: '1px solid rgba(201,185,154,0.4)', overflow: 'hidden' }}>
-      <div style={{ padding: 16, backgroundColor: '#1A1610', color: '#FFF', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Bot size={22} color="#C9B99A" />
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 160px)', backgroundColor: '#FFFFFF', borderRadius: 16, border: '1px solid rgba(13,148,136,0.2)', overflow: 'hidden' }}>
+      <div style={{ padding: 16, backgroundColor: '#0F172A', color: '#FFF', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Bot size={22} color="#0D9488" />
         <div>
           <div style={{ fontSize: 15, fontWeight: 800 }}>24/7 FinGuard AI Business Helper</div>
-          <div style={{ fontSize: 11, color: '#C9B99A' }}>Ask questions in simple English about your store finance</div>
+          <div style={{ fontSize: 11, color: '#CCFBF1' }}>Ask questions in simple English about your store finance</div>
         </div>
       </div>
-      <div style={{ flex: 1, padding: 20, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, backgroundColor: '#FAF8F3' }}>
+      <div style={{ flex: 1, padding: 20, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, backgroundColor: '#F8FAFC' }}>
         {aiMessages.map((m, i) => (
-          <div key={i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: m.sender === 'user' ? '#1A1610' : '#FFFFFF', color: m.sender === 'user' ? '#FFF' : '#1A1610', padding: '12px 16px', borderRadius: 14, maxWidth: '75%', fontSize: 13, border: m.sender === 'ai' ? '1px solid rgba(201,185,154,0.4)' : 'none' }}>
+          <div key={i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: m.sender === 'user' ? '#0F172A' : '#FFFFFF', color: m.sender === 'user' ? '#FFF' : '#0F172A', padding: '12px 16px', borderRadius: 14, maxWidth: '75%', fontSize: 13, border: m.sender === 'ai' ? '1px solid rgba(13,148,136,0.2)' : 'none' }}>
             {m.text}
           </div>
         ))}
       </div>
-      <form onSubmit={onSend} style={{ padding: 14, borderTop: '1px solid rgba(201,185,154,0.3)', display: 'flex', gap: 10, backgroundColor: '#FFF' }}>
-        <input type="text" placeholder="Type your question in simple English..." value={inputQuery} onChange={e => setInputQuery(e.target.value)} style={{ flex: 1, padding: 12, borderRadius: 8, border: '1px solid rgba(201,185,154,0.4)', outline: 'none', fontSize: 13 }} />
-        <button type="submit" style={{ padding: '12px 20px', borderRadius: 8, backgroundColor: '#1A1610', color: '#FFF', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Send</button>
+      <form onSubmit={onSend} style={{ padding: 14, borderTop: '1px solid rgba(13,148,136,0.15)', display: 'flex', gap: 10, backgroundColor: '#FFF' }}>
+        <input type="text" placeholder="Type your question in simple English..." value={inputQuery} onChange={e => setInputQuery(e.target.value)} style={{ flex: 1, padding: 12, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none', fontSize: 13 }} />
+        <button type="submit" style={{ padding: '12px 20px', borderRadius: 8, backgroundColor: '#0D9488', color: '#FFF', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Send</button>
       </form>
     </div>
   );
@@ -1009,25 +1024,25 @@ function ReportsModule({ onOpenReport }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: 16, fontWeight: 800 }}>Simple Business Reports Generator</h3>
-        <button onClick={onOpenReport} style={{ padding: '10px 16px', borderRadius: 8, backgroundColor: '#1A1610', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={onOpenReport} style={{ padding: '10px 16px', borderRadius: 8, backgroundColor: '#0D9488', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}>
           📊 Generate Full Report PDF
         </button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-        <div style={{ backgroundColor: '#FFF', padding: 20, borderRadius: 14, border: '1px solid rgba(201,185,154,0.4)' }}>
+        <div style={{ backgroundColor: '#FFF', padding: 20, borderRadius: 14, border: '1px solid rgba(13,148,136,0.2)' }}>
           <h4 style={{ fontSize: 14, fontWeight: 800 }}>Profit &amp; Loss Statement</h4>
-          <p style={{ fontSize: 12, color: '#6E6455', marginTop: 4 }}>Monthly profit breakdown, margins &amp; expenses.</p>
-          <button onClick={onOpenReport} style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Download Report</button>
+          <p style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>Monthly profit breakdown, margins &amp; expenses.</p>
+          <button onClick={onOpenReport} style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', color: '#0D9488', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Download Report</button>
         </div>
-        <div style={{ backgroundColor: '#FFF', padding: 20, borderRadius: 14, border: '1px solid rgba(201,185,154,0.4)' }}>
+        <div style={{ backgroundColor: '#FFF', padding: 20, borderRadius: 14, border: '1px solid rgba(13,148,136,0.2)' }}>
           <h4 style={{ fontSize: 14, fontWeight: 800 }}>GST Tax Audit Report</h4>
-          <p style={{ fontSize: 12, color: '#6E6455', marginTop: 4 }}>GSTR-1, GSTR-3B tax calculations ready for CA.</p>
-          <button onClick={onOpenReport} style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Download Report</button>
+          <p style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>GSTR-1, GSTR-3B tax calculations ready for CA.</p>
+          <button onClick={onOpenReport} style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', color: '#0D9488', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Download Report</button>
         </div>
-        <div style={{ backgroundColor: '#FFF', padding: 20, borderRadius: 14, border: '1px solid rgba(201,185,154,0.4)' }}>
+        <div style={{ backgroundColor: '#FFF', padding: 20, borderRadius: 14, border: '1px solid rgba(13,148,136,0.2)' }}>
           <h4 style={{ fontSize: 14, fontWeight: 800 }}>Stock Valuation Report</h4>
-          <p style={{ fontSize: 12, color: '#6E6455', marginTop: 4 }}>Total value of all products currently in store.</p>
-          <button onClick={onOpenReport} style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Download Report</button>
+          <p style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>Total value of all products currently in store.</p>
+          <button onClick={onOpenReport} style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', color: '#0D9488', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Download Report</button>
         </div>
       </div>
     </div>
@@ -1039,16 +1054,16 @@ function NotificationsCenterModule({ onClear }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: 16, fontWeight: 800 }}>Notifications Center</h3>
-        <button onClick={onClear} style={{ fontSize: 12, color: '#6E5D44', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Mark all as read</button>
+        <button onClick={onClear} style={{ fontSize: 12, color: '#0D9488', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Mark all as read</button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ padding: 14, borderRadius: 10, backgroundColor: '#FFF', border: '1px solid rgba(201,185,154,0.4)', fontSize: 13 }}>
+        <div style={{ padding: 14, borderRadius: 10, backgroundColor: '#FFF', border: '1px solid rgba(13,148,136,0.2)', fontSize: 13 }}>
           ⚠️ <strong>Fake Bill Alert:</strong> AI blocked a duplicate invoice of ₹ 14,200 from Apex Distributors.
         </div>
-        <div style={{ padding: 14, borderRadius: 10, backgroundColor: '#FFF', border: '1px solid rgba(201,185,154,0.4)', fontSize: 13 }}>
+        <div style={{ padding: 14, borderRadius: 10, backgroundColor: '#FFF', border: '1px solid rgba(13,148,136,0.2)', fontSize: 13 }}>
           📦 <strong>Low Stock Warning:</strong> Cooking Oil and Sugar are running low. Reorder soon!
         </div>
-        <div style={{ padding: 14, borderRadius: 10, backgroundColor: '#FFF', border: '1px solid rgba(201,185,154,0.4)', fontSize: 13 }}>
+        <div style={{ padding: 14, borderRadius: 10, backgroundColor: '#FFF', border: '1px solid rgba(13,148,136,0.2)', fontSize: 13 }}>
           ✅ <strong>GST Ready:</strong> GSTR-1 tax summary report for July is ready to file.
         </div>
       </div>
@@ -1061,7 +1076,7 @@ function EmployeeManagementModule({ empList, onOpenAddEmp }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: 16, fontWeight: 800 }}>Employee &amp; Staff Details ({empList.length} Members)</h3>
-        <button onClick={onOpenAddEmp} style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#1A1610', color: '#FFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={onOpenAddEmp} style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#0D9488', color: '#FFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
           ➕ Add New Employee
         </button>
       </div>
@@ -1073,18 +1088,18 @@ function EmployeeManagementModule({ empList, onOpenAddEmp }) {
   );
 }
 
-/* SYSTEM USER DATABASE INSPECTOR MODULE (AVAILABLE VIA TAB) */
+/* SYSTEM USER DATABASE INSPECTOR MODULE */
 function UserRolesModule({ dbUsersList = [] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ backgroundColor: '#1A1610', color: '#FFFFFF', padding: 20, borderRadius: 16, border: '1.5px solid #C9B99A' }}>
+      <div style={{ backgroundColor: '#0F172A', color: '#FFFFFF', padding: 20, borderRadius: 16, border: '1.5px solid #0D9488' }}>
         <div style={{ fontSize: 18, fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 10 }}>
           <span>👑 System Registered Users &amp; Passwords Inspector</span>
-          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, backgroundColor: '#A88660', color: '#FFF' }}>
+          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, backgroundColor: '#0D9488', color: '#FFF' }}>
             {dbUsersList.length} Users Stored in PostgreSQL
           </span>
         </div>
-        <p style={{ fontSize: 13, color: '#C9B99A', marginTop: 4 }}>
+        <p style={{ fontSize: 13, color: '#CCFBF1', marginTop: 4 }}>
           Inspect all registered store users, email addresses, mobile numbers, assigned roles, and passwords stored in PostgreSQL DB.
         </p>
       </div>
@@ -1149,9 +1164,9 @@ function IntegrationsModule() {
 
 function SettingsModule() {
   return (
-    <div style={{ backgroundColor: '#FFF', padding: 24, borderRadius: 16, border: '1px solid rgba(201,185,154,0.4)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ backgroundColor: '#FFF', padding: 24, borderRadius: 16, border: '1px solid rgba(13,148,136,0.2)', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <h3 style={{ fontSize: 16, fontWeight: 800 }}>App &amp; Security Settings</h3>
-      <div style={{ fontSize: 13, color: '#6E6455' }}>
+      <div style={{ fontSize: 13, color: '#475569' }}>
         • Database: PostgreSQL Storage Configured<br />
         • Main Admin Account: <code>admin@finguard.ai</code> / <code>admin123</code><br />
         • Simple English Mode: Enabled (Active)<br />
@@ -1163,11 +1178,11 @@ function SettingsModule() {
 
 function ProfileModule({ ownerName, companyName, dbUsersList = [] }) {
   return (
-    <div style={{ backgroundColor: '#FFF', padding: 24, borderRadius: 16, border: '1px solid rgba(201,185,154,0.4)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ backgroundColor: '#FFF', padding: 24, borderRadius: 16, border: '1px solid rgba(13,148,136,0.2)', display: 'flex', flexDirection: 'column', gap: 12 }}>
       <h3 style={{ fontSize: 18, fontWeight: 800 }}>👑 {ownerName}</h3>
-      <div style={{ fontSize: 13, color: '#6E6455' }}>Company: <strong>{companyName}</strong></div>
-      <div style={{ fontSize: 13, color: '#6E6455' }}>Role: Business Owner</div>
-      <div style={{ fontSize: 13, color: '#5C705E', fontWeight: 700, marginTop: 8 }}>✓ PostgreSQL Database Connected ({dbUsersList.length} total users managed)</div>
+      <div style={{ fontSize: 13, color: '#475569' }}>Company: <strong>{companyName}</strong></div>
+      <div style={{ fontSize: 13, color: '#475569' }}>Role: Business Owner</div>
+      <div style={{ fontSize: 13, color: '#0D9488', fontWeight: 700, marginTop: 8 }}>✓ PostgreSQL Database Connected ({dbUsersList.length} total users managed)</div>
     </div>
   );
 }
@@ -1177,14 +1192,14 @@ function KpiCard({ title, value, change, positive, icon: Icon }) {
   return (
     <div style={{
       backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18,
-      border: '1px solid rgba(201,185,154,0.4)',
+      border: '1px solid rgba(13,148,136,0.2)',
       display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: '#6E6455' }}>{title}</span>
-        {Icon && <Icon size={18} color="#8A7558" />}
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#475569' }}>{title}</span>
+        {Icon && <Icon size={18} color="#0D9488" />}
       </div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: '#1A1610', marginTop: 8 }}>{value}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A', marginTop: 8 }}>{value}</div>
       <div style={{ fontSize: 11, fontWeight: 700, color: positive ? '#16a34a' : '#d97706', marginTop: 4 }}>
         {change}
       </div>
@@ -1194,11 +1209,11 @@ function KpiCard({ title, value, change, positive, icon: Icon }) {
 
 function TableCard({ headers, rows }) {
   return (
-    <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, border: '1px solid rgba(201,185,154,0.4)', overflow: 'hidden' }}>
+    <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, border: '1px solid rgba(13,148,136,0.2)', overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 12 }}>
           <thead>
-            <tr style={{ backgroundColor: '#FAF8F3', borderBottom: '1px solid rgba(201,185,154,0.3)', color: '#8A7558', textTransform: 'uppercase', fontSize: 11, fontFamily: 'monospace' }}>
+            <tr style={{ backgroundColor: '#F0FDFA', borderBottom: '1px solid rgba(13,148,136,0.15)', color: '#0D9488', textTransform: 'uppercase', fontSize: 11, fontFamily: 'monospace' }}>
               {headers.map((h, i) => (
                 <th key={i} style={{ padding: '12px 16px', fontWeight: 800 }}>{h}</th>
               ))}
@@ -1206,9 +1221,9 @@ function TableCard({ headers, rows }) {
           </thead>
           <tbody>
             {rows.map((row, rIdx) => (
-              <tr key={rIdx} style={{ borderBottom: rIdx === rows.length - 1 ? 'none' : '1px solid rgba(201,185,154,0.2)' }}>
+              <tr key={rIdx} style={{ borderBottom: rIdx === rows.length - 1 ? 'none' : '1px solid rgba(13,148,136,0.1)' }}>
                 {row.map((cell, cIdx) => (
-                  <td key={cIdx} style={{ padding: '12px 16px', color: '#1A1610', fontWeight: cIdx === 0 ? 700 : 500 }}>
+                  <td key={cIdx} style={{ padding: '12px 16px', color: '#0F172A', fontWeight: cIdx === 0 ? 700 : 500 }}>
                     {cell}
                   </td>
                 ))}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import FeaturesGrid from './components/FeaturesGrid';
@@ -15,7 +16,9 @@ import UploadInvoiceFullPage from './pages/UploadInvoiceFullPage';
 import CreateInvoiceFullPage from './pages/CreateInvoiceFullPage';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('landing'); // 'landing' | 'signup' | 'login' | 'dashboard' | 'upload_invoice' | 'create_invoice'
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [loginRole, setLoginRole] = useState(null);
   const [ownerId, setOwnerId] = useState('');
   const [ownerPass, setOwnerPass] = useState('');
@@ -23,7 +26,7 @@ export default function App() {
   const [dashboardOwnerName, setDashboardOwnerName] = useState('Business Owner');
 
   const handleOpenSignup = () => {
-    setCurrentPage('signup');
+    navigate('/signup');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -33,116 +36,151 @@ export default function App() {
     setOwnerPass(generatedPass);
     if (compName) setDashboardCompanyName(compName);
     if (userEmail) setDashboardOwnerName(userEmail);
-    setCurrentPage('login');
+    navigate('/login');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleOpenDashboard = (role = 'owner', compName = '', userEmail = '') => {
     if (compName) setDashboardCompanyName(compName);
     if (userEmail) setDashboardOwnerName(userEmail);
-    setCurrentPage('dashboard');
+    navigate('/dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToLanding = () => {
-    setCurrentPage('landing');
+    navigate('/');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToDashboard = () => {
-    setCurrentPage('dashboard');
+    navigate('/dashboard');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (currentPage === 'dashboard') {
-    return (
-      <BusinessOwnerDashboard
-        companyName={dashboardCompanyName}
-        ownerName={dashboardOwnerName}
-        onLogout={handleBackToLanding}
-        onOpenUploadPage={() => setCurrentPage('upload_invoice')}
-        onOpenBillingPage={() => setCurrentPage('create_invoice')}
-      />
-    );
-  }
-
-  if (currentPage === 'upload_invoice') {
-    return (
-      <UploadInvoiceFullPage
-        onBack={handleBackToDashboard}
-        onInvoiceSaved={handleBackToDashboard}
-      />
-    );
-  }
-
-  if (currentPage === 'create_invoice') {
-    return (
-      <CreateInvoiceFullPage
-        onBack={handleBackToDashboard}
-        onInvoiceCreated={handleBackToDashboard}
-      />
-    );
-  }
-
-  if (currentPage === 'signup') {
-    return (
-      <SignupPage
-        onBack={handleBackToLanding}
-        onNavigateToLogin={(role, genId, genPass, compName, userEmail) => handleOpenLogin(role, genId, genPass, compName, userEmail)}
-      />
-    );
-  }
-
-  if (currentPage === 'login') {
-    return (
-      <LoginPage
-        onBack={handleBackToLanding}
-        initialRole={loginRole}
-        initialOwnerId={ownerId}
-        initialOwnerPass={ownerPass}
-        onNavigateToDashboard={handleOpenDashboard}
-      />
-    );
-  }
-
   return (
-    <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#FFFFFF', overflowX: 'hidden' }}>
-      <Navbar
-        onOpenModal={(type) => {
-          if (type === 'login') handleOpenLogin();
-          else if (type === 'dashboard') handleOpenDashboard();
-          else handleOpenSignup();
-        }}
+    <Routes>
+      {/* ── 1. LANDING PAGE ROUTE (/) ───────────────────────────── */}
+      <Route
+        path="/"
+        element={
+          <div style={{ width: '100%', minHeight: '100vh', backgroundColor: '#FFFFFF', overflowX: 'hidden' }}>
+            <Navbar
+              onOpenModal={(type) => {
+                if (type === 'login') handleOpenLogin();
+                else if (type === 'dashboard') handleOpenDashboard();
+                else handleOpenSignup();
+              }}
+            />
+            <main>
+              <HeroSection
+                onOpenModal={(type) => {
+                  if (type === 'login') handleOpenLogin();
+                  else if (type === 'dashboard') handleOpenDashboard();
+                  else handleOpenSignup();
+                }}
+              />
+              <FeaturesGrid />
+              <RoleShowcase
+                onOpenModal={() => handleOpenLogin()}
+              />
+              <AiDemoSimulator />
+              <RoiCalculator />
+              <PricingSection
+                onOpenModal={(type) => {
+                  if (type === 'login') handleOpenLogin();
+                  else if (type === 'dashboard') handleOpenDashboard();
+                  else handleOpenSignup();
+                }}
+              />
+              <Footer
+                onOpenModal={(type) => {
+                  if (type === 'login') handleOpenLogin();
+                  else if (type === 'dashboard') handleOpenDashboard();
+                  else handleOpenSignup();
+                }}
+              />
+            </main>
+          </div>
+        }
       />
-      <main>
-        <HeroSection
-          onOpenModal={(type) => {
-            if (type === 'login') handleOpenLogin();
-            else if (type === 'dashboard') handleOpenDashboard();
-            else handleOpenSignup();
-          }}
-        />
-        <FeaturesGrid />
-        <RoleShowcase
-          onOpenModal={() => handleOpenLogin()}
-        />
-        <AiDemoSimulator />
-        <RoiCalculator />
-        <PricingSection
-          onOpenModal={(type) => {
-            if (type === 'login') handleOpenLogin();
-            else if (type === 'dashboard') handleOpenDashboard();
-            else handleOpenSignup();
-          }}
-        />
-        <Footer
-          onOpenModal={(type) => {
-            if (type === 'login') handleOpenLogin();
-            else if (type === 'dashboard') handleOpenDashboard();
-            else handleOpenSignup();
-          }}
-        />
-      </main>
-    </div>
+
+      {/* ── 2. LOGIN PAGE ROUTE (/login) ────────────────────────── */}
+      <Route
+        path="/login"
+        element={
+          <LoginPage
+            onBack={handleBackToLanding}
+            initialRole={loginRole}
+            initialOwnerId={ownerId}
+            initialOwnerPass={ownerPass}
+            onNavigateToDashboard={handleOpenDashboard}
+          />
+        }
+      />
+
+      {/* ── 3. SIGNUP PAGE ROUTE (/signup) ──────────────────────── */}
+      <Route
+        path="/signup"
+        element={
+          <SignupPage
+            onBack={handleBackToLanding}
+            onNavigateToLogin={(role, genId, genPass, compName, userEmail) => handleOpenLogin(role, genId, genPass, compName, userEmail)}
+          />
+        }
+      />
+
+      {/* ── 4. OWNER DASHBOARD ROUTE (/dashboard) ───────────────── */}
+      <Route
+        path="/dashboard"
+        element={
+          <BusinessOwnerDashboard
+            companyName={dashboardCompanyName}
+            ownerName={dashboardOwnerName}
+            onLogout={handleBackToLanding}
+            onOpenUploadPage={() => navigate('/upload-invoice')}
+            onOpenBillingPage={() => navigate('/create-invoice')}
+          />
+        }
+      />
+
+      {/* ── 5. DASHBOARD MODULE PARAM ROUTE (/dashboard/:moduleId) ── */}
+      <Route
+        path="/dashboard/:moduleId"
+        element={
+          <BusinessOwnerDashboard
+            companyName={dashboardCompanyName}
+            ownerName={dashboardOwnerName}
+            onLogout={handleBackToLanding}
+            onOpenUploadPage={() => navigate('/upload-invoice')}
+            onOpenBillingPage={() => navigate('/create-invoice')}
+          />
+        }
+      />
+
+      {/* ── 6. UPLOAD INVOICE FULL PAGE (/upload-invoice) ───────── */}
+      <Route
+        path="/upload-invoice"
+        element={
+          <UploadInvoiceFullPage
+            onBack={handleBackToDashboard}
+            onInvoiceSaved={handleBackToDashboard}
+          />
+        }
+      />
+
+      {/* ── 7. CREATE CUSTOMER BILL FULL PAGE (/create-invoice) ──── */}
+      <Route
+        path="/create-invoice"
+        element={
+          <CreateInvoiceFullPage
+            onBack={handleBackToDashboard}
+            onInvoiceCreated={handleBackToDashboard}
+          />
+        }
+      />
+
+      {/* Fallback redirect to / */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }

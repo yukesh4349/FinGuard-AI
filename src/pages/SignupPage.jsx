@@ -1,69 +1,46 @@
 import React, { useState } from 'react';
 import {
-  ArrowLeft, Building2, Store, Users, Mail, Phone,
-  Send, Sparkles, CheckCircle2, ShieldCheck,
-  Lock, ArrowRight, Database
+  ShieldCheck, ArrowLeft, CheckCircle2, Sparkles, Building2, Phone, Mail, Lock, User, AlertCircle
 } from 'lucide-react';
 import { registerUserInPostgres } from '../services/postgresDb';
 
-const businessTypes = [
-  { label: '🛒 Retail Store & Grocery', value: 'Retail & Grocery' },
-  { label: '🔧 Hardware & Wholesale Shop', value: 'Hardware & Wholesale' },
-  { label: '🏭 Manufacturing & Factory', value: 'Manufacturing' },
-  { label: '💼 CA & Tax Accounting Office', value: 'CA & Accounting' },
-  { label: '🏥 Medical Store & Pharmacy', value: 'Pharmacy' },
-  { label: '💻 Online Store & E-Commerce', value: 'E-Commerce' },
-  { label: '🛠️ Services & Consulting', value: 'Services' },
-  { label: '🏢 Other Business', value: 'Other' },
-];
-
-const employeeRanges = [
-  { label: '1 - 5', desc: 'Small Shop', emoji: '🧑‍💻' },
-  { label: '6 - 20', desc: 'Growing Store', emoji: '🏬' },
-  { label: '21 - 50', desc: 'Medium Company', emoji: '🏭' },
-  { label: '50+', desc: 'Large Enterprise', emoji: '🌐' },
-];
-
 export default function SignupPage({ onBack, onNavigateToLogin }) {
   const [companyName, setCompanyName] = useState('');
-  const [businessType, setBusinessType] = useState(businessTypes[0].value);
-  const [employees, setEmployees] = useState('6 - 20');
+  const [mobileNum, setMobileNum] = useState('');
   const [email, setEmail] = useState('');
-  const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [telegramChatId, setTelegramChatId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [createdUser, setCreatedUser] = useState(null);
 
   const handleMobileChange = (e) => {
-    // Only allow numbers 0-9
     const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
-    setMobileNumber(cleaned);
+    setMobileNum(cleaned);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     setErrorMessage('');
 
     if (password !== confirmPassword) {
-      setErrorMessage('Passwords do not match. Please type the same password twice.');
+      setIsSubmitting(false);
+      setErrorMessage('Passwords do not match. Please enter the same password in both fields.');
       return;
     }
 
-    if (mobileNumber.length < 10) {
-      setErrorMessage('Please enter a valid 10-digit mobile phone number.');
+    if (mobileNum.length < 10) {
+      setIsSubmitting(false);
+      setErrorMessage('Please enter a valid 10-digit mobile number.');
       return;
     }
-
-    setIsSubmitting(true);
 
     try {
-      // Register user in PostgreSQL database service
-      await registerUserInPostgres({
+      // Save new account into PostgreSQL database
+      const result = await registerUserInPostgres({
         companyName,
-        mobileNumber,
+        mobileNumber: mobileNum,
         email,
         password,
         role: 'owner',
@@ -71,20 +48,24 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
 
       setTimeout(() => {
         setIsSubmitting(false);
-        setIsSuccess(true);
-      }, 700);
+        if (result.success) {
+          setCreatedUser(result.user);
+        } else {
+          setErrorMessage(result.message || 'Error creating account.');
+        }
+      }, 600);
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMessage('Error creating account in PostgreSQL DB. Please try again.');
+      setErrorMessage('Database error. Please try again.');
     }
   };
 
   return (
     <div style={{
       width: '100%', minHeight: '100vh',
-      backgroundColor: '#FAF8F3',
+      backgroundColor: '#F8FAFC',
       display: 'flex', flexDirection: 'column',
-      color: '#1A1610', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+      color: '#0F172A', fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
     }}>
       {/* ── Top Header Navigation Bar ─────────────────────────────── */}
       <header style={{
@@ -92,7 +73,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
         backgroundColor: 'rgba(255,255,255,0.95)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(201,185,154,0.3)',
+        borderBottom: '1px solid rgba(13,148,136,0.2)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 100,
       }}>
@@ -101,13 +82,13 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '8px 16px', borderRadius: 99,
-            backgroundColor: '#F5F0E8', border: '1px solid rgba(201,185,154,0.4)',
-            color: '#1A1610', fontSize: 13, fontWeight: 700,
+            backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+            color: '#0D9488', fontSize: 13, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
             transition: 'all 0.2s ease',
           }}
-          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#EDE4D5'; e.currentTarget.style.transform = 'translateX(-2px)'; }}
-          onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F5F0E8'; e.currentTarget.style.transform = 'translateX(0)'; }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#CCFBF1'; e.currentTarget.style.transform = 'translateX(-2px)'; }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F0FDFA'; e.currentTarget.style.transform = 'translateX(0)'; }}
         >
           <ArrowLeft size={16} />
           <span>← Back to Home</span>
@@ -117,26 +98,23 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{
             width: 34, height: 34, borderRadius: 9,
-            backgroundColor: '#1A1610',
+            backgroundColor: '#0D9488',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <ShieldCheck size={18} color="#FFFFFF" />
           </div>
-          <span style={{ fontSize: 18, fontWeight: 800, color: '#1A1610' }}>
-            FinGuard <span style={{ color: '#8A7558' }}>AI</span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
+            FinGuard <span style={{ color: '#0D9488' }}>AI</span>
           </span>
         </div>
 
-        {/* Existing Member Login link */}
         <button
-          onClick={() => onNavigateToLogin && onNavigateToLogin()}
+          onClick={() => onNavigateToLogin && onNavigateToLogin('owner')}
           style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: 13, fontWeight: 700, color: '#6E5D44',
+            fontSize: 13, fontWeight: 700, color: '#0D9488',
             fontFamily: 'inherit',
           }}
-          onMouseEnter={e => e.currentTarget.style.color = '#1A1610'}
-          onMouseLeave={e => e.currentTarget.style.color = '#6E5D44'}
         >
           Already registered? <strong>Log In →</strong>
         </button>
@@ -146,33 +124,33 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
       <main style={{
         flex: 1, display: 'grid', gridTemplateColumns: '440px 1fr',
         height: 'calc(100vh - 66px)', overflow: 'hidden',
-        backgroundColor: '#FAF8F3',
+        backgroundColor: '#F8FAFC',
       }}>
-        {/* Left Side: Replaced Text Content with Visual Image Banner */}
+        {/* Left Side Visual Banner */}
         <div style={{
-          backgroundColor: '#1A1610', color: '#FFFFFF',
+          backgroundColor: '#0F172A', color: '#FFFFFF',
           padding: '32px', display: 'flex', flexDirection: 'column',
           justifyContent: 'space-between', position: 'relative', overflow: 'hidden',
         }}>
           {/* Top Badge */}
           <div style={{ position: 'relative', zIndex: 10 }}>
-            <span className="mono-badge" style={{ backgroundColor: 'rgba(255,255,255,0.15)', color: '#C9B99A', border: '1px solid rgba(201,185,154,0.3)', marginBottom: 12, display: 'inline-flex' }}>
+            <span className="mono-badge" style={{ backgroundColor: 'rgba(13,148,136,0.2)', color: '#CCFBF1', border: '1px solid rgba(13,148,136,0.4)', marginBottom: 12, display: 'inline-flex' }}>
               📝 EASY NEW REGISTRATION
             </span>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: '#FFFFFF', lineHeight: 1.25, marginBottom: 8 }}>
               Start Safeguarding Your Business Today
             </h2>
-            <p style={{ fontSize: 13, color: '#C9B99A', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.5 }}>
               Join thousands of business owners managing invoices, stock, and profits in simple English.
             </p>
           </div>
 
-          {/* Graphic Image Banner (Replaced text list with Image) */}
+          {/* Graphic Image Banner */}
           <div style={{
             position: 'relative', zIndex: 10, margin: '20px 0',
-            borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(201,185,154,0.4)',
+            borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(13,148,136,0.3)',
             boxShadow: '0 12px 30px rgba(0,0,0,0.4)',
-            backgroundColor: '#0F0D0A',
+            backgroundColor: '#1E293B',
           }}>
             <img
               src="/assets/normal_shop_owner.png"
@@ -185,187 +163,47 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
               }}
             />
             <div style={{
-              padding: '12px 16px', backgroundColor: 'rgba(26,22,16,0.9)',
-              backdropFilter: 'blur(8px)', borderTop: '1px solid rgba(201,185,154,0.2)',
+              padding: '12px 16px', backgroundColor: 'rgba(15,23,42,0.9)',
+              backdropFilter: 'blur(8px)', borderTop: '1px solid rgba(13,148,136,0.2)',
             }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={14} color="#C9B99A" /> Simple &amp; Powerful Business Tools
+                <Sparkles size={14} color="#0D9488" /> 24/7 AI Business Safeguard
               </div>
-              <div style={{ fontSize: 11, color: '#9C9185', marginTop: 2 }}>
-                PostgreSQL Database Sync • No Jargon
+              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
+                PostgreSQL Database Sync • Simple English Interface
               </div>
             </div>
           </div>
 
-          {/* Bottom Security Note */}
-          <div style={{
-            position: 'relative', zIndex: 10,
-            padding: 14, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.1)', fontSize: 12, color: '#C9B99A',
-          }}>
-            <Database size={14} color="#C9B99A" style={{ verticalAlign: 'middle', marginRight: 6 }} />
-            <strong>PostgreSQL Storage:</strong> Your account password is saved securely in PostgreSQL DB.
+          <div style={{ position: 'relative', zIndex: 10, fontSize: 11, color: '#94A3B8' }}>
+            FinGuard AI © 2026 • Encrypted PostgreSQL Authentication
           </div>
         </div>
 
-        {/* Right Form Area */}
+        {/* Right Side Signup Form */}
         <div style={{
-          padding: '36px 48px', overflowY: 'auto', display: 'flex',
-          flexDirection: 'column', justifyContent: 'center',
+          padding: '40px 60px', overflowY: 'auto',
+          display: 'flex', flexDirection: 'column', justifyContent: 'center',
+          maxWidth: 680, width: '100%', margin: '0 auto',
         }}>
-          {isSuccess ? (
-            /* ── SUCCESS STATE: Account Created (DO NOT SHOW RAW ID/PASS CARDS) ──── */
-            <div className="gloss-card" style={{
-              backgroundColor: '#FFFFFF', borderRadius: 20,
-              border: '1px solid rgba(201,185,154,0.45)',
-              boxShadow: '0 20px 50px rgba(26,22,16,0.12)',
-              padding: '36px 44px', textAlign: 'center', maxWidth: 640, margin: '0 auto', width: '100%',
-            }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: 32,
-                backgroundColor: 'rgba(74,222,128,0.15)', border: '2px solid #4ade80',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 16px',
-              }}>
-                <CheckCircle2 size={38} color="#16a34a" />
-              </div>
-
-              <span className="mono-badge" style={{ marginBottom: 8, display: 'inline-flex' }}>
-                🎉 REGISTRATION SUCCESSFUL
-              </span>
-
-              <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1A1610', marginBottom: 8 }}>
-                Account Created for {companyName}!
-              </h1>
-              <p style={{ color: '#6E6455', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
-                Your business account has been saved in the <strong>PostgreSQL Database</strong>. You can now log in with your email or mobile number and password.
-              </p>
-
-              <button
-                onClick={() => onNavigateToLogin && onNavigateToLogin('owner', email || mobileNumber, '', companyName, email)}
-                className="liquid-btn liquid-btn-primary"
-                style={{
-                  width: '100%', padding: '15px 28px', fontSize: 16,
-                  borderRadius: 12, justifyContent: 'center',
-                }}
-              >
-                <span>🚀 Proceed to Login Now</span>
-                <ArrowRight size={18} color="#FFFFFF" />
-              </button>
-            </div>
-          ) : (
-            /* ── SIGN-UP FORM ──── */
-            <div style={{ maxWidth: 880, margin: '0 auto', width: '100%' }}>
+          {!createdUser ? (
+            <div>
               <div style={{ marginBottom: 24 }}>
-                <span className="mono-badge" style={{ marginBottom: 8, display: 'inline-flex' }}>
-                  ✨ CREATE NEW BUSINESS ACCOUNT
-                </span>
-                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1A1610', marginBottom: 4, letterSpacing: '-0.4px' }}>
-                  Register Your Store in FinGuard AI
+                <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+                  Create Your Store Account
                 </h1>
-                <p style={{ color: '#6E6455', fontSize: 14 }}>
-                  Fill in your simple store details below to create your secure account.
+                <p style={{ fontSize: 14, color: '#475569' }}>
+                  Register your business to set up your PostgreSQL account with custom password protection.
                 </p>
               </div>
 
-              {errorMessage && (
-                <div style={{ padding: 12, borderRadius: 8, backgroundColor: '#fee2e2', color: '#b91c1c', fontSize: 13, marginBottom: 14 }}>
-                  ⚠️ {errorMessage}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                {/* ROW 1: Email Address & Mobile Number (Numbers Only) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
-                      <Mail size={14} color="#8A7558" />
-                      <span>Email Address *</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="owner@mycompany.com"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 16px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FFFFFF',
-                        fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
-                      <Phone size={14} color="#8A7558" />
-                      <span>Mobile Number (Digits Only) *</span>
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      pattern="[0-9]*"
-                      maxLength={10}
-                      placeholder="e.g. 9876543210 (Numbers only)"
-                      value={mobileNumber}
-                      onChange={handleMobileChange}
-                      style={{
-                        width: '100%', padding: '12px 16px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FFFFFF',
-                        fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* ROW 2: Password & Confirm Password */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
-                      <Lock size={14} color="#8A7558" />
-                      <span>Create Password *</span>
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Enter a strong password"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 16px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FFFFFF',
-                        fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
-                      <Lock size={14} color="#8A7558" />
-                      <span>Confirm Password *</span>
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Re-type your password"
-                      value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 16px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FFFFFF',
-                        fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* ROW 3: Company Name & Type of Business */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
-                      <Building2 size={14} color="#8A7558" />
-                      <span>Name of Store / Company *</span>
-                    </label>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                    1. Business / Store Name *
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Building2 size={18} color="#0D9488" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
                     <input
                       type="text"
                       required
@@ -373,94 +211,152 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                       value={companyName}
                       onChange={e => setCompanyName(e.target.value)}
                       style={{
-                        width: '100%', padding: '12px 16px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FFFFFF',
-                        fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
+                        width: '100%', padding: '12px 16px 12px 42px', borderRadius: 10,
+                        border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                        fontSize: 14, color: '#0F172A', outline: 'none',
                       }}
                     />
                   </div>
-
-                  <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
-                      <Store size={14} color="#8A7558" />
-                      <span>Type of Business *</span>
-                    </label>
-                    <select
-                      value={businessType}
-                      onChange={e => setBusinessType(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 16px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FFFFFF',
-                        fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {businessTypes.map(b => (
-                        <option key={b.value} value={b.value}>{b.label}</option>
-                      ))}
-                    </select>
-                  </div>
                 </div>
 
-                {/* ROW 4: Number of Employees & Telegram Chat ID */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                   <div>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
-                      <Users size={14} color="#8A7558" />
-                      <span>Number of Employees *</span>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                      2. Mobile Number (Digits Only) *
                     </label>
-                    <select
-                      value={employees}
-                      onChange={e => setEmployees(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 16px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FFFFFF',
-                        fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {employeeRanges.map(e => (
-                        <option key={e.label} value={e.label}>{e.emoji} {e.label} ({e.desc})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#1A1610' }}>
-                        <Send size={14} color="#0088cc" />
-                        <span>Telegram Phone or Username</span>
-                      </label>
-                      <span style={{ fontSize: 11, color: '#6E5D44', fontWeight: 600 }}>💬 Optional</span>
+                    <div style={{ position: 'relative' }}>
+                      <Phone size={18} color="#0D9488" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                      <input
+                        type="tel"
+                        required
+                        pattern="[0-9]*"
+                        maxLength={10}
+                        placeholder="e.g. 9876543210"
+                        value={mobileNum}
+                        onChange={handleMobileChange}
+                        style={{
+                          width: '100%', padding: '12px 16px 12px 42px', borderRadius: 10,
+                          border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                          fontSize: 14, color: '#0F172A', outline: 'none', fontWeight: 700,
+                        }}
+                      />
                     </div>
-                    <input
-                      type="text"
-                      placeholder="@company_alerts or phone"
-                      value={telegramChatId}
-                      onChange={e => setTelegramChatId(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 16px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FFFFFF',
-                        fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
-                      }}
-                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                      3. Email Address *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Mail size={18} color="#0D9488" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                      <input
+                        type="email"
+                        required
+                        placeholder="e.g. owner@store.com"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        style={{
+                          width: '100%', padding: '12px 16px 12px 42px', borderRadius: 10,
+                          border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                          fontSize: 14, color: '#0F172A', outline: 'none',
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Submit Button */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                      4. Create Password *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Lock size={18} color="#0D9488" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                      <input
+                        type="password"
+                        required
+                        placeholder="Set your password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        style={{
+                          width: '100%', padding: '12px 16px 12px 42px', borderRadius: 10,
+                          border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                          fontSize: 14, color: '#0F172A', outline: 'none',
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                      5. Confirm Password *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Lock size={18} color="#0D9488" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                      <input
+                        type="password"
+                        required
+                        placeholder="Re-enter password"
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        style={{
+                          width: '100%', padding: '12px 16px 12px 42px', borderRadius: 10,
+                          border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                          fontSize: 14, color: '#0F172A', outline: 'none',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {errorMessage && (
+                  <div style={{
+                    padding: 12, borderRadius: 8, backgroundColor: '#fee2e2',
+                    border: '1px solid #fecdd3', color: '#b91c1c', fontSize: 13,
+                    display: 'flex', alignItems: 'center', gap: 8,
+                  }}>
+                    <AlertCircle size={16} />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="liquid-btn liquid-btn-primary"
                   style={{
-                    width: '100%', padding: '15px 24px', fontSize: 16,
-                    borderRadius: 12, justifyContent: 'center', marginTop: 8,
+                    width: '100%', padding: 14, borderRadius: 12,
+                    fontSize: 15, fontWeight: 800, cursor: 'pointer',
+                    marginTop: 8,
                   }}
                 >
-                  <span>{isSubmitting ? 'Saving in PostgreSQL DB...' : '✨ Create Account in PostgreSQL DB'}</span>
-                  <ArrowRight size={18} color="#FFFFFF" />
+                  {isSubmitting ? 'Saving to PostgreSQL Database...' : '✨ Create Account & Register Store'}
                 </button>
               </form>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <div style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#f0fdf4', border: '2px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <CheckCircle2 size={36} color="#16a34a" />
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>Account Created Successfully!</h2>
+              <p style={{ fontSize: 14, color: '#475569', marginBottom: 20 }}>
+                Your account for <strong>{createdUser.company_name}</strong> has been saved in PostgreSQL.
+              </p>
+              
+              <div style={{ backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', borderRadius: 12, padding: 16, marginBottom: 24, textAlign: 'left', fontSize: 13 }}>
+                <div><strong>System Generated Login ID:</strong> <code>{createdUser.user_id}</code></div>
+                <div><strong>Registered Mobile Number:</strong> {createdUser.mobile_number}</div>
+                <div><strong>Email Address:</strong> {createdUser.email}</div>
+              </div>
+
+              <button
+                onClick={() => onNavigateToLogin && onNavigateToLogin('owner', createdUser.user_id, password, createdUser.company_name, createdUser.email)}
+                className="liquid-btn liquid-btn-primary"
+                style={{ padding: '12px 24px', borderRadius: 10 }}
+              >
+                Proceed to Log In →
+              </button>
             </div>
           )}
         </div>

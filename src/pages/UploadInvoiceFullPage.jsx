@@ -40,14 +40,14 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
   return (
     <div style={{
       width: '100%', minHeight: '100vh',
-      backgroundColor: '#FAF8F3', color: '#1A1610',
+      backgroundColor: '#F8FAFC', color: '#0F172A',
       fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
       display: 'flex', flexDirection: 'column',
     }}>
       {/* Top Bar with Back Button */}
       <header style={{
         height: 66, padding: '0 32px',
-        backgroundColor: '#FFFFFF', borderBottom: '1px solid rgba(201,185,154,0.3)',
+        backgroundColor: '#FFFFFF', borderBottom: '1px solid rgba(13,148,136,0.2)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 100,
       }}>
@@ -56,8 +56,8 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '8px 16px', borderRadius: 99,
-            backgroundColor: '#F5F0E8', border: '1px solid rgba(201,185,154,0.4)',
-            color: '#1A1610', fontSize: 13, fontWeight: 700,
+            backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+            color: '#0D9488', fontSize: 13, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
@@ -66,15 +66,15 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: '#1A1610', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: '#0D9488', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FileText size={18} color="#FFFFFF" />
           </div>
-          <span style={{ fontSize: 18, fontWeight: 800, color: '#1A1610' }}>
-            Supplier Invoice <span style={{ color: '#8A7558' }}>Scanner</span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
+            Supplier Invoice <span style={{ color: '#0D9488' }}>Scanner</span>
           </span>
         </div>
 
-        <span style={{ fontSize: 12, color: '#5C705E', fontWeight: 700, backgroundColor: 'rgba(92,112,94,0.1)', padding: '4px 12px', borderRadius: 99 }}>
+        <span style={{ fontSize: 12, color: '#0D9488', fontWeight: 700, backgroundColor: '#F0FDFA', padding: '4px 12px', borderRadius: 99, border: '1px solid rgba(13,148,136,0.3)' }}>
           Full Page OCR Scanner
         </span>
       </header>
@@ -82,10 +82,10 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
       {/* Main Content View */}
       <main style={{ flex: 1, padding: '36px 48px', maxWidth: 1100, margin: '0 auto', width: '100%' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1A1610', marginBottom: 4 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
             📤 Upload Supplier Invoice Bill
           </h1>
-          <p style={{ color: '#6E6455', fontSize: 14 }}>
+          <p style={{ color: '#475569', fontSize: 14 }}>
             Snap a picture with your camera or select a bill file from your device to scan automatically.
           </p>
         </div>
@@ -97,18 +97,18 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
             
             {/* Option 1: Open Camera Direct */}
             <label style={{
-              backgroundColor: '#1A1610', color: '#FFFFFF',
+              backgroundColor: '#0F172A', color: '#FFFFFF',
               borderRadius: 16, padding: '24px 28px', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 16,
               boxShadow: '0 8px 20px rgba(0,0,0,0.1)',
               transition: 'all 0.2s ease',
             }}>
-              <div style={{ width: 50, height: 50, borderRadius: 14, backgroundColor: '#A88660', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 50, height: 50, borderRadius: 14, backgroundColor: '#0D9488', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Camera size={26} color="#FFFFFF" />
               </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 800 }}>📷 Take Picture with Camera</div>
-                <div style={{ fontSize: 12, color: '#C9B99A', marginTop: 2 }}>Click to open camera and snap bill photo</div>
+                <div style={{ fontSize: 12, color: '#CCFBF1', marginTop: 2 }}>Click to open camera and snap bill photo</div>
               </div>
               <input
                 type="file"
@@ -122,13 +122,13 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
             {/* Option 2: Upload File */}
             <label style={{
               backgroundColor: '#FFFFFF', borderRadius: 16, padding: '32px 28px',
-              border: '2px dashed rgba(201,185,154,0.6)', cursor: 'pointer',
+              border: '2px dashed rgba(13,148,136,0.4)', cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               textAlign: 'center', minHeight: 220,
             }}>
-              <Upload size={36} color="#8A7558" style={{ marginBottom: 12 }} />
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#1A1610' }}>Browse &amp; Upload Bill File</div>
-              <div style={{ fontSize: 12, color: '#6E6455', marginTop: 4 }}>Supports PDF, PNG, JPG files</div>
+              <Upload size={36} color="#0D9488" style={{ marginBottom: 12 }} />
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A' }}>Browse &amp; Upload Bill File</div>
+              <div style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>Supports PDF, PNG, JPG files</div>
               <input
                 type="file"
                 accept="image/*,application/pdf"
@@ -138,27 +138,27 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
             </label>
 
             {selectedFile && (
-              <div style={{ padding: 14, borderRadius: 10, backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.4)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <FileText size={18} color="#8A7558" />
+              <div style={{ padding: 14, borderRadius: 10, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <FileText size={18} color="#0D9488" />
                 <span style={{ fontWeight: 700 }}>{selectedFile.name}</span>
               </div>
             )}
           </div>
 
           {/* Right Box: Scanning Status & Extracted Result */}
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 28, border: '1px solid rgba(201,185,154,0.4)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 28, border: '1px solid rgba(13,148,136,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             {isScanning ? (
               <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                <Sparkles size={40} color="#8A7558" style={{ animation: 'spin 1.5s linear infinite', marginBottom: 16 }} />
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1A1610' }}>Scanning Bill with AI...</h3>
-                <p style={{ fontSize: 13, color: '#6E6455', marginTop: 4 }}>Extracting supplier details, totals, and checking fake bill warnings</p>
+                <Sparkles size={40} color="#0D9488" style={{ animation: 'spin 1.5s linear infinite', marginBottom: 16 }} />
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>Scanning Bill with AI...</h3>
+                <p style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>Extracting supplier details, totals, and checking fake bill warnings</p>
               </div>
             ) : scanResult ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(201,185,154,0.3)', paddingBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(13,148,136,0.15)', paddingBottom: 12 }}>
                   <div>
-                    <span style={{ fontSize: 11, color: '#8A7558', fontWeight: 700, fontFamily: 'monospace' }}>SCANNED SUPPLIER INVOICE</span>
-                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#1A1610', marginTop: 2 }}>{scanResult.supplierName}</h3>
+                    <span style={{ fontSize: 11, color: '#0D9488', fontWeight: 700, fontFamily: 'monospace' }}>SCANNED SUPPLIER INVOICE</span>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>{scanResult.supplierName}</h3>
                   </div>
                   <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, backgroundColor: '#f0fdf4', color: '#16a34a', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 4 }}>
                     <CheckCircle2 size={14} /> AI Verified
@@ -170,15 +170,15 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
                   <div><strong>Date:</strong> {scanResult.date}</div>
                 </div>
 
-                <div style={{ backgroundColor: '#FAF8F3', borderRadius: 10, padding: 14, border: '1px solid rgba(201,185,154,0.3)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#8A7558', marginBottom: 8, fontFamily: 'monospace' }}>BILL ITEMS EXTRACTED:</div>
+                <div style={{ backgroundColor: '#F8FAFC', borderRadius: 10, padding: 14, border: '1px solid rgba(13,148,136,0.2)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0D9488', marginBottom: 8, fontFamily: 'monospace' }}>BILL ITEMS EXTRACTED:</div>
                   {scanResult.items.map((item, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
                       <span>{item.name}</span>
-                      <strong style={{ color: '#1A1610' }}>{item.price}</strong>
+                      <strong style={{ color: '#0F172A' }}>{item.price}</strong>
                     </div>
                   ))}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, borderTop: '1px solid rgba(201,185,154,0.3)', paddingTop: 8, marginTop: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, borderTop: '1px solid rgba(13,148,136,0.2)', paddingTop: 8, marginTop: 8 }}>
                     <span>Total Amount:</span>
                     <span style={{ color: '#16a34a' }}>{scanResult.totalAmount}</span>
                   </div>
@@ -192,7 +192,7 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
                   onClick={handleSaveInvoice}
                   style={{
                     width: '100%', padding: '14px', borderRadius: 12,
-                    backgroundColor: '#1A1610', color: '#FFFFFF',
+                    backgroundColor: '#0D9488', color: '#FFFFFF',
                     border: 'none', fontSize: 15, fontWeight: 800, cursor: 'pointer',
                     marginTop: 8,
                   }}
@@ -201,9 +201,9 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
                 </button>
               </div>
             ) : (
-              <div style={{ textAlign: 'center', padding: '60px 0', color: '#6E6455' }}>
-                <FileText size={48} color="#C9B99A" style={{ marginBottom: 12 }} />
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#1A1610' }}>No File Selected Yet</h3>
+              <div style={{ textAlign: 'center', padding: '60px 0', color: '#475569' }}>
+                <FileText size={48} color="#0D9488" style={{ marginBottom: 12 }} />
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0F172A' }}>No File Selected Yet</h3>
                 <p style={{ fontSize: 13, marginTop: 4 }}>Snap a photo with camera or browse a bill file to start scanning.</p>
               </div>
             )}

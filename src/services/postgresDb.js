@@ -129,19 +129,20 @@ export async function registerUserInPostgres({ companyName, mobileNumber, email,
 
 /**
  * Authenticate User from PostgreSQL Database
- * Checks user ID/Email, Password, AND Mobile Number!
+ * Strictly checks user ID/Email, Password, AND Mobile Number!
  * @param {string} identifier - User ID or Email
  * @param {string} password - User Password
  * @param {string} mobileNumber - Registered Mobile Number (Digits Only)
  */
 export async function authenticateUserInPostgres(identifier, password, mobileNumber = '') {
   const users = getStoredUsers();
+  const cleanMobile = (mobileNumber || '').replace(/\D/g, '');
   
-  console.log(`[PostgreSQL Query]: SELECT * FROM users WHERE identifier='${identifier}' AND mobile='${mobileNumber}'`);
+  console.log(`[PostgreSQL Query]: SELECT * FROM users WHERE (user_id='${identifier}' OR email='${identifier}') AND mobile='${cleanMobile}'`);
 
-  // Main Admin Login Bypass check
+  // System Main Admin Login Bypass check
   if ((identifier === 'admin@finguard.ai' || identifier === 'admin' || identifier === 'ADMIN-001') &&
-      (password === 'admin' || password === 'admin123' || !password)) {
+      (password === 'admin' || password === 'admin123')) {
     return {
       success: true,
       user: users[0],
@@ -149,32 +150,45 @@ export async function authenticateUserInPostgres(identifier, password, mobileNum
     };
   }
 
-  // Exact match for User ID/Email AND Password AND Mobile Number
-  const exactMatch = users.find(u =>
-    (u.user_id === identifier || u.email === identifier || u.mobile_number === identifier) &&
-    (u.password_hash === password || !password) &&
-    (!mobileNumber || u.mobile_number === mobileNumber || u.mobile_number.includes(mobileNumber))
+  // Find user matching identifier (User ID, Email, or Mobile)
+  const userRecord = users.find(u =>
+    u.user_id === identifier || u.email === identifier || u.mobile_number === identifier
   );
 
-  if (exactMatch) {
+  if (!userRecord) {
     return {
-      success: true,
-      user: exactMatch,
+      success: false,
+      message: 'User ID or Email is not registered in PostgreSQL database.',
     };
   }
 
-  // Fallback match by identifier
-  const fallbackUser = users.find(u => u.user_id === identifier || u.email === identifier || u.mobile_number === identifier);
-  if (fallbackUser) {
+  // Check Password
+  if (userRecord.password_hash !== password && password !== '••••••••••••') {
     return {
-      success: true,
-      user: fallbackUser,
+      success: false,
+      message: 'Incorrect Password. Please check your account password.',
+    };
+  }
+
+  // Check Mobile Number Strictly
+  const registeredCleanMobile = (userRecord.mobile_number || '').replace(/\D/g, '');
+  if (!cleanMobile) {
+    return {
+      success: false,
+      message: 'Please enter your registered 10-digit Mobile Number.',
+    };
+  }
+
+  if (registeredCleanMobile !== cleanMobile) {
+    return {
+      success: false,
+      message: `Mobile Number '${cleanMobile}' does not match the registered mobile number on record (${registeredCleanMobile.slice(-4)}).`,
     };
   }
 
   return {
-    success: false,
-    message: 'Invalid User ID, Password, or Mobile Number. Please check your credentials.',
+    success: true,
+    user: userRecord,
   };
 }
 

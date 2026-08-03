@@ -40,14 +40,14 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
   return (
     <div style={{
       width: '100%', minHeight: '100vh',
-      backgroundColor: '#FAF8F3', color: '#1A1610',
+      backgroundColor: '#F8FAFC', color: '#0F172A',
       fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
       display: 'flex', flexDirection: 'column',
     }}>
       {/* Top Bar */}
       <header style={{
         height: 66, padding: '0 32px',
-        backgroundColor: '#FFFFFF', borderBottom: '1px solid rgba(201,185,154,0.3)',
+        backgroundColor: '#FFFFFF', borderBottom: '1px solid rgba(13,148,136,0.2)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 100,
       }}>
@@ -56,8 +56,8 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '8px 16px', borderRadius: 99,
-            backgroundColor: '#F5F0E8', border: '1px solid rgba(201,185,154,0.4)',
-            color: '#1A1610', fontSize: 13, fontWeight: 700,
+            backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+            color: '#0D9488', fontSize: 13, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
@@ -66,15 +66,15 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: '#1A1610', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 34, height: 34, borderRadius: 9, backgroundColor: '#0D9488', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FileText size={18} color="#FFFFFF" />
           </div>
-          <span style={{ fontSize: 18, fontWeight: 800, color: '#1A1610' }}>
-            Customer <span style={{ color: '#8A7558' }}>Billing &amp; Invoice</span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
+            Customer <span style={{ color: '#0D9488' }}>Billing &amp; Invoice</span>
           </span>
         </div>
 
-        <span style={{ fontSize: 12, color: '#5C705E', fontWeight: 700, backgroundColor: 'rgba(92,112,94,0.1)', padding: '4px 12px', borderRadius: 99 }}>
+        <span style={{ fontSize: 12, color: '#0D9488', fontWeight: 700, backgroundColor: '#F0FDFA', padding: '4px 12px', borderRadius: 99, border: '1px solid rgba(13,148,136,0.3)' }}>
           New Customer Invoice
         </span>
       </header>
@@ -82,10 +82,10 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
       {/* Main Billing View */}
       <main style={{ flex: 1, padding: '36px 48px', maxWidth: 1000, margin: '0 auto', width: '100%' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1A1610', marginBottom: 4 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
             🧾 Create Customer Invoice
           </h1>
-          <p style={{ color: '#6E6455', fontSize: 14 }}>
+          <p style={{ color: '#475569', fontSize: 14 }}>
             Fill customer details and item list below to print or download bill receipt.
           </p>
         </div>
@@ -93,7 +93,7 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
         <form onSubmit={handleSaveBill} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           
           {/* Customer Details Box */}
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 24, border: '1px solid rgba(201,185,154,0.4)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 24, border: '1px solid rgba(13,148,136,0.2)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Customer / Store Name *</label>
               <input
@@ -102,7 +102,7 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
                 placeholder="e.g. Ramesh Kumar / City Grocers"
                 value={customerName}
                 onChange={e => setCustomerName(e.target.value)}
-                style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(201,185,154,0.5)', outline: 'none', fontSize: 14 }}
+                style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(13,148,136,0.3)', outline: 'none', fontSize: 14 }}
               />
             </div>
 
@@ -115,19 +115,19 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
                 placeholder="e.g. 9876543210"
                 value={customerPhone}
                 onChange={e => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(201,185,154,0.5)', outline: 'none', fontSize: 14 }}
+                style={{ width: '100%', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(13,148,136,0.3)', outline: 'none', fontSize: 14 }}
               />
             </div>
           </div>
 
           {/* Items Table Box */}
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 24, border: '1px solid rgba(201,185,154,0.4)' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 24, border: '1px solid rgba(13,148,136,0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <h3 style={{ fontSize: 16, fontWeight: 800 }}>Items List</h3>
               <button
                 type="button"
                 onClick={handleAddItem}
-                style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.5)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', color: '#0D9488', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
                 <Plus size={14} /> Add Item Row
               </button>
@@ -135,7 +135,7 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
 
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
               <thead>
-                <tr style={{ backgroundColor: '#FAF8F3', borderBottom: '1px solid rgba(201,185,154,0.3)', color: '#8A7558', fontSize: 11, fontFamily: 'monospace', textTransform: 'uppercase' }}>
+                <tr style={{ backgroundColor: '#F0FDFA', borderBottom: '1px solid rgba(13,148,136,0.2)', color: '#0D9488', fontSize: 11, fontFamily: 'monospace', textTransform: 'uppercase' }}>
                   <th style={{ padding: 12 }}>Description</th>
                   <th style={{ padding: 12, width: 100 }}>Qty</th>
                   <th style={{ padding: 12, width: 140 }}>Price (₹)</th>
@@ -145,14 +145,14 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
               </thead>
               <tbody>
                 {items.map((item, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid rgba(201,185,154,0.2)' }}>
+                  <tr key={idx} style={{ borderBottom: '1px solid rgba(13,148,136,0.1)' }}>
                     <td style={{ padding: 8 }}>
                       <input
                         type="text"
                         placeholder="Item Name"
                         value={item.description}
                         onChange={e => handleItemChange(idx, 'description', e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid rgba(201,185,154,0.4)', outline: 'none' }}
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }}
                       />
                     </td>
                     <td style={{ padding: 8 }}>
@@ -161,7 +161,7 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
                         min="1"
                         value={item.qty}
                         onChange={e => handleItemChange(idx, 'qty', e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid rgba(201,185,154,0.4)', outline: 'none' }}
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }}
                       />
                     </td>
                     <td style={{ padding: 8 }}>
@@ -170,7 +170,7 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
                         min="0"
                         value={item.price}
                         onChange={e => handleItemChange(idx, 'price', e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid rgba(201,185,154,0.4)', outline: 'none' }}
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }}
                       />
                     </td>
                     <td style={{ padding: 12, fontWeight: 700 }}>
@@ -190,7 +190,7 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
               </tbody>
             </table>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20, paddingTop: 14, borderTop: '1px solid rgba(201,185,154,0.3)', fontSize: 18, fontWeight: 800, color: '#1A1610' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20, paddingTop: 14, borderTop: '1px solid rgba(13,148,136,0.2)', fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
               Subtotal Amount: <span style={{ color: '#16a34a', marginLeft: 12 }}>₹ {calculateSubtotal().toLocaleString()}</span>
             </div>
           </div>
@@ -199,13 +199,13 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
             <button
               type="button"
               onClick={onBack}
-              style={{ flex: 1, padding: 14, borderRadius: 12, border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FAF8F3', fontWeight: 700, cursor: 'pointer' }}
+              style={{ flex: 1, padding: 14, borderRadius: 12, border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#F8FAFC', fontWeight: 700, cursor: 'pointer' }}
             >
               Cancel
             </button>
             <button
               type="submit"
-              style={{ flex: 2, padding: 14, borderRadius: 12, border: 'none', backgroundColor: '#1A1610', color: '#FFF', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}
+              style={{ flex: 2, padding: 14, borderRadius: 12, border: 'none', backgroundColor: '#0D9488', color: '#FFF', fontWeight: 800, fontSize: 15, cursor: 'pointer' }}
             >
               🧾 Save &amp; Print Customer Bill
             </button>
