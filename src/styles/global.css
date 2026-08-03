@@ -1,0 +1,446 @@
+/* ========================================================
+   FinGuard AI — Global Styles
+   Gloss UI + Liquid Buttons + Scroll Animations
+   White & Cream palette
+   ======================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* ── CSS Variables ─────────────────────────────────────── */
+:root {
+  --c-white:   #FFFFFF;
+  --c-cream-0: #FFFEF9;
+  --c-cream-1: #FAF8F3;
+  --c-cream-2: #F5EFE4;
+  --c-cream-3: #EDE4D5;
+  --c-cream-4: #E0D4C0;
+  --c-cream-5: #C9B99A;
+  --c-dark:    #1A1610;
+  --c-dark-2:  #2E2820;
+  --c-mid:     #6E6455;
+  --c-subtle:  #9C9185;
+  --c-border:  rgba(26,22,16,0.08);
+  --c-border-cream: rgba(201,185,154,0.35);
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Reset ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body, #root {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--c-white);
+  color: var(--c-dark);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 6px; }
+::-webkit-scrollbar-track  { background: var(--c-cream-1); }
+::-webkit-scrollbar-thumb  { background: var(--c-cream-4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-cream-5); }
+
+/* ══════════════════════════════════════════════════════════
+   KEYFRAMES
+   ══════════════════════════════════════════════════════════ */
+
+/* Floating */
+@keyframes float {
+  0%,100% { transform: translateY(0px); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes float2 {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  33%     { transform: translateY(-6px) rotate(0.5deg); }
+  66%     { transform: translateY(-3px) rotate(-0.3deg); }
+}
+
+/* Reveal from below */
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Scale pop-in */
+@keyframes scalePop {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Horizontal ticker scroll */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Shimmer sweep (navbar underline) */
+@keyframes shimmerSweep {
+  0%   { left: -35%; }
+  100% { left: 110%; }
+}
+
+/* Orb ambient drift */
+@keyframes orbDrift {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%     { transform: translate(18px,-12px) scale(1.04); }
+  66%     { transform: translate(-10px,8px) scale(0.97); }
+}
+
+/* Liquid button morphing background */
+@keyframes liquidFlow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Gloss sweep on hover */
+@keyframes glossSweep {
+  0%   { left: -80%; opacity: 0; }
+  30%  { opacity: 1; }
+  100% { left: 130%; opacity: 0; }
+}
+
+/* Pulse ring */
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(201,185,154,0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(201,185,154,0); }
+  100% { box-shadow: 0 0 0 0 rgba(201,185,154,0); }
+}
+
+/* Text gradient shimmer */
+@keyframes textShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Card border glow on hover */
+@keyframes borderGlow {
+  0%,100% { border-color: rgba(201,185,154,0.35); }
+  50%     { border-color: rgba(201,185,154,0.75); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ══════════════════════════════════════════════════════════ */
+
+/* -- Scroll reveal (triggered by IntersectionObserver) -- */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s var(--ease-spring), transform 0.7s var(--ease-spring);
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.32s; }
+.reveal-delay-4 { transition-delay: 0.44s; }
+.reveal-delay-5 { transition-delay: 0.56s; }
+
+/* -- Ticker -- */
+.ticker-track {
+  display: inline-flex;
+  animation: ticker 24s linear infinite;
+  will-change: transform;
+}
+.ticker-track:hover { animation-play-state: paused; }
+
+/* -- Float animations -- */
+.anim-float  { animation: float  5.5s ease-in-out infinite; }
+.anim-float2 { animation: float2 7s   ease-in-out infinite; }
+.anim-float3 { animation: float  4s   ease-in-out infinite 1s; }
+
+/* -- Navbar shimmer underline -- */
+.nav-line {
+  height: 1px;
+  background: rgba(26,22,16,0.07);
+  position: relative;
+  overflow: hidden;
+}
+.nav-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -35%;
+  width: 35%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--c-cream-5), transparent);
+  animation: shimmerSweep 3.2s ease-in-out infinite;
+}
+
+/* ── GLOSS CARD ─────────────────────────────────────────── */
+.gloss-card {
+  position: relative;
+  background: rgba(255,255,255,0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.3s var(--ease-spring),
+              box-shadow 0.3s var(--ease-spring),
+              border-color 0.3s ease;
+}
+.gloss-card::before {
+  /* top-left specular highlight */
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.55) 0%, transparent 100%);
+  pointer-events: none;
+  border-radius: 16px 16px 0 0;
+  z-index: 0;
+}
+.gloss-card::after {
+  /* sweep gloss on hover */
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -80%;
+  width: 60%;
+  height: 220%;
+  background: linear-gradient(
+    110deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.45) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  transform: skewX(-15deg);
+  transition: none;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+}
+.gloss-card:hover::after {
+  animation: glossSweep 0.7s var(--ease-smooth) forwards;
+}
+.gloss-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 50px rgba(26,22,16,0.10),
+              0 0 0 1px rgba(201,185,154,0.4);
+}
+.gloss-card > * { position: relative; z-index: 2; }
+
+/* ── LIQUID BUTTON ──────────────────────────────────────── */
+.liquid-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 26px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  border: none;
+  overflow: hidden;
+  transition: transform 0.25s var(--ease-spring),
+              box-shadow 0.25s var(--ease-spring);
+  letter-spacing: -0.01em;
+}
+.liquid-btn::before {
+  /* morphing liquid background */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-size: 200% 200%;
+  transition: background-position 0.5s ease;
+  z-index: -1;
+}
+/* Ensures all children (including icon SVGs) stay above the ::before gradient */
+.liquid-btn > * { position: relative; z-index: 1; }
+/* Ensures text nodes (not elements) also render above ::before */
+.liquid-btn { isolation: isolate; }
+.liquid-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+.liquid-btn:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+/* Primary liquid btn — dark */
+.liquid-btn-primary::before {
+  background: linear-gradient(135deg, #1A1610 0%, #3D3628 50%, #1A1610 100%);
+  background-size: 200% 200%;
+}
+.liquid-btn-primary {
+  background: #1A1610;
+  color: #FFFFFF;
+  box-shadow: 0 6px 20px rgba(26,22,16,0.22),
+              0 1px 0 rgba(255,255,255,0.08) inset;
+}
+.liquid-btn-primary:hover {
+  box-shadow: 0 10px 30px rgba(26,22,16,0.30),
+              0 1px 0 rgba(255,255,255,0.12) inset;
+}
+.liquid-btn-primary:hover::before {
+  background-position: right center;
+  animation: liquidFlow 1.5s ease infinite;
+}
+/* gloss on primary */
+.liquid-btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 999px 999px 0 0;
+}
+
+/* Secondary liquid btn — cream */
+.liquid-btn-secondary::before {
+  background: linear-gradient(135deg, #F5F0E8 0%, #EDE4D5 50%, #F5F0E8 100%);
+  background-size: 200% 200%;
+}
+.liquid-btn-secondary {
+  background: #F5F0E8;
+  color: #1A1610;
+  border: 1.5px solid rgba(201,185,154,0.5);
+  box-shadow: 0 4px 14px rgba(26,22,16,0.07),
+              0 1px 0 rgba(255,255,255,0.9) inset;
+}
+.liquid-btn-secondary:hover {
+  box-shadow: 0 8px 22px rgba(26,22,16,0.11),
+              0 1px 0 rgba(255,255,255,0.9) inset;
+  border-color: rgba(201,185,154,0.85);
+}
+.liquid-btn-secondary:hover::before {
+  background-position: right center;
+  animation: liquidFlow 1.5s ease infinite;
+}
+.liquid-btn-secondary::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.75) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 999px 999px 0 0;
+}
+
+/* ── GLOSS FLOATING BADGE ───────────────────────────────── */
+.glass-badge {
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.8);
+  box-shadow: 0 8px 24px rgba(26,22,16,0.08),
+              0 1px 0 rgba(255,255,255,1) inset;
+  border-radius: 14px;
+}
+
+/* ── MONOSPACE PILL BADGE ───────────────────────────────── */
+.mono-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(245,240,232,0.95);
+  border: 1px solid rgba(201,185,154,0.6);
+  color: #6E5D44;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+/* ── SECTION WRAPPER CONSISTENT PADDING ─────────────────── */
+.section-pad {
+  padding: 96px 40px;
+  max-width: 1340px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── ORB DECORATION ─────────────────────────────────────── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: orbDrift 9s ease-in-out infinite;
+}
+
+/* Pulse ring for logo icon */
+.pulse-ring {
+  animation: pulseRing 2.8s ease-out infinite;
+}
+
+/* text shimmer */
+.text-shimmer {
+  background: linear-gradient(90deg, var(--c-dark) 0%, var(--c-cream-5) 50%, var(--c-dark) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 4s linear infinite;
+}
+
+/* ── BUTTON RESET + FOCUS ──────────────────────────── */
+button:focus-visible {
+  outline: 2px solid var(--c-cream-5);
+  outline-offset: 3px;
+}
+
+/* ── INPUT FOCUS RING ──────────────────────────────── */
+input:focus {
+  box-shadow: 0 0 0 3px rgba(201,185,154,0.3);
+  border-color: rgba(201,185,154,0.7) !important;
+  outline: none;
+}
+
+/* ── SECTION REVEAL (alternate class) ─────────────── */
+.section-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s var(--ease-spring), transform 0.6s var(--ease-spring);
+}
+.section-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── GLOSS CARD inner glow on hover ────────────────── */
+.gloss-card:hover {
+  box-shadow: 0 28px 56px rgba(26,22,16,0.12),
+              0 0 0 1px rgba(201,185,154,0.45),
+              0 0 24px rgba(201,185,154,0.08) inset;
+}
+
+/* ── RESPONSIVE SECTION PADDING ────────────────────── */
+@media (max-width: 768px) {
+  .section-pad {
+    padding: 64px 20px;
+  }
+}
+
+/* ── PREVENT TICKER FLASH ───────────────────────────── */
+.ticker-track {
+  will-change: transform;
+  white-space: nowrap;
+}
