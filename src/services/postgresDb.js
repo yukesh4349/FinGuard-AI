@@ -6,11 +6,11 @@
 
 // PostgreSQL Connection String Configuration
 export const POSTGRES_CONFIG = {
-  host: process.env.VITE_PGHOST || 'localhost',
-  port: process.env.VITE_PGPORT || 5432,
-  database: process.env.VITE_PGDATABASE || 'finguard_db',
-  user: process.env.VITE_PGUSER || 'postgres',
-  password: process.env.VITE_PGPASSWORD || 'postgres',
+  host: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PGHOST) || 'localhost',
+  port: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PGPORT) || 5432,
+  database: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PGDATABASE) || 'finguard_db',
+  user: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PGUSER) || 'postgres',
+  password: (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PGPASSWORD) || 'postgres',
   ssl: false,
 };
 
