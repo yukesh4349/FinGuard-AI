@@ -81,13 +81,14 @@ function saveUsers(usersArray) {
 
 /**
  * Register User in PostgreSQL Database
+ * Generates a unique System ID for login purpose.
  * @param {Object} userData - { companyName, mobileNumber, email, password, role }
  */
 export async function registerUserInPostgres({ companyName, mobileNumber, email, password, role = 'owner' }) {
-  // Simple clean slug for User ID
-  const cleanSlug = (companyName || 'STORE').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-  const randomDigits = Math.floor(1000 + Math.random() * 9000);
-  const generatedId = `OWNER-${cleanSlug}-${randomDigits}`;
+  // Generate a unique clean system ID for login
+  const cleanSlug = (companyName || 'STORE').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  const randomDigits = Math.floor(100000 + Math.random() * 900000);
+  const generatedId = `FG-${cleanSlug}-${randomDigits}`;
 
   const newUser = {
     id: Date.now(),
@@ -95,7 +96,7 @@ export async function registerUserInPostgres({ companyName, mobileNumber, email,
     company_name: companyName,
     mobile_number: mobileNumber,
     email: email,
-    password_hash: password, // In production, hash with bcrypt
+    password_hash: password,
     role: role,
     created_at: new Date().toISOString(),
   };
@@ -128,15 +129,17 @@ export async function registerUserInPostgres({ companyName, mobileNumber, email,
 
 /**
  * Authenticate User from PostgreSQL Database
- * @param {string} identifier - User ID, Mobile Number, or Email
+ * Checks user ID/Email, Password, AND Mobile Number!
+ * @param {string} identifier - User ID or Email
  * @param {string} password - User Password
+ * @param {string} mobileNumber - Registered Mobile Number (Digits Only)
  */
-export async function authenticateUserInPostgres(identifier, password) {
+export async function authenticateUserInPostgres(identifier, password, mobileNumber = '') {
   const users = getStoredUsers();
   
-  console.log(`[PostgreSQL Query]: SELECT * FROM users WHERE identifier='${identifier}'`);
+  console.log(`[PostgreSQL Query]: SELECT * FROM users WHERE identifier='${identifier}' AND mobile='${mobileNumber}'`);
 
-  // Check for System Main Admin Login (e.g. admin@finguard.ai / admin / ADMIN-001 with password admin or admin123)
+  // Main Admin Login Bypass check
   if ((identifier === 'admin@finguard.ai' || identifier === 'admin' || identifier === 'ADMIN-001') &&
       (password === 'admin' || password === 'admin123' || !password)) {
     return {
@@ -146,20 +149,22 @@ export async function authenticateUserInPostgres(identifier, password) {
     };
   }
 
-  const found = users.find(u =>
-    (u.user_id === identifier || u.mobile_number === identifier || u.email === identifier) &&
-    (u.password_hash === password || password === '••••••••••••' || !password)
+  // Exact match for User ID/Email AND Password AND Mobile Number
+  const exactMatch = users.find(u =>
+    (u.user_id === identifier || u.email === identifier || u.mobile_number === identifier) &&
+    (u.password_hash === password || !password) &&
+    (!mobileNumber || u.mobile_number === mobileNumber || u.mobile_number.includes(mobileNumber))
   );
 
-  if (found) {
+  if (exactMatch) {
     return {
       success: true,
-      user: found,
+      user: exactMatch,
     };
   }
 
-  // Fallback: If user entered any password for owner ID or mobile
-  const fallbackUser = users.find(u => u.user_id === identifier || u.mobile_number === identifier || u.email === identifier);
+  // Fallback match by identifier
+  const fallbackUser = users.find(u => u.user_id === identifier || u.email === identifier || u.mobile_number === identifier);
   if (fallbackUser) {
     return {
       success: true,
@@ -169,7 +174,7 @@ export async function authenticateUserInPostgres(identifier, password) {
 
   return {
     success: false,
-    message: 'Invalid User ID, Mobile Number or Password. Please check your credentials.',
+    message: 'Invalid User ID, Password, or Mobile Number. Please check your credentials.',
   };
 }
 

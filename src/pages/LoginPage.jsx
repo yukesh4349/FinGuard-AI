@@ -132,8 +132,8 @@ export default function LoginPage({
     setErrorMessage('');
 
     try {
-      // Query PostgreSQL database service for authentication
-      const result = await authenticateUserInPostgres(userId || mobileNum, password);
+      // Query PostgreSQL database service for authentication checking ID, Password, and Mobile Number
+      const result = await authenticateUserInPostgres(userId, password, mobileNum);
       
       setTimeout(() => {
         setIsLoggingIn(false);
@@ -144,13 +144,9 @@ export default function LoginPage({
             onNavigateToDashboard(selectedRole ? selectedRole.id : 'owner', companyName, userId || 'OWNER-USER');
           }
         } else {
-          // If custom user isn't found, default to smooth login for user convenience
-          setIsSuccess(true);
-          if (onNavigateToDashboard) {
-            onNavigateToDashboard(selectedRole ? selectedRole.id : 'owner', companyName, userId || 'OWNER-USER');
-          }
+          setErrorMessage(result.message || 'Invalid User ID, Password, or Mobile Number.');
         }
-      }, 700);
+      }, 600);
     } catch (err) {
       setIsLoggingIn(false);
       setErrorMessage('Database error. Please try again.');
@@ -228,7 +224,7 @@ export default function LoginPage({
         height: 'calc(100vh - 66px)', overflow: 'hidden',
         backgroundColor: '#FAF8F3',
       }}>
-        {/* Left Side: Replaced Text Content with Visual Image Banner */}
+        {/* Left Side: Replaced Text Content with Visual Shop Banner Image */}
         <div style={{
           backgroundColor: '#1A1610', color: '#FFFFFF',
           padding: '32px', display: 'flex', flexDirection: 'column',
@@ -240,14 +236,14 @@ export default function LoginPage({
               🛡️ SAFE & EASY LOGIN
             </span>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: '#FFFFFF', lineHeight: 1.25, marginBottom: 8 }}>
-              Simple Money &amp; Bill Protection
+              Simple Shop &amp; Bill Protection
             </h2>
             <p style={{ fontSize: 13, color: '#C9B99A', lineHeight: 1.5 }}>
-              FinGuard AI keeps your business safe from wrong bills, fake payments, and lost profits.
+              FinGuard AI keeps your retail shop safe from wrong bills, fake payments, and lost profits.
             </p>
           </div>
 
-          {/* Center Graphic Image (Replaced text with Image) */}
+          {/* Center Graphic Image (Normal Shop Owner Image) */}
           <div style={{
             position: 'relative', zIndex: 10, margin: '20px 0',
             borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(201,185,154,0.4)',
@@ -255,13 +251,12 @@ export default function LoginPage({
             backgroundColor: '#0F0D0A',
           }}>
             <img
-              src="/assets/finguard_login_banner.png"
-              alt="FinGuard AI Business & Financial Security"
+              src="/assets/normal_shop_owner.png"
+              alt="Shop Owner Managing Business Bills"
               style={{
                 width: '100%', height: 260, objectFit: 'cover', display: 'block',
               }}
               onError={(e) => {
-                // Fallback image if needed
                 e.currentTarget.src = '/assets/hero_dashboard.png';
               }}
             />
@@ -273,7 +268,7 @@ export default function LoginPage({
                 <Sparkles size={14} color="#C9B99A" /> 24/7 Smart Business Safeguard
               </div>
               <div style={{ fontSize: 11, color: '#9C9185', marginTop: 2 }}>
-                PostgreSQL Secure Database • Simple English Dashboard
+                PostgreSQL Secure Database • Easy AI Dashboard
               </div>
             </div>
           </div>

@@ -11,9 +11,11 @@ import Footer from './components/Footer';
 import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
 import BusinessOwnerDashboard from './pages/BusinessOwnerDashboard';
+import UploadInvoiceFullPage from './pages/UploadInvoiceFullPage';
+import CreateInvoiceFullPage from './pages/CreateInvoiceFullPage';
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('landing'); // 'landing' | 'signup' | 'login' | 'dashboard'
+  const [currentPage, setCurrentPage] = useState('landing'); // 'landing' | 'signup' | 'login' | 'dashboard' | 'upload_invoice' | 'create_invoice'
   const [loginRole, setLoginRole] = useState(null);
   const [ownerId, setOwnerId] = useState('');
   const [ownerPass, setOwnerPass] = useState('');
@@ -47,12 +49,37 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleBackToDashboard = () => {
+    setCurrentPage('dashboard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (currentPage === 'dashboard') {
     return (
       <BusinessOwnerDashboard
         companyName={dashboardCompanyName}
         ownerName={dashboardOwnerName}
         onLogout={handleBackToLanding}
+        onOpenUploadPage={() => setCurrentPage('upload_invoice')}
+        onOpenBillingPage={() => setCurrentPage('create_invoice')}
+      />
+    );
+  }
+
+  if (currentPage === 'upload_invoice') {
+    return (
+      <UploadInvoiceFullPage
+        onBack={handleBackToDashboard}
+        onInvoiceSaved={handleBackToDashboard}
+      />
+    );
+  }
+
+  if (currentPage === 'create_invoice') {
+    return (
+      <CreateInvoiceFullPage
+        onBack={handleBackToDashboard}
+        onInvoiceCreated={handleBackToDashboard}
       />
     );
   }

@@ -9,10 +9,10 @@ const options = [
     sub: 'For small stores, retail shops, and growing business ledgers',
     badge: 'QUICK START',
     features: [
-      'Instant OCR Invoice & Receipt Scanning',
+      'Instant Bill Photo & Receipt Scanner',
       'AI Fraud & Duplicate Bill Screening Engine',
       'Automated GST Filing Statements (GSTR-1 & 3B)',
-      'Role-Based Permissions (Owners & Accountants)',
+      'Easy Staff Permissions (Owners & Accountants)',
       'Multi-Channel WhatsApp & Email Reminders',
       'Encrypted Cloud Ledger Backup',
     ],
@@ -27,11 +27,11 @@ const options = [
     badge: 'EXISTING MEMBERS',
     features: [
       'Log In to Your FinGuard Workspace',
-      'Access 24/7 Gemini LLM Advisory Terminal',
+      'Access 24/7 AI Chatbot Terminal',
       'View Real-Time Demand & Stock Forecasts',
       'Manage Low-Cost Supplier Purchase Orders',
-      'Full Role-Based Access Control (RBAC)',
-      'Kafka Real-Time Event Stream Log',
+      'Full Staff Access Control',
+      'Real-Time Security Activity Stream',
     ],
     buttonText: 'Log In to Workspace',
     icon: LogIn,
@@ -98,67 +98,73 @@ export default function PricingSection({ onOpenModal }) {
                   backgroundColor: opt.primary ? 'rgba(255,255,255,0.12)' : '#F5F0E8',
                   border: `1px solid ${opt.primary ? 'rgba(255,255,255,0.2)' : 'rgba(201,185,154,0.4)'}`,
                 }}>
-                  <Sparkles size={11} color={opt.primary ? '#FFFFFF' : '#9C8A6E'} />
+                  <Sparkles size={11} color={opt.primary ? '#C9B99A' : '#6E5D44'} />
                   <span style={{
-                    fontSize: 10, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.05em',
-                    color: opt.primary ? '#FFFFFF' : '#9C8A6E',
-                  }}>{opt.badge}</span>
+                    color: opt.primary ? '#C9B99A' : '#6E5D44',
+                    fontSize: 10, fontWeight: 700, fontFamily: 'monospace',
+                    letterSpacing: '0.08em',
+                  }}>
+                    {opt.badge}
+                  </span>
                 </div>
 
-                {/* Accent bar */}
-                <div style={{
-                  height: 2, borderRadius: 99, marginBottom: 20,
-                  backgroundColor: opt.primary ? 'rgba(255,255,255,0.15)' : 'rgba(201,185,154,0.4)',
-                }} />
-
                 <h3 style={{
-                  fontSize: 24, fontWeight: 800, marginBottom: 6,
+                  fontSize: 22, fontWeight: 800,
                   color: opt.primary ? '#FFFFFF' : '#1A1610',
-                }}>{opt.name}</h3>
+                  marginBottom: 6,
+                }}>
+                  {opt.name}
+                </h3>
                 <p style={{
-                  fontSize: 14, lineHeight: 1.55, marginBottom: 28,
-                  color: opt.primary ? 'rgba(255,255,255,0.6)' : '#6E6455',
-                }}>{opt.sub}</p>
+                  fontSize: 13, lineHeight: 1.5,
+                  color: opt.primary ? '#A89B85' : '#6E6455',
+                  marginBottom: 24,
+                }}>
+                  {opt.sub}
+                </p>
 
-                {/* Features */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 13, marginBottom: 32, flex: 1 }}>
-                  {opt.features.map((feat, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {/* Features list */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginBottom: 32, flex: 1 }}>
+                  {opt.features.map((feat) => (
+                    <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
-                        width: 18, height: 18, borderRadius: 99, flexShrink: 0,
-                        backgroundColor: opt.primary ? 'rgba(255,255,255,0.22)' : '#C9B99A',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 20, height: 20, borderRadius: 99,
+                        backgroundColor: opt.primary ? 'rgba(255,255,255,0.15)' : '#F5F0E8',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
-                        <Check size={11} color="#FFFFFF" />
+                        <Check size={12} color={opt.primary ? '#FFFFFF' : '#1A1610'} />
                       </div>
                       <span style={{
-                        fontSize: 14, fontWeight: 500,
-                        color: opt.primary ? 'rgba(255,255,255,0.85)' : '#1A1610',
-                      }}>{feat}</span>
+                        fontSize: 13, fontWeight: 500,
+                        color: opt.primary ? '#F0EAD6' : '#1A1610',
+                      }}>
+                        {feat}
+                      </span>
                     </div>
                   ))}
                 </div>
 
-                {/* CTA button */}
+                {/* Button */}
                 <button
-                  onClick={() => onOpenModal && onOpenModal(opt.id === 'enterprise' ? 'login' : 'setup')}
-                  className={`liquid-btn ${opt.primary ? 'liquid-btn-secondary' : 'liquid-btn-primary'}`}
+                  onClick={() => onOpenModal ? onOpenModal(opt.id === 'enterprise' ? 'login' : 'setup') : null}
+                  className={`liquid-btn ${opt.primary ? 'liquid-btn-primary' : 'liquid-btn-secondary'}`}
                   style={{
-                    width: '100%', fontSize: 15, padding: '14px 20px', borderRadius: 12,
-                    justifyContent: 'center',
-                    ...(opt.primary
-                      ? { background: '#FFFFFF', color: '#1A1610', border: '1px solid rgba(255,255,255,0.9)', boxShadow: '0 4px 16px rgba(0,0,0,0.25)' }
-                      : {}),
+                    width: '100%',
+                    justify: 'center',
+                    padding: '14px',
+                    borderRadius: 12,
+                    fontSize: 14,
                   }}
                 >
-                  <Icon size={15} color={opt.primary ? '#1A1610' : '#FFFFFF'} />
-                  <span style={{ color: opt.primary ? '#1A1610' : '#FFFFFF', fontWeight: 700 }}>{opt.buttonText}</span>
-                  <ArrowRight size={15} color={opt.primary ? '#1A1610' : '#FFFFFF'} />
+                  <Icon size={16} />
+                  <span>{opt.buttonText}</span>
+                  <ArrowRight size={16} />
                 </button>
               </div>
             );
           })}
         </div>
+
       </div>
     </section>
   );

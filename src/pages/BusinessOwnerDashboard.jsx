@@ -26,7 +26,7 @@ const modulesList = [
   { id: 'reports', title: '13. Simple Business Reports', icon: BarChart3, category: 'Reports' },
   { id: 'notifications', title: '14. Notifications Alert', icon: Bell, category: 'Main Dashboard' },
   { id: 'employees', title: '15. Employee Details', icon: UserCheck, category: 'Team & Staff' },
-  { id: 'user_roles', title: '16. Staff Access & All User DB', icon: Shield, category: 'Team & Staff' },
+  { id: 'user_roles', title: '16. Staff Access & User DB', icon: Shield, category: 'Team & Staff' },
   { id: 'audit_logs', title: '17. Activity History Logs', icon: Clock, category: 'Reports' },
   { id: 'documents', title: '18. Bill Files & Documents', icon: Folder, category: 'Store Operations' },
   { id: 'integrations', title: '19. App Connections', icon: Cpu, category: 'Settings' },
@@ -38,6 +38,8 @@ export default function BusinessOwnerDashboard({
   companyName = 'Metro Superstore Ltd',
   ownerName = 'Business Owner',
   onLogout,
+  onOpenUploadPage,
+  onOpenBillingPage,
 }) {
   const [activeModule, setActiveModule] = useState('overview');
   const [moduleSearch, setModuleSearch] = useState('');
@@ -50,8 +52,6 @@ export default function BusinessOwnerDashboard({
 
   // Modals state
   const [showAddEmpModal, setShowAddEmpModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportGenerated, setReportGenerated] = useState(false);
 
@@ -113,17 +113,17 @@ export default function BusinessOwnerDashboard({
 
   return (
     <div style={{
-      display: 'flex', width: '100%', minHeight: '100vh',
+      display: 'flex', width: '100vw', height: '100vh',
       backgroundColor: '#FAF8F3', color: '#1A1610',
       fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-      position: 'relative',
+      position: 'relative', overflow: 'hidden',
     }}>
-      {/* ── LEFT SIDEBAR NAVIGATION (21 MODULES) ─────────────────── */}
+      {/* ── FIXED LEFT SIDEBAR NAVIGATION (PERFECT FIXED LAYOUT) ──────── */}
       <aside style={{
         width: 280, backgroundColor: '#FFFFFF',
         borderRight: '1px solid rgba(201,185,154,0.4)',
         display: 'flex', flexDirection: 'column',
-        position: 'sticky', top: 0, height: '100vh', zIndex: 50,
+        height: '100vh', flexShrink: 0, zIndex: 50,
       }}>
         {/* Brand Header */}
         <div style={{
@@ -236,14 +236,14 @@ export default function BusinessOwnerDashboard({
         </div>
       </aside>
 
-      {/* ── MAIN CONTENT AREA ────────────────────────────────────── */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, paddingBottom: 80 }}>
+      {/* ── MAIN CONTENT AREA (INDEPENDENTLY SCROLLABLE) ───────────────── */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
         {/* Top Header */}
         <header style={{
           height: 64, padding: '0 28px', backgroundColor: '#FFFFFF',
           borderBottom: '1px solid rgba(201,185,154,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          position: 'sticky', top: 0, zIndex: 40,
+          position: 'sticky', top: 0, zIndex: 40, flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1A1610' }}>
@@ -296,7 +296,7 @@ export default function BusinessOwnerDashboard({
         </header>
 
         {/* Body View Render */}
-        <div style={{ flex: 1, padding: 28, overflowY: 'auto' }}>
+        <div style={{ flex: 1, padding: 28 }}>
           {activeModule === 'overview' && (
             <OverviewModule
               companyName={companyName}
@@ -304,12 +304,12 @@ export default function BusinessOwnerDashboard({
               empList={empList}
               dbUsersList={dbUsersList}
               onOpenAddEmp={() => setShowAddEmpModal(true)}
-              onOpenUpload={() => setShowUploadModal(true)}
-              onOpenCreateInvoice={() => setShowCreateInvoiceModal(true)}
+              onOpenUpload={onOpenUploadPage}
+              onOpenCreateInvoice={onOpenBillingPage}
               onOpenReport={() => setShowReportModal(true)}
             />
           )}
-          {activeModule === 'invoices' && <InvoiceManagementModule onOpenCreateInvoice={() => setShowCreateInvoiceModal(true)} onOpenUpload={() => setShowUploadModal(true)} />}
+          {activeModule === 'invoices' && <InvoiceManagementModule onOpenCreateInvoice={onOpenBillingPage} onOpenUpload={onOpenUploadPage} />}
           {activeModule === 'payments' && <PaymentManagementModule />}
           {activeModule === 'expenses' && <ExpenseManagementModule />}
           {activeModule === 'inventory' && <InventoryManagementModule />}
@@ -500,40 +500,6 @@ export default function BusinessOwnerDashboard({
         </div>
       )}
 
-      {showUploadModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 28, width: 440, maxWidth: '90%', border: '1px solid rgba(201,185,154,0.4)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800 }}>📤 Upload Supplier Invoice</h3>
-              <button onClick={() => setShowUploadModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
-            </div>
-            <div style={{ padding: 24, border: '2px dashed rgba(201,185,154,0.6)', borderRadius: 12, textAlign: 'center', backgroundColor: '#FAF8F3', marginBottom: 16 }}>
-              <Upload size={32} color="#8A7558" style={{ marginBottom: 8 }} />
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1610' }}>Click or Drop Supplier Bill File Here</div>
-              <div style={{ fontSize: 11, color: '#6E6455', marginTop: 4 }}>Supports PDF, JPG, PNG invoices</div>
-            </div>
-            <button onClick={() => { alert("Invoice scanned successfully! AI checked for duplicate prices: 0 Errors found."); setShowUploadModal(false); }} style={{ width: '100%', padding: 12, borderRadius: 8, backgroundColor: '#1A1610', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Scan &amp; Save Bill</button>
-          </div>
-        </div>
-      )}
-
-      {showCreateInvoiceModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 28, width: 460, maxWidth: '90%', border: '1px solid rgba(201,185,154,0.4)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800 }}>🧾 Create Customer Invoice (Billing)</h3>
-              <button onClick={() => setShowCreateInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input type="text" placeholder="Customer Name (e.g. Apex Traders)" style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(201,185,154,0.5)', outline: 'none' }} />
-              <input type="text" placeholder="Item Description (e.g. 50 Packs Grocery Items)" style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(201,185,154,0.5)', outline: 'none' }} />
-              <input type="text" placeholder="Total Amount (₹)" style={{ padding: 10, borderRadius: 8, border: '1px solid rgba(201,185,154,0.5)', outline: 'none' }} />
-              <button onClick={() => { alert("Customer Invoice created & saved in PostgreSQL!"); setShowCreateInvoiceModal(false); }} style={{ width: '100%', padding: 12, borderRadius: 8, backgroundColor: '#1A1610', color: '#FFF', border: 'none', fontWeight: 700, cursor: 'pointer', marginTop: 8 }}>Generate &amp; Print Bill</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {showReportModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 28, width: 440, maxWidth: '90%', border: '1px solid rgba(201,185,154,0.4)', textAlign: 'center' }}>
@@ -561,41 +527,11 @@ export default function BusinessOwnerDashboard({
 }
 
 /* ═════════════════════════════════════════════════════════════════════
-   1. OVERVIEW MODULE
+   1. OVERVIEW MODULE (RESTRUCTURED & BANNER REMOVED ENTIRELY)
    ═════════════════════════════════════════════════════════════════════ */
 function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenAddEmp, onOpenUpload, onOpenCreateInvoice, onOpenReport }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-
-      {/* SYSTEM MAIN ADMIN REGISTRATION BANNER / USER DB INSPECTOR */}
-      <div style={{
-        backgroundColor: '#1A1610', color: '#FFFFFF', borderRadius: 16, padding: 20,
-        border: '1.5px solid #C9B99A', boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#A88660', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-            👑
-          </div>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 8 }}>
-              System Main Admin Panel Connected
-              <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 99, backgroundColor: '#5C705E', color: '#FFF' }}>
-                {dbUsersList.length} Total DB Users
-              </span>
-            </div>
-            <div style={{ fontSize: 12, color: '#C9B99A', marginTop: 2 }}>
-              Logged in as Main System Admin (<code>admin@finguard.ai</code> / password: <code>admin123</code>). You can inspect all user emails and passwords in PostgreSQL DB below!
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={() => onNavigate('user_roles')}
-          style={{ padding: '10px 16px', borderRadius: 10, backgroundColor: '#C9B99A', color: '#1A1610', border: 'none', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
-        >
-          Inspect User Passwords →
-        </button>
-      </div>
 
       {/* ── TOP SECTION: GRAPHS FIRST ────────────────────────────────── */}
       <div>
@@ -1137,19 +1073,19 @@ function EmployeeManagementModule({ empList, onOpenAddEmp }) {
   );
 }
 
-/* 👑 SYSTEM MAIN ADMIN USER DATABASE INSPECTOR MODULE */
+/* SYSTEM USER DATABASE INSPECTOR MODULE (AVAILABLE VIA TAB) */
 function UserRolesModule({ dbUsersList = [] }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ backgroundColor: '#1A1610', color: '#FFFFFF', padding: 20, borderRadius: 16, border: '1.5px solid #C9B99A' }}>
         <div style={{ fontSize: 18, fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span>👑 System Main Admin - Registered Users &amp; Passwords Inspector</span>
+          <span>👑 System Registered Users &amp; Passwords Inspector</span>
           <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, backgroundColor: '#A88660', color: '#FFF' }}>
             {dbUsersList.length} Users Stored in PostgreSQL
           </span>
         </div>
         <p style={{ fontSize: 13, color: '#C9B99A', marginTop: 4 }}>
-          As the System Main Owner, you can view all registered business users, emails, mobile numbers, assigned roles, and passwords stored in PostgreSQL DB.
+          Inspect all registered store users, email addresses, mobile numbers, assigned roles, and passwords stored in PostgreSQL DB.
         </p>
       </div>
 
@@ -1175,7 +1111,7 @@ function AuditLogsModule() {
         headers={['Log ID', 'Timestamp', 'User', 'Action Executed', 'IP Address']}
         rows={[
           ['LOG-8891', '03 Aug 2026, 10:24 AM', 'AI Interceptor', 'Blocked Duplicate Invoice #INV-9021', 'Internal AI'],
-          ['LOG-8890', '03 Aug 2026, 09:15 AM', 'System Main Admin', 'Inspected PostgreSQL User Credentials Table', '192.168.1.1'],
+          ['LOG-8890', '03 Aug 2026, 09:15 AM', 'Business Owner', 'Logged in successfully with PostgreSQL DB', '192.168.1.1'],
         ]}
       />
     </div>
@@ -1230,7 +1166,7 @@ function ProfileModule({ ownerName, companyName, dbUsersList = [] }) {
     <div style={{ backgroundColor: '#FFF', padding: 24, borderRadius: 16, border: '1px solid rgba(201,185,154,0.4)', display: 'flex', flexDirection: 'column', gap: 12 }}>
       <h3 style={{ fontSize: 18, fontWeight: 800 }}>👑 {ownerName}</h3>
       <div style={{ fontSize: 13, color: '#6E6455' }}>Company: <strong>{companyName}</strong></div>
-      <div style={{ fontSize: 13, color: '#6E6455' }}>Role: System Main Admin (Super Owner Control)</div>
+      <div style={{ fontSize: 13, color: '#6E6455' }}>Role: Business Owner</div>
       <div style={{ fontSize: 13, color: '#5C705E', fontWeight: 700, marginTop: 8 }}>✓ PostgreSQL Database Connected ({dbUsersList.length} total users managed)</div>
     </div>
   );

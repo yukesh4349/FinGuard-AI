@@ -4,40 +4,40 @@ import useScrollReveal from '../utils/useScrollReveal';
 
 const featuresList = [
   {
-    id: 1, icon: ScanText, title: 'Smart OCR Invoice & Auto-Reconciliation',
-    category: 'Invoice Service', tag: 'OCR Engine',
-    desc: 'Extract line items, GSTIN numbers, supplier names, and totals from physical or digital receipts with high precision.',
-    details: 'Automates matching with bank records and schedules due payment notifications.',
+    id: 1, icon: ScanText, title: 'Instant Bill Photo & Receipt Scanner',
+    category: 'Invoice Service', tag: 'Bill Reader',
+    desc: 'Extract line items, GST numbers, supplier names, and total amounts from bill photos with high precision.',
+    details: 'Automates matching with store records and alerts upcoming bill due dates.',
   },
   {
-    id: 2, icon: ShieldAlert, title: 'AI Anomaly & Fraud Detection Shield',
-    category: 'Security Service', tag: 'Risk Governance',
-    desc: 'Real-time rule engine & ML anomaly detection to instantly flag duplicate bills, unauthorized claims, or vendor price inflation.',
-    details: 'Blocks unverified disbursements before payments are dispatched.',
+    id: 2, icon: ShieldAlert, title: 'AI Fake Bill & Overcharge Protection',
+    category: 'Security Service', tag: 'Fake Bill Shield',
+    desc: 'Real-time AI security to instantly block duplicate invoices, wrong bills, or supplier price overcharging.',
+    details: 'Blocks fake bill payments before money leaves your account.',
   },
   {
-    id: 3, icon: TrendingUp, title: 'AI Demand & Stock Forecasting',
-    category: 'Stock Service', tag: 'Predictive AI',
-    desc: 'Predict inventory requirements based on historical order cadence, seasonal patterns, and supplier delivery windows.',
-    details: 'Automates reorder recommendations to maintain continuous stock availability.',
+    id: 3, icon: TrendingUp, title: 'AI Demand & Stock Low Warnings',
+    category: 'Stock Service', tag: 'Stock Alert',
+    desc: 'Predict stock needs based on sales history so your retail shop never runs out of popular items.',
+    details: 'Automates reorder recommendations to keep healthy stock levels.',
   },
   {
-    id: 4, icon: ShoppingBag, title: 'Vendor Cost Matching & PO Automation',
-    category: 'Purchase Service', tag: 'Cost Management',
-    desc: 'Compare wholesale component prices across registered suppliers to ensure competitive procurement rates.',
-    details: 'Dispatches automated Purchase Orders directly to approved vendors.',
+    id: 4, icon: ShoppingBag, title: 'Supplier Price Comparison & Buying Orders',
+    category: 'Purchase Service', tag: 'Cost Saver',
+    desc: 'Compare wholesale item prices across registered suppliers to ensure you buy at the lowest market rate.',
+    details: 'Dispatches automated buying orders directly to approved suppliers.',
   },
   {
-    id: 5, icon: Bot, title: 'Gemini LLM Business Advisory',
-    category: 'AI Advisory Service', tag: 'Google Gemini AI',
-    desc: 'Inquire in natural language regarding cash flow trajectories, tax strategies, and capital allocation recommendations.',
-    details: 'Context-aware intelligence trained on real-time enterprise ledger data.',
+    id: 5, icon: Bot, title: '24/7 AI Chatbot Business Helper',
+    category: 'AI Advisory Service', tag: 'AI Assistant',
+    desc: 'Ask questions in simple English about your store profits, sales, GST taxes, and cash flow trajectory.',
+    details: 'Always active to answer questions and give smart store tips.',
   },
   {
-    id: 6, icon: FileText, title: 'Automated GST Compliance & Reporting',
-    category: 'Compliance Service', tag: 'Multi-Channel Alert',
-    desc: 'Generate GSTR-1 and GSTR-3B tax audit summaries with multi-channel WhatsApp, Email, and SMS alert dispatch.',
-    details: 'Export structured audit ledgers and P&L statements to PDF or Excel formats.',
+    id: 6, icon: FileText, title: 'Automated GST Tax Filing & Simple Reports',
+    category: 'Compliance Service', tag: 'GST Filing',
+    desc: 'Generate GSTR-1 and GSTR-3B tax audit summaries with automatic WhatsApp and SMS alerts.',
+    details: 'Download simple profit & loss statements to PDF or Excel formats.',
   },
 ];
 
@@ -134,16 +134,16 @@ export default function FeaturesGrid() {
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 60 }}>
           <div className="mono-badge" style={{ marginBottom: 16, display: 'inline-flex' }}>
             <Zap size={13} color="#9C8A6E" />
-            MICROSERVICE FINANCIAL PLATFORM
+            EASY SHOP FINANCIAL APP
           </div>
           <h2 style={{
             color: '#1A1610', fontSize: 'clamp(28px, 4vw, 40px)',
             fontWeight: 800, letterSpacing: '-0.8px', marginBottom: 14,
           }}>
-            Core Financial Management Capabilities
+            Main Shop Management Features
           </h2>
           <p style={{ color: '#6E6455', fontSize: 16, lineHeight: 1.65, maxWidth: 600, margin: '0 auto 16px' }}>
-            Designed for modern enterprises to streamline ledger operations, improve cost management, and safeguard liquidity.
+            Designed for business owners to easily manage bills, cut costs, and protect store profits in simple English.
           </p>
           {/* animated underline */}
           <div style={{ width: 80, height: 2, background: 'linear-gradient(90deg, transparent, #C9B99A, transparent)', borderRadius: 99, margin: '0 auto' }} />

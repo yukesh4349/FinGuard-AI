@@ -175,7 +175,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
             backgroundColor: '#0F0D0A',
           }}>
             <img
-              src="/assets/finguard_login_banner.png"
+              src="/assets/normal_shop_owner.png"
               alt="FinGuard AI Easy Business Protection"
               style={{
                 width: '100%', height: 260, objectFit: 'cover', display: 'block',

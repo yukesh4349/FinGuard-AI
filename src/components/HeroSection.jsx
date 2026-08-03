@@ -55,7 +55,7 @@ export default function HeroSection({ onOpenModal }) {
           {/* Mono pill badge */}
           <div className="reveal mono-badge" style={{ marginBottom: 22, display: 'inline-flex' }}>
             <Sparkles size={13} color="#6E5D44" />
-            FINANCIAL OPERATING SYSTEM // GEMINI AI
+            SIMPLE MONEY &amp; BILL MANAGEMENT // AI ASSISTANT
           </div>
 
           {/* Headline */}
@@ -70,8 +70,8 @@ export default function HeroSection({ onOpenModal }) {
               marginBottom: 18,
             }}
           >
-            Smart Financial Management<br />
-            &amp; AI Intelligence for{' '}
+            Smart Shop Management<br />
+            &amp; AI Protection for{' '}
             <span style={{ color: '#8A7558' }}>Your Business</span>
           </h1>
 
@@ -87,9 +87,8 @@ export default function HeroSection({ onOpenModal }) {
               maxWidth: 540,
             }}
           >
-            Unified financial platform integrating instant OCR invoice scanning,
-            real-time GST compliance, AI fraud governance, and 24/7 Gemini
-            business advisory.
+            All-in-one shop money app featuring instant bill photo scanning,
+            simple GST tax reports, fake bill warnings, and 24/7 AI chat assistance.
           </p>
 
           {/* Checklist */}
@@ -97,7 +96,7 @@ export default function HeroSection({ onOpenModal }) {
             className="reveal reveal-delay-3"
             style={{ display: 'flex', flexWrap: 'wrap', gap: 18, marginBottom: 36 }}
           >
-            {['Instant OCR Parsing', 'AI Fraud Governance', 'GST Compliance Automation'].map((item) => (
+            {['Instant Bill Scanner', 'Fake Bill Interceptor', 'Easy GST Tax Filing'].map((item) => (
               <span key={item} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#1A1610' }}>
                 <CheckCircle2 size={15} color="#1A1610" />
                 {item}
@@ -143,9 +142,9 @@ export default function HeroSection({ onOpenModal }) {
             }}
           >
             {[
-              { icon: Lock, label: 'Encrypted Ledger' },
-              { icon: ShieldCheck, label: 'Role-Based Permissions' },
-              { icon: Layers, label: 'Kafka Event Stream' },
+              { icon: Lock, label: 'Secure Accounts' },
+              { icon: ShieldCheck, label: 'Easy Staff Access' },
+              { icon: Layers, label: 'Instant Bill Sync' },
             ].map(({ icon: Icon, label }, i) => (
               <React.Fragment key={label}>
                 {i > 0 && <span style={{ width: 1, height: 14, backgroundColor: 'rgba(201,185,154,0.4)', display: 'block' }} />}
@@ -192,16 +191,16 @@ export default function HeroSection({ onOpenModal }) {
             <div style={{ width: '100%', height: '100%', padding: 20, position: 'relative', overflow: 'hidden' }}>
               {/* Top bar */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <span style={{ color: '#C9B99A', fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.06em' }}>FINGUARD DASHBOARD — Q2 2024</span>
+                <span style={{ color: '#C9B99A', fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.06em' }}>FINGUARD DASHBOARD — LIVE</span>
                 <span style={{ background: 'rgba(74,222,128,0.15)', color: '#4ade80', fontSize: 10, padding: '3px 10px', borderRadius: 99, fontWeight: 700, border: '1px solid rgba(74,222,128,0.3)' }}>● LIVE</span>
               </div>
 
               {/* Stat row */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
                 {[
-                  { label: 'Cash Flow', val: '$64,230', change: '+24%', up: true },
+                  { label: 'Cash Flow', val: '₹ 64,230', change: '+24%', up: true },
                   { label: 'Invoices', val: '1,284', change: '+8%', up: true },
-                  { label: 'Fraud Blocked', val: '$1,480', change: '3 alerts', up: false },
+                  { label: 'Fraud Blocked', val: '₹ 1,480', change: '3 alerts', up: false },
                 ].map((s) => (
                   <div key={s.label} style={{
                     background: 'rgba(255,255,255,0.06)',
@@ -233,7 +232,7 @@ export default function HeroSection({ onOpenModal }) {
 
               {/* Bottom tags */}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {['OCR Engine', 'GST Auto-Filed', 'Gemini AI', 'RBAC Active'].map((t) => (
+                {['Bill Reader', 'GST Tax Auto', 'AI Chatbot', 'Staff Access'].map((t) => (
                   <span key={t} style={{ background: 'rgba(201,185,154,0.12)', color: '#C9B99A', fontSize: 9, padding: '3px 8px', borderRadius: 6, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', border: '1px solid rgba(201,185,154,0.2)' }}>{t}</span>
                 ))}
               </div>
@@ -248,7 +247,7 @@ export default function HeroSection({ onOpenModal }) {
             </div>
           </div>
 
-          {/* Floating badge 1 — AI Risk Governance */}
+          {/* Floating badge 1 — AI Protection */}
           <div
             className="glass-badge anim-float"
             style={{
@@ -268,13 +267,13 @@ export default function HeroSection({ onOpenModal }) {
               <ShieldCheck size={15} color="#1A1610" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ color: '#1A1610', fontSize: 12, fontWeight: 700 }}>AI Risk Governance</div>
-              <div style={{ color: '#6E6455', fontSize: 11, marginTop: 1, fontWeight: 500 }}>Real-time audit active. Ledger clear.</div>
+              <div style={{ color: '#1A1610', fontSize: 12, fontWeight: 700 }}>AI Bill Protection</div>
+              <div style={{ color: '#6E6455', fontSize: 11, marginTop: 1, fontWeight: 500 }}>Fake bill interceptor active.</div>
             </div>
             <div style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ade80', flexShrink: 0 }} />
           </div>
 
-          {/* Floating badge 2 — Gemini AI Advisory */}
+          {/* Floating badge 2 — AI Helper Chat */}
           <div
             className="glass-badge anim-float3"
             style={{
@@ -294,8 +293,8 @@ export default function HeroSection({ onOpenModal }) {
               <Bot size={15} color="#6E5D44" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ color: '#1A1610', fontSize: 12, fontWeight: 700 }}>Gemini AI Advisory</div>
-              <div style={{ color: '#6E6455', fontSize: 11, marginTop: 1, fontWeight: 500 }}>Business advisory live.</div>
+              <div style={{ color: '#1A1610', fontSize: 12, fontWeight: 700 }}>AI Business Helper</div>
+              <div style={{ color: '#6E6455', fontSize: 11, marginTop: 1, fontWeight: 500 }}>24/7 AI chat active.</div>
             </div>
           </div>
 

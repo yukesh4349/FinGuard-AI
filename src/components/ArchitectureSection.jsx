@@ -3,25 +3,25 @@ import { Layers, Database, Shield, Zap, Server, Cpu, MessageSquare, Lock, Activi
 import useScrollReveal from '../utils/useScrollReveal';
 
 const microservices = [
-  { name: 'User & Role Service', desc: 'RBAC Policy & Department Mapping', icon: Lock },
-  { name: 'Invoice & Payment Service', desc: 'OCR Processing & Due Date Tracking', icon: Server },
-  { name: 'Transaction Service', desc: 'Real-Time Ledger & Auto-Reconciliation', icon: Activity },
-  { name: 'Inventory & Stock Service', desc: 'Demand Forecasting & Reorder Alerts', icon: Layers },
-  { name: 'AI Prediction Service', desc: 'Backend ML Forecasting Engine', icon: Cpu },
-  { name: 'Vendor Management Service', desc: 'Low-Cost Supplier Price Matcher', icon: Server },
-  { name: 'Purchase Management Service', desc: 'Automated PO Dispatch Workflow', icon: Server },
-  { name: 'Fraud Detection Service', desc: 'AI Anomaly & Rule Engine Shield', icon: Shield },
-  { name: 'Compliance Service', desc: 'GST Reports & Tax Audit Schedules', icon: Server },
-  { name: 'AI Advisor (Gemini LLM)', desc: 'Natural Language Advisory Engine', icon: Cpu },
-  { name: 'Notification Service', desc: 'WhatsApp, SMS & Email Alerts', icon: MessageSquare },
-  { name: 'Audit Log Service', desc: 'Immutable User Activity Logs', icon: Database },
+  { name: 'User & Staff Service', desc: 'Easy Permissions & Staff Roles', icon: Lock },
+  { name: 'Invoice & Payment Service', desc: 'Bill Reader & Due Date Tracking', icon: Server },
+  { name: 'Transaction Service', desc: 'Real-Time Money Ledger', icon: Activity },
+  { name: 'Inventory & Stock Service', desc: 'Stock Alerts & Low Item Warning', icon: Layers },
+  { name: 'AI Forecast Service', desc: 'Smart Sales & Profit Forecasting', icon: Cpu },
+  { name: 'Vendor Management Service', desc: 'Lowest Price Supplier Matcher', icon: Server },
+  { name: 'Purchase Orders Service', desc: 'Easy Buying Order Manager', icon: Server },
+  { name: 'Fraud Shield Service', desc: 'Fake & Duplicate Bill Blocker', icon: Shield },
+  { name: 'GST Tax Service', desc: 'Simple GST Filing Reports', icon: Server },
+  { name: 'AI Chatbot Helper', desc: 'Simple English Business Helper', icon: Cpu },
+  { name: 'Notification Service', desc: 'WhatsApp & SMS Alerts', icon: MessageSquare },
+  { name: 'Audit Log Service', desc: 'History of Store Activity', icon: Database },
 ];
 
 const storageItems = [
-  { icon: Database, color: '#5C705E', name: 'Amazon DynamoDB', desc: 'Encrypted at rest: Users, Invoices, Stock' },
-  { icon: Server, color: '#A88660', name: 'Amazon S3 & RDS', desc: 'Receipt Attachments & Relational Ledgers' },
-  { icon: Zap, color: '#C88D74', name: 'Redis Cache', desc: 'High-Speed Session & Query Caching' },
-  { icon: Shield, color: '#38332E', name: 'IAM Security & Backup', desc: 'Automated Recovery & Secret Management' },
+  { icon: Database, color: '#5C705E', name: 'PostgreSQL Database', desc: 'Stores Users, Bills, & Stock safely' },
+  { icon: Server, color: '#A88660', name: 'Cloud File Vault', desc: 'Stores Scanned Bills & Receipts' },
+  { icon: Zap, color: '#C88D74', name: 'Fast Memory Cache', desc: 'Instant Search & High Speed' },
+  { icon: Shield, color: '#38332E', name: 'Automatic Backups', desc: 'Daily Backup & Safe Security' },
 ];
 
 export default function ArchitectureSection() {
@@ -43,16 +43,16 @@ export default function ArchitectureSection() {
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 48 }}>
           <div className="mono-badge" style={{ marginBottom: 14, display: 'inline-flex' }}>
             <Server size={14} color="#A88660" />
-            Microservice Architecture
+            Simple App Structure
           </div>
           <h2 style={{
             color: '#1E1B18', fontSize: 'clamp(26px, 3.5vw, 38px)',
             fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 12,
           }}>
-            High-Level Enterprise Architecture
+            How FinGuard AI Works
           </h2>
           <p style={{ color: '#6E675F', fontSize: 16, lineHeight: 1.6, maxWidth: 640, margin: '0 auto' }}>
-            Architected for high availability, event-driven streaming via Apache Kafka, and encrypted DynamoDB persistence.
+            Built with instant real-time data sync, secure PostgreSQL database, and 24/7 AI chat protection.
           </p>
         </div>
 
@@ -75,14 +75,14 @@ export default function ArchitectureSection() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
               <Zap size={18} color="#A88660" />
-              <span style={{ color: '#1E1B18', fontSize: 18, fontWeight: 800 }}>API Gateway (FastAPI Engine)</span>
+              <span style={{ color: '#1E1B18', fontSize: 18, fontWeight: 800 }}>FinGuard AI Core Gateway</span>
             </div>
             <p style={{ color: '#4A443E', fontSize: 13, margin: 0 }}>
-              Routing • Load Balancing • OAuth2 JWT Security • Rate Limiting • SSL Encryption
+              Fast Routing • Password Security • Encrypted Data • Anti-Fraud Protection
             </p>
           </div>
 
-          {/* Kafka bar */}
+          {/* Real-time bar */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             padding: 12, borderRadius: 12,
@@ -91,7 +91,7 @@ export default function ArchitectureSection() {
           }}>
             <Activity size={16} color="#5C705E" />
             <span style={{ color: '#5C705E', fontSize: 14, fontWeight: 700 }}>
-              Apache Kafka Real-Time Event Streaming &amp; Message Queue
+              Real-Time Instant Data Sync &amp; Automatic Alerts
             </span>
           </div>
 
