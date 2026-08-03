@@ -23,7 +23,7 @@ const coreModules = [
   { id: 'ocr', title: 'OCR Invoice Scanning', desc: 'Extract line items & GST automatically', icon: FileText },
   { id: 'fraud', title: 'AI Fraud & Anomaly Shield', desc: 'Screen duplicate bills & price inflation', icon: Shield },
   { id: 'stock', title: 'Demand & Stock Predictor', desc: 'Forecast reorders & supplier Lead time', icon: Layers },
-  { id: 'gemini', title: 'Gemini 24/7 AI Advisor', desc: 'Natural language cash flow advisory', icon: Bot },
+  { id: 'gemini', title: 'FinGuard 24/7 AI Advisor', desc: 'Natural language cash flow advisory', icon: Bot },
 ];
 
 export default function SetupModal({ isOpen, onClose }) {
@@ -67,7 +67,7 @@ export default function SetupModal({ isOpen, onClose }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
-      backgroundColor: 'rgba(26, 22, 16, 0.65)',
+      backgroundColor: 'rgba(15, 23, 42, 0.72)',
       backdropFilter: 'blur(10px)',
       WebkitBackdropFilter: 'blur(10px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -79,8 +79,8 @@ export default function SetupModal({ isOpen, onClose }) {
         maxHeight: '90vh', overflowY: 'auto',
         backgroundColor: '#FFFFFF',
         borderRadius: 24,
-        border: '1px solid rgba(201,185,154,0.4)',
-        boxShadow: '0 24px 60px rgba(26,22,16,0.22)',
+        border: '1px solid rgba(13,148,136,0.3)',
+        boxShadow: '0 24px 60px rgba(15,23,42,0.22)',
         padding: 36,
         position: 'relative',
       }}>
@@ -90,13 +90,13 @@ export default function SetupModal({ isOpen, onClose }) {
           style={{
             position: 'absolute', top: 20, right: 20,
             width: 36, height: 36, borderRadius: 18,
-            backgroundColor: '#F5F0E8', border: '1px solid rgba(201,185,154,0.3)',
+            backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: '#1A1610',
+            cursor: 'pointer', color: '#0F172A',
             transition: 'background 0.2s ease',
           }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#EDE4D5'}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#CCFBF1'}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F0FDFA'}
         >
           <X size={18} />
         </button>
@@ -105,39 +105,39 @@ export default function SetupModal({ isOpen, onClose }) {
           <div style={{ textAlign: 'center', padding: '20px 10px' }}>
             <div style={{
               width: 64, height: 64, borderRadius: 32,
-              backgroundColor: 'rgba(74,222,128,0.15)', border: '2px solid #4ade80',
+              backgroundColor: '#f0fdf4', border: '2px solid #bbf7d0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 20px',
             }}>
               <CheckCircle2 size={36} color="#16a34a" />
             </div>
-            <h2 style={{ fontSize: 26, fontWeight: 800, color: '#1A1610', marginBottom: 8 }}>
+            <h2 style={{ fontSize: 26, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
               FinGuard Workspace Created!
             </h2>
-            <p style={{ color: '#6E6455', fontSize: 15, lineHeight: 1.6, maxWidth: 460, margin: '0 auto 24px' }}>
+            <p style={{ color: '#475569', fontSize: 15, lineHeight: 1.6, maxWidth: 460, margin: '0 auto 24px' }}>
               Your financial operating system for <strong>{companyName || 'Your Business'}</strong> is provisioned at <strong>{subdomain || 'workspace'}.finguard.ai</strong>
             </p>
 
             <div style={{
-              backgroundColor: '#FAF8F3', borderRadius: 16, padding: 20,
-              border: '1px solid rgba(201,185,154,0.4)', textAlign: 'left',
+              backgroundColor: '#F8FAFC', borderRadius: 16, padding: 20,
+              border: '1px solid rgba(13,148,136,0.3)', textAlign: 'left',
               marginBottom: 28, display: 'flex', flexDirection: 'column', gap: 10,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                <span style={{ color: '#6E6455' }}>Industry:</span>
-                <strong style={{ color: '#1A1610' }}>{industry}</strong>
+                <span style={{ color: '#475569' }}>Industry:</span>
+                <strong style={{ color: '#0F172A' }}>{industry}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                <span style={{ color: '#6E6455' }}>Team Size:</span>
-                <strong style={{ color: '#1A1610' }}>{employees} Employees</strong>
+                <span style={{ color: '#475569' }}>Team Size:</span>
+                <strong style={{ color: '#0F172A' }}>{employees} Employees</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                <span style={{ color: '#6E6455' }}>Monthly Invoices:</span>
-                <strong style={{ color: '#1A1610' }}>~{monthlyInvoices} Docs / mo</strong>
+                <span style={{ color: '#475569' }}>Monthly Invoices:</span>
+                <strong style={{ color: '#0F172A' }}>~{monthlyInvoices} Docs / mo</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                <span style={{ color: '#6E6455' }}>Active Modules:</span>
-                <strong style={{ color: '#8A7558' }}>{selectedModules.length} Microservices Ready</strong>
+                <span style={{ color: '#475569' }}>Active Modules:</span>
+                <strong style={{ color: '#0D9488' }}>{selectedModules.length} Microservices Ready</strong>
               </div>
             </div>
 
@@ -155,13 +155,13 @@ export default function SetupModal({ isOpen, onClose }) {
             {/* Header & Steps Indicator */}
             <div style={{ marginBottom: 28 }}>
               <div className="mono-badge" style={{ marginBottom: 10, display: 'inline-flex' }}>
-                <Sparkles size={13} color="#6E5D44" />
+                <Sparkles size={13} color="#0D9488" />
                 SYSTEM SETUP WIZARD // STEP {step} OF 2
               </div>
-              <h2 style={{ fontSize: 24, fontWeight: 800, color: '#1A1610', marginBottom: 4 }}>
+              <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
                 {step === 1 ? 'Set Up FinGuard for Your Business' : 'Configure Essential Financial Parameters'}
               </h2>
-              <p style={{ color: '#6E6455', fontSize: 14 }}>
+              <p style={{ color: '#475569', fontSize: 14 }}>
                 {step === 1 ? 'Enter general enterprise details to provision your dedicated workspace.' : 'Tailor OCR scanning, fraud screening, and team roles for your store.'}
               </p>
             </div>
@@ -169,10 +169,10 @@ export default function SetupModal({ isOpen, onClose }) {
             {/* Step 1: General Details */}
             {step === 1 && (
               <form onSubmit={(e) => { e.preventDefault(); setStep(2); }} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {/* 2x2 Grid Inputs: Row 1 Email & Mobile; Row 2 Company Name & Industry */}
+                {/* 2x2 Grid Inputs */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#1A1610', marginBottom: 4 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>
                       Business Email *
                     </label>
                     <input
@@ -183,13 +183,13 @@ export default function SetupModal({ isOpen, onClose }) {
                       onChange={e => setEmail(e.target.value)}
                       style={{
                         width: '100%', padding: '10px 14px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FAF8F3',
-                        fontSize: 13, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
+                        border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                        fontSize: 13, color: '#0F172A', outline: 'none', fontFamily: 'inherit',
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#1A1610', marginBottom: 4 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>
                       Mobile / WhatsApp Number *
                     </label>
                     <input
@@ -200,8 +200,8 @@ export default function SetupModal({ isOpen, onClose }) {
                       onChange={e => setPhone(e.target.value)}
                       style={{
                         width: '100%', padding: '10px 14px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FAF8F3',
-                        fontSize: 13, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
+                        border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                        fontSize: 13, color: '#0F172A', outline: 'none', fontFamily: 'inherit',
                       }}
                     />
                   </div>
@@ -209,7 +209,7 @@ export default function SetupModal({ isOpen, onClose }) {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#1A1610', marginBottom: 4 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>
                       Company / Store Name *
                     </label>
                     <input
@@ -223,14 +223,14 @@ export default function SetupModal({ isOpen, onClose }) {
                       }}
                       style={{
                         width: '100%', padding: '10px 14px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FAF8F3',
-                        fontSize: 13, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
+                        border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                        fontSize: 13, color: '#0F172A', outline: 'none', fontFamily: 'inherit',
                       }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#1A1610', marginBottom: 4 }}>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>
                       Industry / Business Type
                     </label>
                     <select
@@ -238,8 +238,8 @@ export default function SetupModal({ isOpen, onClose }) {
                       onChange={e => setIndustry(e.target.value)}
                       style={{
                         width: '100%', padding: '10px 14px', borderRadius: 10,
-                        border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FAF8F3',
-                        fontSize: 13, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
+                        border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                        fontSize: 13, color: '#0F172A', outline: 'none', fontFamily: 'inherit',
                       }}
                     >
                       {businessTypes.map(t => (
@@ -250,7 +250,7 @@ export default function SetupModal({ isOpen, onClose }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
                     Number of Employees / Team Members
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
@@ -263,9 +263,9 @@ export default function SetupModal({ isOpen, onClose }) {
                           onClick={() => setEmployees(r.label)}
                           style={{
                             padding: '8px 6px', borderRadius: 8,
-                            backgroundColor: selected ? '#1A1610' : '#FAF8F3',
-                            border: `1px solid ${selected ? '#1A1610' : 'rgba(201,185,154,0.4)'}`,
-                            color: selected ? '#FFFFFF' : '#1A1610',
+                            backgroundColor: selected ? '#0F172A' : '#F8FAFC',
+                            border: `1px solid ${selected ? '#0F172A' : 'rgba(13,148,136,0.3)'}`,
+                            color: selected ? '#FFFFFF' : '#0F172A',
                             textAlign: 'center', cursor: 'pointer', fontFamily: 'inherit',
                             transition: 'all 0.2s ease',
                           }}
@@ -294,21 +294,21 @@ export default function SetupModal({ isOpen, onClose }) {
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <label style={{ fontSize: 13, fontWeight: 700, color: '#1A1610' }}>
-                      Estimated Monthly Invoices & Receipts
+                    <label style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>
+                      Estimated Monthly Invoices &amp; Receipts
                     </label>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: '#8A7558' }}>{monthlyInvoices} Docs / mo</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: '#0D9488' }}>{monthlyInvoices} Docs / mo</span>
                   </div>
                   <input
                     type="range" min="20" max="1500" step="10"
                     value={monthlyInvoices}
                     onChange={e => setMonthlyInvoices(Number(e.target.value))}
-                    style={{ width: '100%', accentColor: '#1A1610', cursor: 'pointer', height: 8, borderRadius: 4 }}
+                    style={{ width: '100%', accentColor: '#0D9488', cursor: 'pointer', height: 8, borderRadius: 4 }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 10 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 10 }}>
                     Select Core Microservice Modules
                   </label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -321,23 +321,23 @@ export default function SetupModal({ isOpen, onClose }) {
                           onClick={() => toggleModule(m.id)}
                           style={{
                             padding: 14, borderRadius: 12, cursor: 'pointer',
-                            backgroundColor: active ? '#FAF8F3' : '#FFFFFF',
-                            border: `1px solid ${active ? '#1A1610' : 'rgba(201,185,154,0.4)'}`,
+                            backgroundColor: active ? '#F0FDFA' : '#FFFFFF',
+                            border: `1px solid ${active ? '#0D9488' : 'rgba(13,148,136,0.3)'}`,
                             display: 'flex', alignItems: 'flex-start', gap: 10,
                             transition: 'all 0.2s ease',
                           }}
                         >
                           <div style={{
                             width: 20, height: 20, borderRadius: 6,
-                            backgroundColor: active ? '#1A1610' : 'rgba(201,185,154,0.2)',
+                            backgroundColor: active ? '#0D9488' : 'rgba(13,148,136,0.2)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             flexShrink: 0, marginTop: 2,
                           }}>
                             {active && <Check size={13} color="#FFFFFF" />}
                           </div>
                           <div>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: '#1A1610' }}>{m.title}</div>
-                            <div style={{ fontSize: 11, color: '#6E6455', marginTop: 2 }}>{m.desc}</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A' }}>{m.title}</div>
+                            <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{m.desc}</div>
                           </div>
                         </div>
                       );
@@ -346,10 +346,10 @@ export default function SetupModal({ isOpen, onClose }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
                     FinGuard Subdomain URL
                   </label>
-                  <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.5)', borderRadius: 10, padding: '0 14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#F8FAFC', border: '1px solid rgba(13,148,136,0.3)', borderRadius: 10, padding: '0 14px' }}>
                     <input
                       type="text"
                       value={subdomain}
@@ -357,10 +357,10 @@ export default function SetupModal({ isOpen, onClose }) {
                       placeholder="workspace"
                       style={{
                         flex: 1, border: 'none', backgroundColor: 'transparent', padding: '12px 0',
-                        fontSize: 14, fontWeight: 700, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
+                        fontSize: 14, fontWeight: 700, color: '#0F172A', outline: 'none', fontFamily: 'inherit',
                       }}
                     />
-                    <span style={{ fontSize: 13, color: '#6E5D44', fontWeight: 600 }}>.finguard.ai</span>
+                    <span style={{ fontSize: 13, color: '#0D9488', fontWeight: 600 }}>.finguard.ai</span>
                   </div>
                 </div>
 
@@ -370,8 +370,8 @@ export default function SetupModal({ isOpen, onClose }) {
                     onClick={() => setStep(1)}
                     style={{
                       padding: '14px 20px', borderRadius: 12,
-                      backgroundColor: '#F5F0E8', border: '1px solid rgba(201,185,154,0.4)',
-                      color: '#1A1610', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                      backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+                      color: '#0D9488', fontSize: 14, fontWeight: 700, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', gap: 6,
                     }}
                   >

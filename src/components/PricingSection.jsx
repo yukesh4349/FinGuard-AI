@@ -47,7 +47,7 @@ export default function PricingSection({ onOpenModal }) {
       id="pricing"
       style={{
         padding: '96px 40px',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#F8FAFC',
       }}
     >
       <div style={{ maxWidth: 1360, margin: '0 auto' }}>
@@ -55,16 +55,16 @@ export default function PricingSection({ onOpenModal }) {
         {/* Header */}
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 56 }}>
           <div className="mono-badge" style={{ marginBottom: 14, display: 'inline-flex' }}>
-            <Zap size={13} color="#9C8A6E" />
+            <Zap size={13} color="#0D9488" />
             GET STARTED IN MINUTES
           </div>
           <h2 style={{
-            color: '#1A1610', fontSize: 'clamp(28px, 4vw, 40px)',
+            color: '#0F172A', fontSize: 'clamp(28px, 4vw, 40px)',
             fontWeight: 800, letterSpacing: '-0.8px', marginBottom: 12,
           }}>
             Set Up FinGuard for Your Business
           </h2>
-          <p style={{ color: '#6E6455', fontSize: 16, lineHeight: 1.65, maxWidth: 580, margin: '0 auto' }}>
+          <p style={{ color: '#475569', fontSize: 16, lineHeight: 1.65, maxWidth: 580, margin: '0 auto' }}>
             Create a new account for your store or log in directly to your existing team workspace.
           </p>
         </div>
@@ -82,9 +82,9 @@ export default function PricingSection({ onOpenModal }) {
                   maxWidth: 540,
                   padding: 36,
                   borderRadius: 22,
-                  background: opt.primary ? '#1A1610' : '#FAF8F3',
-                  border: `1px solid ${opt.primary ? '#1A1610' : 'rgba(26,22,16,0.07)'}`,
-                  boxShadow: opt.primary ? '0 20px 50px rgba(26,22,16,0.20)' : '0 4px 20px rgba(26,22,16,0.04)',
+                  background: opt.primary ? '#0F172A' : '#FFFFFF',
+                  border: `1px solid ${opt.primary ? '#0F172A' : 'rgba(13,148,136,0.2)'}`,
+                  boxShadow: opt.primary ? '0 20px 50px rgba(15,23,42,0.20)' : '0 4px 20px rgba(13,148,136,0.06)',
                   display: 'flex',
                   flexDirection: 'column',
                   transition: 'transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s ease',
@@ -95,13 +95,13 @@ export default function PricingSection({ onOpenModal }) {
                   display: 'inline-flex', alignItems: 'center', gap: 5,
                   padding: '4px 12px', borderRadius: 99, alignSelf: 'flex-start',
                   marginBottom: 16,
-                  backgroundColor: opt.primary ? 'rgba(255,255,255,0.12)' : '#F5F0E8',
-                  border: `1px solid ${opt.primary ? 'rgba(255,255,255,0.2)' : 'rgba(201,185,154,0.4)'}`,
+                  backgroundColor: opt.primary ? 'rgba(13,148,136,0.2)' : '#F0FDFA',
+                  border: `1px solid ${opt.primary ? 'rgba(13,148,136,0.4)' : 'rgba(13,148,136,0.3)'}`,
                 }}>
-                  <Sparkles size={11} color={opt.primary ? '#C9B99A' : '#6E5D44'} />
+                  <Sparkles size={11} color={opt.primary ? '#CCFBF1' : '#0D9488'} />
                   <span style={{
-                    color: opt.primary ? '#C9B99A' : '#6E5D44',
-                    fontSize: 10, fontWeight: 700, fontFamily: 'monospace',
+                    color: opt.primary ? '#CCFBF1' : '#0D9488',
+                    fontSize: 10, fontWeight: 800, fontFamily: 'monospace',
                     letterSpacing: '0.08em',
                   }}>
                     {opt.badge}
@@ -110,14 +110,14 @@ export default function PricingSection({ onOpenModal }) {
 
                 <h3 style={{
                   fontSize: 22, fontWeight: 800,
-                  color: opt.primary ? '#FFFFFF' : '#1A1610',
+                  color: opt.primary ? '#FFFFFF' : '#0F172A',
                   marginBottom: 6,
                 }}>
                   {opt.name}
                 </h3>
                 <p style={{
                   fontSize: 13, lineHeight: 1.5,
-                  color: opt.primary ? '#A89B85' : '#6E6455',
+                  color: opt.primary ? '#94A3B8' : '#475569',
                   marginBottom: 24,
                 }}>
                   {opt.sub}
@@ -129,14 +129,14 @@ export default function PricingSection({ onOpenModal }) {
                     <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
                         width: 20, height: 20, borderRadius: 99,
-                        backgroundColor: opt.primary ? 'rgba(255,255,255,0.15)' : '#F5F0E8',
+                        backgroundColor: opt.primary ? 'rgba(13,148,136,0.2)' : '#F0FDFA',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
-                        <Check size={12} color={opt.primary ? '#FFFFFF' : '#1A1610'} />
+                        <Check size={12} color={opt.primary ? '#CCFBF1' : '#0D9488'} />
                       </div>
                       <span style={{
                         fontSize: 13, fontWeight: 500,
-                        color: opt.primary ? '#F0EAD6' : '#1A1610',
+                        color: opt.primary ? '#F8FAFC' : '#0F172A',
                       }}>
                         {feat}
                       </span>
@@ -150,7 +150,7 @@ export default function PricingSection({ onOpenModal }) {
                   className={`liquid-btn ${opt.primary ? 'liquid-btn-primary' : 'liquid-btn-secondary'}`}
                   style={{
                     width: '100%',
-                    justify: 'center',
+                    justifyContent: 'center',
                     padding: '14px',
                     borderRadius: 12,
                     fontSize: 14,

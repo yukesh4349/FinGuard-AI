@@ -17,21 +17,21 @@ export default function HeroSection({ onOpenModal }) {
         position: 'relative',
         overflow: 'hidden',
         backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid rgba(26,22,16,0.08)',
+        borderBottom: '1px solid rgba(13,148,136,0.12)',
         paddingBottom: 72,
       }}
     >
-      {/* Ambient cream orbs */}
+      {/* Ambient teal & blue orbs */}
       <div className="orb" style={{
         width: 520, height: 520,
         top: -130, left: -110,
-        background: 'rgba(237,228,213,0.55)',
+        background: 'rgba(204,251,241,0.55)',
         filter: 'blur(88px)',
       }} />
       <div className="orb" style={{
         width: 420, height: 420,
         top: '8%', right: -90,
-        background: 'rgba(250,248,243,0.9)',
+        background: 'rgba(224,242,254,0.7)',
         filter: 'blur(72px)',
         animationDelay: '2s',
       }} />
@@ -54,7 +54,7 @@ export default function HeroSection({ onOpenModal }) {
 
           {/* Mono pill badge */}
           <div className="reveal mono-badge" style={{ marginBottom: 22, display: 'inline-flex' }}>
-            <Sparkles size={13} color="#6E5D44" />
+            <Sparkles size={13} color="#0D9488" />
             SIMPLE MONEY &amp; BILL MANAGEMENT // AI ASSISTANT
           </div>
 
@@ -62,7 +62,7 @@ export default function HeroSection({ onOpenModal }) {
           <h1
             className="reveal reveal-delay-1"
             style={{
-              color: '#1A1610',
+              color: '#0F172A',
               fontSize: 'clamp(36px, 5vw, 56px)',
               fontWeight: 800,
               lineHeight: 1.1,
@@ -72,14 +72,14 @@ export default function HeroSection({ onOpenModal }) {
           >
             Smart Shop Management<br />
             &amp; AI Protection for{' '}
-            <span style={{ color: '#8A7558' }}>Your Business</span>
+            <span style={{ color: '#0D9488' }}>Your Business</span>
           </h1>
 
           {/* Subheadline */}
           <p
             className="reveal reveal-delay-2"
             style={{
-              color: '#6E6455',
+              color: '#475569',
               fontSize: 17,
               lineHeight: 1.65,
               fontWeight: 400,
@@ -97,8 +97,8 @@ export default function HeroSection({ onOpenModal }) {
             style={{ display: 'flex', flexWrap: 'wrap', gap: 18, marginBottom: 36 }}
           >
             {['Instant Bill Scanner', 'Fake Bill Interceptor', 'Easy GST Tax Filing'].map((item) => (
-              <span key={item} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#1A1610' }}>
-                <CheckCircle2 size={15} color="#1A1610" />
+              <span key={item} style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#0F172A' }}>
+                <CheckCircle2 size={15} color="#0D9488" />
                 {item}
               </span>
             ))}
@@ -122,7 +122,7 @@ export default function HeroSection({ onOpenModal }) {
               className="liquid-btn liquid-btn-secondary"
               style={{ fontSize: 15, padding: '14px 22px', borderRadius: 12 }}
             >
-              <LogIn size={16} color="#1A1610" />
+              <LogIn size={16} color="#0F172A" />
               <span>Log In to Workspace</span>
             </button>
           </div>
@@ -137,8 +137,8 @@ export default function HeroSection({ onOpenModal }) {
               gap: 12,
               padding: '14px 18px',
               borderRadius: 12,
-              backgroundColor: '#FAF8F3',
-              border: '1px solid rgba(201,185,154,0.3)',
+              backgroundColor: '#F0FDFA',
+              border: '1px solid rgba(13,148,136,0.25)',
             }}
           >
             {[
@@ -147,9 +147,9 @@ export default function HeroSection({ onOpenModal }) {
               { icon: Layers, label: 'Instant Bill Sync' },
             ].map(({ icon: Icon, label }, i) => (
               <React.Fragment key={label}>
-                {i > 0 && <span style={{ width: 1, height: 14, backgroundColor: 'rgba(201,185,154,0.4)', display: 'block' }} />}
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6E6455', fontSize: 12, fontWeight: 500 }}>
-                  <Icon size={13} color="#9C8A6E" />
+                {i > 0 && <span style={{ width: 1, height: 14, backgroundColor: 'rgba(13,148,136,0.3)', display: 'block' }} />}
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#0F172A', fontSize: 12, fontWeight: 600 }}>
+                  <Icon size={13} color="#0D9488" />
                   {label}
                 </span>
               </React.Fragment>
@@ -177,9 +177,9 @@ export default function HeroSection({ onOpenModal }) {
               maxWidth: 580,
               borderRadius: 20,
               overflow: 'hidden',
-              border: '1px solid rgba(201,185,154,0.3)',
-              boxShadow: '0 24px 60px rgba(26,22,16,0.12)',
-              backgroundColor: '#1A1610',
+              border: '1px solid rgba(13,148,136,0.25)',
+              boxShadow: '0 24px 60px rgba(15,23,42,0.15)',
+              backgroundColor: '#0F172A',
               aspectRatio: '4/3',
               display: 'flex',
               alignItems: 'center',
@@ -191,7 +191,7 @@ export default function HeroSection({ onOpenModal }) {
             <div style={{ width: '100%', height: '100%', padding: 20, position: 'relative', overflow: 'hidden' }}>
               {/* Top bar */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <span style={{ color: '#C9B99A', fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.06em' }}>FINGUARD DASHBOARD — LIVE</span>
+                <span style={{ color: '#CCFBF1', fontSize: 11, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.06em' }}>FINGUARD DASHBOARD — LIVE</span>
                 <span style={{ background: 'rgba(74,222,128,0.15)', color: '#4ade80', fontSize: 10, padding: '3px 10px', borderRadius: 99, fontWeight: 700, border: '1px solid rgba(74,222,128,0.3)' }}>● LIVE</span>
               </div>
 
@@ -208,7 +208,7 @@ export default function HeroSection({ onOpenModal }) {
                     padding: '10px 12px',
                     border: '1px solid rgba(255,255,255,0.08)',
                   }}>
-                    <div style={{ color: '#C9B99A', fontSize: 10, fontFamily: 'sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{s.label}</div>
+                    <div style={{ color: '#94A3B8', fontSize: 10, fontFamily: 'sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{s.label}</div>
                     <div style={{ color: '#FFFFFF', fontSize: 15, fontWeight: 800, marginBottom: 2 }}>{s.val}</div>
                     <div style={{ color: s.up ? '#4ade80' : '#F59E0B', fontSize: 10, fontWeight: 700 }}>{s.change}</div>
                   </div>
@@ -223,7 +223,7 @@ export default function HeroSection({ onOpenModal }) {
                     height: `${h}%`,
                     borderRadius: '4px 4px 0 0',
                     background: i >= 9
-                      ? 'linear-gradient(180deg, #C9B99A 0%, rgba(201,185,154,0.6) 100%)'
+                      ? 'linear-gradient(180deg, #0D9488 0%, rgba(13,148,136,0.6) 100%)'
                       : 'rgba(255,255,255,0.08)',
                     transition: 'height 0.5s ease',
                   }} />
@@ -233,7 +233,7 @@ export default function HeroSection({ onOpenModal }) {
               {/* Bottom tags */}
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {['Bill Reader', 'GST Tax Auto', 'AI Chatbot', 'Staff Access'].map((t) => (
-                  <span key={t} style={{ background: 'rgba(201,185,154,0.12)', color: '#C9B99A', fontSize: 9, padding: '3px 8px', borderRadius: 6, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', border: '1px solid rgba(201,185,154,0.2)' }}>{t}</span>
+                  <span key={t} style={{ background: 'rgba(13,148,136,0.2)', color: '#CCFBF1', fontSize: 9, padding: '3px 8px', borderRadius: 6, fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', border: '1px solid rgba(13,148,136,0.3)' }}>{t}</span>
                 ))}
               </div>
 
@@ -263,12 +263,12 @@ export default function HeroSection({ onOpenModal }) {
               zIndex: 10,
             }}
           >
-            <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#F5F0E8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <ShieldCheck size={15} color="#1A1610" />
+            <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#F0FDFA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <ShieldCheck size={15} color="#0D9488" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ color: '#1A1610', fontSize: 12, fontWeight: 700 }}>AI Bill Protection</div>
-              <div style={{ color: '#6E6455', fontSize: 11, marginTop: 1, fontWeight: 500 }}>Fake bill interceptor active.</div>
+              <div style={{ color: '#0F172A', fontSize: 12, fontWeight: 700 }}>AI Bill Protection</div>
+              <div style={{ color: '#475569', fontSize: 11, marginTop: 1, fontWeight: 500 }}>Fake bill interceptor active.</div>
             </div>
             <div style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ade80', flexShrink: 0 }} />
           </div>
@@ -289,12 +289,12 @@ export default function HeroSection({ onOpenModal }) {
               zIndex: 10,
             }}
           >
-            <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#EDE4D5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Bot size={15} color="#6E5D44" />
+            <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#E0F2FE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Bot size={15} color="#0284C7" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ color: '#1A1610', fontSize: 12, fontWeight: 700 }}>AI Business Helper</div>
-              <div style={{ color: '#6E6455', fontSize: 11, marginTop: 1, fontWeight: 500 }}>24/7 AI chat active.</div>
+              <div style={{ color: '#0F172A', fontSize: 12, fontWeight: 700 }}>AI Business Helper</div>
+              <div style={{ color: '#475569', fontSize: 11, marginTop: 1, fontWeight: 500 }}>24/7 AI chat active.</div>
             </div>
           </div>
 
@@ -313,8 +313,8 @@ export default function HeroSection({ onOpenModal }) {
               zIndex: 10,
             }}
           >
-            <TrendingUp size={13} color="#1A1610" />
-            <span style={{ color: '#1A1610', fontSize: 12, fontWeight: 700 }}>Cash Flow +24%</span>
+            <TrendingUp size={13} color="#0D9488" />
+            <span style={{ color: '#0F172A', fontSize: 12, fontWeight: 700 }}>Cash Flow +24%</span>
           </div>
         </div>
       </div>

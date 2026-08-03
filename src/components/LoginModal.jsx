@@ -10,17 +10,17 @@ const rolesList = [
     title: 'Business Owner',
     subtitle: 'Executive Governance & Cash Flow',
     icon: Briefcase,
-    color: '#A88660',
+    color: '#0D9488',
     badge: 'FULL ACCESS',
     demoEmail: 'owner@metrosuperstore.com',
-    permissions: ['Cash Flow & Profitability Overview', 'Inventory Alerting & Approval Rights', '24/7 Gemini Strategic Advisor'],
+    permissions: ['Cash Flow & Profitability Overview', 'Inventory Alerting & Approval Rights', '24/7 FinGuard AI Advisor'],
   },
   {
     id: 'accountant',
     title: 'Accountant / CA',
     subtitle: 'Automated Ledger & GST Filings',
     icon: Calculator,
-    color: '#5C705E',
+    color: '#0284C7',
     badge: 'FINANCIAL ROLE',
     demoEmail: 'accountant@metrosuperstore.com',
     permissions: ['Instant OCR Receipt & Bill Parsing', 'Automated GST (GSTR-1 & 3B) Schedules', 'Bank Reconciliation Ledger'],
@@ -30,7 +30,7 @@ const rolesList = [
     title: 'Operations & Staff',
     subtitle: 'Receipt Snap & Requisitions',
     icon: Users,
-    color: '#C88D74',
+    color: '#0D9488',
     badge: 'SCOPED ROLE',
     demoEmail: 'staff.ops@metrosuperstore.com',
     permissions: ['Mobile Receipt Snap & Expense Claim', 'Department Categorization', 'Restricted to Private Balances'],
@@ -40,7 +40,7 @@ const rolesList = [
     title: 'Vendor / Supplier',
     subtitle: 'B2B Procurement & PO Portal',
     icon: Store,
-    color: '#A88660',
+    color: '#0284C7',
     badge: 'EXTERNAL PORTAL',
     demoEmail: 'supplier@apexindustrial.com',
     permissions: ['Quotation Submission & Rates Match', 'Purchase Order Confirmation', 'Real-Time Payment Tracking'],
@@ -50,7 +50,7 @@ const rolesList = [
     title: 'Admin & Auditor',
     subtitle: 'Security Policy & Audit Trail',
     icon: ShieldCheck,
-    color: '#38332E',
+    color: '#0F172A',
     badge: 'GOVERNANCE ROLE',
     demoEmail: 'auditor@finguard.ai',
     permissions: ['Immutable User Activity Audit Log', 'RBAC Boundary Enforcement', 'AI Anomaly Detection Screening'],
@@ -90,7 +90,7 @@ export default function LoginModal({ isOpen, onClose }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
-      backgroundColor: 'rgba(26, 22, 16, 0.68)',
+      backgroundColor: 'rgba(15, 23, 42, 0.72)',
       backdropFilter: 'blur(10px)',
       WebkitBackdropFilter: 'blur(10px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -102,8 +102,8 @@ export default function LoginModal({ isOpen, onClose }) {
         maxHeight: '90vh', overflowY: 'auto',
         backgroundColor: '#FFFFFF',
         borderRadius: 24,
-        border: '1px solid rgba(201,185,154,0.4)',
-        boxShadow: '0 24px 60px rgba(26,22,16,0.22)',
+        border: '1px solid rgba(13,148,136,0.3)',
+        boxShadow: '0 24px 60px rgba(15,23,42,0.22)',
         padding: 36,
         position: 'relative',
       }}>
@@ -113,13 +113,13 @@ export default function LoginModal({ isOpen, onClose }) {
           style={{
             position: 'absolute', top: 20, right: 20,
             width: 36, height: 36, borderRadius: 18,
-            backgroundColor: '#F5F0E8', border: '1px solid rgba(201,185,154,0.3)',
+            backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', color: '#1A1610',
+            cursor: 'pointer', color: '#0F172A',
             transition: 'background 0.2s ease',
           }}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#EDE4D5'}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F5F0E8'}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#CCFBF1'}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = '#F0FDFA'}
         >
           <X size={18} />
         </button>
@@ -128,29 +128,29 @@ export default function LoginModal({ isOpen, onClose }) {
           <div style={{ textAlign: 'center', padding: '24px 10px' }}>
             <div style={{
               width: 64, height: 64, borderRadius: 32,
-              backgroundColor: 'rgba(74,222,128,0.15)', border: '2px solid #4ade80',
+              backgroundColor: '#f0fdf4', border: '2px solid #bbf7d0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 20px',
             }}>
               <CheckCircle2 size={36} color="#16a34a" />
             </div>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#1A1610', marginBottom: 8 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
               Authenticated as {selectedRole.title}!
             </h2>
-            <p style={{ color: '#6E6455', fontSize: 14, marginBottom: 24 }}>
+            <p style={{ color: '#475569', fontSize: 14, marginBottom: 24 }}>
               Redirecting to <strong>{selectedRole.title} Workspace</strong>...
             </p>
 
             <div style={{
-              backgroundColor: '#FAF8F3', borderRadius: 14, padding: 18,
-              border: '1px solid rgba(201,185,154,0.4)', textAlign: 'left',
+              backgroundColor: '#F8FAFC', borderRadius: 14, padding: 18,
+              border: '1px solid rgba(13,148,136,0.3)', textAlign: 'left',
               marginBottom: 24,
             }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#8A7558', fontFamily: 'monospace', textTransform: 'uppercase', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#0D9488', fontFamily: 'monospace', textTransform: 'uppercase', marginBottom: 8 }}>
                 SESSION AUTHORIZATION GRANTED
               </div>
-              <div style={{ fontSize: 13, color: '#1A1610', fontWeight: 700 }}>{email}</div>
-              <div style={{ fontSize: 12, color: '#6E6455', marginTop: 2 }}>Role Scope: {selectedRole.badge}</div>
+              <div style={{ fontSize: 13, color: '#0F172A', fontWeight: 700 }}>{email}</div>
+              <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>Role Scope: {selectedRole.badge}</div>
             </div>
 
             <button
@@ -167,14 +167,14 @@ export default function LoginModal({ isOpen, onClose }) {
           <div>
             <div style={{ marginBottom: 24, textAlign: 'center' }}>
               <div className="mono-badge" style={{ marginBottom: 12, display: 'inline-flex' }}>
-                <KeyRound size={13} color="#6E5D44" />
+                <KeyRound size={13} color="#0D9488" />
                 ROLE-BASED WORKSPACE ACCESS
               </div>
-              <h2 style={{ fontSize: 24, fontWeight: 800, color: '#1A1610', marginBottom: 6 }}>
+              <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
                 Select Your Role to Log In
               </h2>
-              <p style={{ color: '#6E6455', fontSize: 14 }}>
-                Choose your enterprise role to open the specialized login terminal.
+              <p style={{ color: '#475569', fontSize: 14 }}>
+                Choose your store role to open the specialized login terminal.
               </p>
             </div>
 
@@ -189,20 +189,20 @@ export default function LoginModal({ isOpen, onClose }) {
                     style={{
                       width: '100%', display: 'flex', alignItems: 'center', gap: 14,
                       padding: 16, borderRadius: 16,
-                      backgroundColor: '#FAF8F3',
-                      border: '1px solid rgba(201,185,154,0.45)',
+                      backgroundColor: '#F8FAFC',
+                      border: '1px solid rgba(13,148,136,0.3)',
                       cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
-                      boxShadow: '0 2px 8px rgba(26,22,16,0.03)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                       transition: 'all 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
                     }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.backgroundColor = '#F5EFE4';
+                      e.currentTarget.style.backgroundColor = '#F0FDFA';
                       e.currentTarget.style.borderColor = role.color;
                       e.currentTarget.style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.backgroundColor = '#FAF8F3';
-                      e.currentTarget.style.borderColor = 'rgba(201,185,154,0.45)';
+                      e.currentTarget.style.backgroundColor = '#F8FAFC';
+                      e.currentTarget.style.borderColor = 'rgba(13,148,136,0.3)';
                       e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
@@ -216,19 +216,19 @@ export default function LoginModal({ isOpen, onClose }) {
 
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 16, fontWeight: 800, color: '#1A1610' }}>{role.title}</span>
+                        <span style={{ fontSize: 16, fontWeight: 800, color: '#0F172A' }}>{role.title}</span>
                         <span style={{
                           fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 6,
-                          backgroundColor: 'rgba(201,185,154,0.3)', color: '#6E5D44',
-                          fontFamily: 'monospace', textTransform: 'uppercase',
+                          backgroundColor: '#F0FDFA', color: '#0D9488',
+                          fontFamily: 'monospace', textTransform: 'uppercase', border: '1px solid rgba(13,148,136,0.2)',
                         }}>{role.badge}</span>
                       </div>
-                      <span style={{ fontSize: 13, color: '#6E6455', marginTop: 2, display: 'block' }}>
+                      <span style={{ fontSize: 13, color: '#475569', marginTop: 2, display: 'block' }}>
                         {role.subtitle}
                       </span>
                     </div>
 
-                    <ArrowRight size={18} color="#6E5D44" />
+                    <ArrowRight size={18} color="#0D9488" />
                   </button>
                 );
               })}
@@ -242,8 +242,8 @@ export default function LoginModal({ isOpen, onClose }) {
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
                 padding: '6px 12px', borderRadius: 8,
-                backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.4)',
-                fontSize: 12, fontWeight: 700, color: '#1A1610', cursor: 'pointer',
+                backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+                fontSize: 12, fontWeight: 700, color: '#0D9488', cursor: 'pointer',
                 marginBottom: 20, fontFamily: 'inherit',
               }}
             >
@@ -255,7 +255,7 @@ export default function LoginModal({ isOpen, onClose }) {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 14,
               padding: 16, borderRadius: 16,
-              backgroundColor: '#FAF8F3',
+              backgroundColor: '#F8FAFC',
               border: `1px solid ${selectedRole.color}`,
               marginBottom: 24,
             }}>
@@ -267,26 +267,26 @@ export default function LoginModal({ isOpen, onClose }) {
                 {React.createElement(selectedRole.icon, { size: 20, color: '#FFFFFF' })}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#1A1610' }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#0F172A' }}>
                   {selectedRole.title} Login
                 </div>
-                <div style={{ fontSize: 12, color: '#6E6455', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>
                   {selectedRole.subtitle}
                 </div>
               </div>
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: 4,
                 padding: '4px 9px', borderRadius: 8, fontSize: 10, fontWeight: 700,
-                color: '#5C705E', backgroundColor: 'rgba(92,112,94,0.12)',
+                color: '#0D9488', backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
               }}>
-                <Lock size={11} color="#5C705E" /> RBAC Enforced
+                <Lock size={11} color="#0D9488" /> RBAC Enforced
               </span>
             </div>
 
             {/* Login Form */}
             <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
                   Work Email / Workspace Username
                 </label>
                 <input
@@ -297,14 +297,14 @@ export default function LoginModal({ isOpen, onClose }) {
                   placeholder={selectedRole.demoEmail}
                   style={{
                     width: '100%', padding: '12px 16px', borderRadius: 10,
-                    border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FAF8F3',
-                    fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
+                    border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                    fontSize: 14, color: '#0F172A', outline: 'none', fontFamily: 'inherit',
                   }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#1A1610', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
                   Password
                 </label>
                 <input
@@ -315,24 +315,24 @@ export default function LoginModal({ isOpen, onClose }) {
                   placeholder="••••••••••••"
                   style={{
                     width: '100%', padding: '12px 16px', borderRadius: 10,
-                    border: '1px solid rgba(201,185,154,0.5)', backgroundColor: '#FAF8F3',
-                    fontSize: 14, color: '#1A1610', outline: 'none', fontFamily: 'inherit',
+                    border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                    fontSize: 14, color: '#0F172A', outline: 'none', fontFamily: 'inherit',
                   }}
                 />
               </div>
 
               {/* Scoped Permissions Preview */}
               <div style={{
-                backgroundColor: '#FAF8F3', borderRadius: 12, padding: 14,
-                border: '1px solid rgba(201,185,154,0.3)',
+                backgroundColor: '#F8FAFC', borderRadius: 12, padding: 14,
+                border: '1px solid rgba(13,148,136,0.3)',
               }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#8A7558', fontFamily: 'monospace', textTransform: 'uppercase', marginBottom: 6 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#0D9488', fontFamily: 'monospace', textTransform: 'uppercase', marginBottom: 6 }}>
                   {selectedRole.title} Scoped Permissions:
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {selectedRole.permissions.map((p, i) => (
-                    <div key={i} style={{ fontSize: 12, color: '#6E6455', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: '#10B981', fontWeight: 800 }}>✓</span>
+                    <div key={i} style={{ fontSize: 12, color: '#475569', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: '#16a34a', fontWeight: 800 }}>✓</span>
                       {p}
                     </div>
                   ))}
@@ -356,13 +356,13 @@ export default function LoginModal({ isOpen, onClose }) {
                   onClick={() => setIsSuccess(true)}
                   style={{
                     width: '100%', padding: '10px 14px', borderRadius: 10,
-                    backgroundColor: '#FAF8F3', border: '1px solid rgba(201,185,154,0.4)',
-                    color: '#6E5D44', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+                    color: '#0D9488', fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                     fontFamily: 'inherit',
                   }}
                 >
-                  <Sparkles size={13} color="#6E5D44" />
+                  <Sparkles size={13} color="#0D9488" />
                   <span>⚡ Quick Demo Log In as {selectedRole.title}</span>
                 </button>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { ScanText, ShieldAlert, TrendingUp, ShoppingBag, Bot, FileText, ArrowUpRight, Zap } from 'lucide-react';
 import useScrollReveal from '../utils/useScrollReveal';
 
@@ -56,6 +56,8 @@ function FeatureCard({ feat, delayClass }) {
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
+        backgroundColor: hovered ? '#FFFFFF' : '#F8FAFC',
+        borderColor: hovered ? 'rgba(13,148,136,0.4)' : 'rgba(13,148,136,0.15)',
         transition: 'transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s cubic-bezier(0.22,1,0.36,1)',
       }}
     >
@@ -64,7 +66,7 @@ function FeatureCard({ feat, delayClass }) {
         height: 2,
         borderRadius: 99,
         marginBottom: 20,
-        background: hovered ? '#1A1610' : 'transparent',
+        background: hovered ? '#0D9488' : 'transparent',
         transition: 'background 0.35s ease',
         width: hovered ? '100%' : '0%',
       }} />
@@ -73,42 +75,42 @@ function FeatureCard({ feat, delayClass }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
         <div style={{
           width: 44, height: 44, borderRadius: 10,
-          backgroundColor: hovered ? '#EDE4D5' : '#F5F0E8',
-          border: `1px solid ${hovered ? 'rgba(201,185,154,0.6)' : 'rgba(201,185,154,0.3)'}`,
+          backgroundColor: hovered ? '#E0F2FE' : '#F0FDFA',
+          border: `1px solid ${hovered ? 'rgba(2,132,199,0.3)' : 'rgba(13,148,136,0.2)'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: 'all 0.25s ease',
         }}>
-          <Icon size={22} color={hovered ? '#1A1610' : '#9C8A6E'} />
+          <Icon size={22} color={hovered ? '#0284C7' : '#0D9488'} />
         </div>
         <span style={{
           padding: '4px 10px', borderRadius: 8,
-          backgroundColor: '#F5F0E8',
-          border: '1px solid rgba(201,185,154,0.3)',
-          fontSize: 10, fontWeight: 700, color: '#9C8A6E',
+          backgroundColor: '#F0FDFA',
+          border: '1px solid rgba(13,148,136,0.3)',
+          fontSize: 10, fontWeight: 700, color: '#0D9488',
           fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.05em',
         }}>{feat.tag}</span>
       </div>
 
       <h3 style={{
-        color: '#1A1610', fontSize: 18, fontWeight: 700,
+        color: '#0F172A', fontSize: 18, fontWeight: 700,
         marginBottom: 10, lineHeight: 1.4,
         transition: 'color 0.2s ease',
       }}>{feat.title}</h3>
-      <p style={{ color: '#6E6455', fontSize: 14, lineHeight: 1.6, marginBottom: 20, flex: 1 }}>{feat.desc}</p>
+      <p style={{ color: '#475569', fontSize: 14, lineHeight: 1.6, marginBottom: 20, flex: 1 }}>{feat.desc}</p>
 
       {/* Footer */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        paddingTop: 14, borderTop: '1px solid rgba(26,22,16,0.06)',
+        paddingTop: 14, borderTop: '1px solid rgba(15,23,42,0.06)',
       }}>
-        <p style={{ color: '#9C8A6E', fontSize: 12, flex: 1, marginRight: 10, lineHeight: 1.5 }}>{feat.details}</p>
+        <p style={{ color: '#0D9488', fontSize: 12, flex: 1, marginRight: 10, lineHeight: 1.5, fontWeight: 600 }}>{feat.details}</p>
         <div style={{
           width: 30, height: 30, borderRadius: 8,
-          backgroundColor: hovered ? '#1A1610' : '#F5F0E8',
+          backgroundColor: hovered ? '#0D9488' : '#F0FDFA',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: 'all 0.25s ease', flexShrink: 0,
         }}>
-          <ArrowUpRight size={16} color={hovered ? '#FFFFFF' : '#9C8A6E'} />
+          <ArrowUpRight size={16} color={hovered ? '#FFFFFF' : '#0D9488'} />
         </div>
       </div>
     </div>
@@ -125,7 +127,7 @@ export default function FeaturesGrid() {
       id="features"
       style={{
         padding: '96px 40px',
-        backgroundColor: '#FAF8F3',
+        backgroundColor: '#FFFFFF',
       }}
     >
       <div style={{ maxWidth: 1360, margin: '0 auto' }}>
@@ -133,20 +135,20 @@ export default function FeaturesGrid() {
         {/* Header */}
         <div className="reveal" style={{ textAlign: 'center', marginBottom: 60 }}>
           <div className="mono-badge" style={{ marginBottom: 16, display: 'inline-flex' }}>
-            <Zap size={13} color="#9C8A6E" />
+            <Zap size={13} color="#0D9488" />
             EASY SHOP FINANCIAL APP
           </div>
           <h2 style={{
-            color: '#1A1610', fontSize: 'clamp(28px, 4vw, 40px)',
+            color: '#0F172A', fontSize: 'clamp(28px, 4vw, 40px)',
             fontWeight: 800, letterSpacing: '-0.8px', marginBottom: 14,
           }}>
             Main Shop Management Features
           </h2>
-          <p style={{ color: '#6E6455', fontSize: 16, lineHeight: 1.65, maxWidth: 600, margin: '0 auto 16px' }}>
+          <p style={{ color: '#475569', fontSize: 16, lineHeight: 1.65, maxWidth: 600, margin: '0 auto 16px' }}>
             Designed for business owners to easily manage bills, cut costs, and protect store profits in simple English.
           </p>
           {/* animated underline */}
-          <div style={{ width: 80, height: 2, background: 'linear-gradient(90deg, transparent, #C9B99A, transparent)', borderRadius: 99, margin: '0 auto' }} />
+          <div style={{ width: 80, height: 2, background: 'linear-gradient(90deg, transparent, #0D9488, transparent)', borderRadius: 99, margin: '0 auto' }} />
         </div>
 
         {/* Grid */}
