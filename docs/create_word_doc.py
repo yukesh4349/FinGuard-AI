@@ -92,11 +92,11 @@ def create_finguard_docx():
         u_hdr[i]._tc.get_or_add_tcPr().append(shading)
 
     users_data = [
-        ("ADMIN-001", "FinGuard System Governance", "admin@finguard.ai", "admin123", "9999999999"),
-        ("OWNER-METRO-8492", "Metro Superstore Ltd", "owner@metrosuperstore.com", "FG-8924-XK9", "9876543210"),
-        ("accountant@metrosuperstore.com", "Metro Superstore Ltd", "accountant@metrosuperstore.com", "FG-CA-2026", "9876523451"),
-        ("manager.store1@metrosuperstore.com", "Metro Superstore Ltd", "manager.store1@metrosuperstore.com", "FG-MGR-552", "9876534562"),
-        ("staff.ops@metrosuperstore.com", "Metro Superstore Ltd", "staff.ops@metrosuperstore.com", "FG-STAFF-982", "9876545673"),
+        ("ADMIN-001 (Super Admin)", "FinGuard System Governance", "admin@finguard.ai", "admin123", "9999999999"),
+        ("OWNER-METRO-8492 (Business Owner)", "Metro Superstore Ltd", "owner@metrosuperstore.com", "FG-8924-XK9", "9876543210"),
+        ("accountant@metrosuperstore.com (Store Accountant)", "Metro Superstore Ltd", "accountant@metrosuperstore.com", "FG-CA-2026", "9876523451"),
+        ("cashier.billing@metrosuperstore.com (Cashier & Billing)", "Metro Superstore Ltd", "cashier.billing@metrosuperstore.com", "FG-BILL-789", "9876545673"),
+        ("manager.stock@metrosuperstore.com (Stock Manager)", "Metro Superstore Ltd", "manager.stock@metrosuperstore.com", "FG-STOCK-552", "9876534562"),
     ]
 
     for row_data in users_data:

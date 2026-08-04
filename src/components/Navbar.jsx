@@ -18,10 +18,10 @@ export default function Navbar({ onOpenModal }) {
   };
 
   const links = [
-    { id: 'features',   label: 'Easy Features' },
-    { id: 'roles',      label: 'Role Dashboards' },
+    { id: 'features', label: 'Easy Features' },
+    { id: 'roles', label: 'Role Dashboards' },
     { id: 'ai-advisor', label: '24/7 AI Helper' },
-    { id: 'roi',        label: 'Savings & Profit' },
+    { id: 'roi', label: 'Savings & Profit' },
   ];
 
   return (
@@ -47,38 +47,38 @@ export default function Navbar({ onOpenModal }) {
 
         {/* Logo */}
         <button onClick={() => { navigate('/'); scrollTo('hero'); }}
-          style={{ display:'flex', alignItems:'center', gap:10, background:'none', border:'none', cursor:'pointer', padding:0 }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
           <div className="pulse-ring" style={{
-            width:38, height:38, borderRadius:10,
-            background:'#0D9488', border:'1px solid rgba(13,148,136,0.4)',
-            display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+            width: 38, height: 38, borderRadius: 10,
+            background: '#0D9488', border: '1px solid rgba(13,148,136,0.4)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
-          <div style={{ textAlign:'left' }}>
-            <div style={{ fontSize:18, fontWeight:800, color:'#0F172A', lineHeight:1.1, letterSpacing:'-0.4px' }}>
-              FinGuard <span style={{ color:'#0D9488' }}>AI</span>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', lineHeight: 1.1, letterSpacing: '-0.4px' }}>
+              FinGuard <span style={{ color: '#0D9488' }}>AI</span>
             </div>
-            <div style={{ fontSize:9, color:'#0D9488', fontFamily:'monospace', textTransform:'uppercase', letterSpacing:'0.06em', fontWeight:700 }}>
+            <div style={{ fontSize: 9, color: '#0D9488', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>
               Smart Business Safeguard
             </div>
           </div>
         </button>
 
         {/* Desktop Nav Links */}
-        <div style={{ display:'flex', alignItems:'center', gap:4, flex:1, justifyContent:'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, justifyContent: 'center' }}>
           {links.map(({ id, label }) => (
             <button key={id} onClick={() => scrollTo(id)} style={{
-              background:'none', border:'none', cursor:'pointer',
-              padding:'6px 14px', borderRadius:8,
-              fontSize:14, fontWeight:600, color:'#334155',
-              fontFamily:'inherit',
-              transition:'background 0.18s ease, color 0.18s ease',
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '6px 14px', borderRadius: 8,
+              fontSize: 14, fontWeight: 600, color: '#334155',
+              fontFamily: 'inherit',
+              transition: 'background 0.18s ease, color 0.18s ease',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#F0FDFA'; e.currentTarget.style.color = '#0D9488'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#334155'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#F0FDFA'; e.currentTarget.style.color = '#0D9488'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#334155'; }}
             >
               {label}
             </button>
@@ -86,39 +86,39 @@ export default function Navbar({ onOpenModal }) {
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           <button
             onClick={() => onOpenModal ? onOpenModal('login') : navigate('/login')}
             className="liquid-btn liquid-btn-secondary"
-            style={{ padding:'9px 18px', fontSize:13, borderRadius:99, gap:6 }}
+            style={{ padding: '9px 18px', fontSize: 13, borderRadius: 99, gap: 6 }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" />
             </svg>
             <span>Log In</span>
           </button>
           <button
             onClick={() => onOpenModal ? onOpenModal('setup') : navigate('/signup')}
             className="liquid-btn liquid-btn-primary"
-            style={{ padding:'9px 20px', fontSize:13, borderRadius:99 }}
+            style={{ padding: '9px 20px', fontSize: 13, borderRadius: 99 }}
           >
             <span>Set Up FinGuard</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
+              <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </button>
 
           {/* Mobile menu toggle */}
           <button onClick={() => setMenuOpen(!menuOpen)}
             style={{
-              display:'none',
-              background:'#F0FDFA', border:'1px solid rgba(13,148,136,0.3)',
-              borderRadius:8, padding:'8px', cursor:'pointer',
+              display: 'none',
+              background: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+              borderRadius: 8, padding: '8px', cursor: 'pointer',
             }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F172A" strokeWidth="2" strokeLinecap="round">
               {menuOpen
-                ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
-                : <><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/></>}
+                ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
+                : <><line x1="4" y1="8" x2="20" y2="8" /><line x1="4" y1="16" x2="20" y2="16" /></>}
             </svg>
           </button>
         </div>
@@ -130,18 +130,18 @@ export default function Navbar({ onOpenModal }) {
       {/* Mobile drawer */}
       {menuOpen && (
         <div style={{
-          padding:'12px 40px 20px',
-          borderTop:'1px solid rgba(13,148,136,0.2)',
-          background:'rgba(255,255,255,0.98)',
-          display:'flex', flexDirection:'column', gap:4,
-          animation:'revealUp 0.25s ease both',
+          padding: '12px 40px 20px',
+          borderTop: '1px solid rgba(13,148,136,0.2)',
+          background: 'rgba(255,255,255,0.98)',
+          display: 'flex', flexDirection: 'column', gap: 4,
+          animation: 'revealUp 0.25s ease both',
         }}>
-          {[...links, { id:'pricing', label:'Get Started' }].map(({ id, label }) => (
+          {[...links, { id: 'pricing', label: 'Get Started' }].map(({ id, label }) => (
             <button key={id} onClick={() => scrollTo(id)} style={{
-              background:'none', border:'none', cursor:'pointer',
-              padding:'10px 12px', borderRadius:8, textAlign:'left',
-              fontSize:15, fontWeight:600, color:'#0F172A', fontFamily:'inherit',
-              borderBottom:'1px solid rgba(13,148,136,0.1)',
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '10px 12px', borderRadius: 8, textAlign: 'left',
+              fontSize: 15, fontWeight: 600, color: '#0F172A', fontFamily: 'inherit',
+              borderBottom: '1px solid rgba(13,148,136,0.1)',
             }}>
               {label}
             </button>

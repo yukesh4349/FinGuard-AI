@@ -70,7 +70,13 @@ CREATE TABLE IF NOT EXISTS cashflow_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed Initial Demo Owner Account in PostgreSQL
+-- Seed Initial 4 Role Store Accounts + Super Admin in PostgreSQL
 INSERT INTO users (user_id, company_name, mobile_number, email, password_hash, role)
-VALUES ('OWNER-METRO-8492', 'Metro Superstore Ltd', '9876543210', 'owner@metrosuperstore.com', 'FG-8924-XK9', 'owner')
+VALUES 
+  ('ADMIN-001', 'FinGuard System Governance Central', '9999999999', 'admin@finguard.ai', 'admin123', 'super_admin'),
+  ('OWNER-METRO-8492', 'Metro Superstore Ltd', '9876543210', 'owner@metrosuperstore.com', 'FG-8924-XK9', 'owner'),
+  ('accountant@metrosuperstore.com', 'Metro Superstore Ltd', '9876523451', 'accountant@metrosuperstore.com', 'FG-CA-2026', 'accountant'),
+  ('cashier.billing@metrosuperstore.com', 'Metro Superstore Ltd', '9876545673', 'cashier.billing@metrosuperstore.com', 'FG-BILL-789', 'billing'),
+  ('manager.stock@metrosuperstore.com', 'Metro Superstore Ltd', '9876534562', 'manager.stock@metrosuperstore.com', 'FG-STOCK-552', 'stock_manager')
 ON CONFLICT (user_id) DO NOTHING;
+

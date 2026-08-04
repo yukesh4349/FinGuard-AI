@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft, Camera, Upload, CheckCircle2, AlertTriangle, FileText,
-  Sparkles, ShieldCheck, Download, Trash2, Plus, Edit3, Save, RefreshCw, Cpu, Image as ImageIcon, Eye, FileCode, Building2, Calendar, Hash, Percent
+  Sparkles, ShieldCheck, Download, Trash2, Plus, Edit3, Save, RefreshCw, Cpu, Image as ImageIcon, Eye, FileCode, Building2, Calendar, Hash, Percent, Database
 } from 'lucide-react';
+import { saveOcrDataToSupabase } from '../services/supabaseClient';
 
 export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -107,7 +108,7 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
 
       setStatusMessage('Parsing Vendor Name, Invoice No, Qty, Rate, GST % & Totals...');
       const parsed = extractAccurateInvoiceFields(extractedRawText, file);
-      
+
       setTimeout(() => {
         setIsScanning(false);
         setScanResult(parsed);
@@ -205,7 +206,7 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
       // Match pattern: <Item Name> <Qty> <Rate> <GST%> <Total>
       // e.g. "Basmati Rice 25kg 10 1850 5% 18500"
       const structuredMatch = line.match(/^(.+?)\s+(\d+)\s+(\d+(?:\.\d+)?)\s+(\d+%\s+)?(\d+(?:\.\d+)?)$/);
-      
+
       if (structuredMatch) {
         const name = structuredMatch[1].trim();
         const qty = structuredMatch[2];
@@ -299,8 +300,29 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
     setEditItems(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSaveInvoice = () => {
-    alert(`Success: Supplier Invoice ${editInvoiceNo} from ${editSupplier} saved to business records!`);
+  const handleSaveInvoice = async () => {
+    setIsScanning(true);
+    setStatusMessage('Saving OCR extracted data & raw text to Supabase DB...');
+
+    const res = await saveOcrDataToSupabase({
+      supplierName: editSupplier,
+      invoiceNumber: editInvoiceNo,
+      invoiceDate: editDate,
+      subtotal: editSubtotal,
+      taxGst: editTaxGst,
+      grandTotal: editGrandTotal,
+      items: editItems,
+      rawText: rawDocumentText,
+    });
+
+    setIsScanning(false);
+
+    if (res.savedLocally) {
+      alert(`Saved: Invoice ${editInvoiceNo} saved to Database! (Local Store Active. Connect Supabase URL & Key to sync with Cloud DB)`);
+    } else {
+      alert(`Success: Invoice ${editInvoiceNo} & Full Raw Text saved directly to Supabase Cloud DB (public.ocr_invoices)!`);
+    }
+
     if (onInvoiceSaved) onInvoiceSaved();
     onBack();
   };
@@ -359,10 +381,10 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 24 }}>
-          
+
           {/* Left Column: Upload Controls & Image Preview & Delete File */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-            
+
             {/* Option 1: Open Camera Direct */}
             <label style={{
               backgroundColor: '#0F172A', color: '#FFFFFF',
@@ -459,7 +481,7 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
               </div>
             ) : scanResult ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                
+
                 {/* Header with Raw Text Toggle */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(13,148,136,0.15)', paddingBottom: 10 }}>
                   <div>

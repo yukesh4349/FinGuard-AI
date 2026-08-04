@@ -23,12 +23,20 @@ const availableRoles = [
     badge: 'TAX & BILLS',
   },
   {
-    id: 'manager',
-    title: 'Store Executive / Staff',
-    sub: 'Customer billing, daily sales entry, and stock updates',
-    icon: '🛍️',
+    id: 'billing',
+    title: 'Store Cashier & Billing Executive',
+    sub: 'Customer billing checkout, POS register, and retail sales',
+    icon: '💳',
     color: '#0D9488',
-    badge: 'BILLING & STOCK',
+    badge: 'POS & BILLING',
+  },
+  {
+    id: 'stock_manager',
+    title: 'Stock & Inventory Manager',
+    sub: 'Stock intake, inventory tracking, supplier orders & warehouse',
+    icon: '📦',
+    color: '#0284C7',
+    badge: 'STOCK & INVENTORY',
   },
 ];
 
@@ -67,16 +75,20 @@ export default function LoginPage({
     setSelectedRole(role);
     setErrorMessage('');
     if (role.id === 'owner') {
-      if (!userId) setUserId(initialOwnerId || 'OWNER-METRO-8492');
-      if (!password) setPassword(initialOwnerPass || 'FG-8924-XK9');
-      if (!mobileNum) setMobileNum('9876543210');
+      setUserId(initialOwnerId || 'OWNER-METRO-8492');
+      setPassword(initialOwnerPass || 'FG-8924-XK9');
+      setMobileNum('9876543210');
     } else if (role.id === 'accountant') {
       setUserId('accountant@metrosuperstore.com');
       setPassword('FG-CA-2026');
       setMobileNum('9876523451');
-    } else if (role.id === 'manager') {
-      setUserId('manager.store1@metrosuperstore.com');
-      setPassword('FG-MGR-552');
+    } else if (role.id === 'billing') {
+      setUserId('cashier.billing@metrosuperstore.com');
+      setPassword('FG-BILL-789');
+      setMobileNum('9876545673');
+    } else if (role.id === 'stock_manager') {
+      setUserId('manager.stock@metrosuperstore.com');
+      setPassword('FG-STOCK-552');
       setMobileNum('9876534562');
     }
   };
@@ -100,7 +112,7 @@ export default function LoginPage({
     try {
       // Query PostgreSQL database service for authentication checking ID, Password, and Mobile Number strictly
       const result = await authenticateUserInPostgres(userId, password, mobileNum);
-      
+
       setTimeout(() => {
         setIsLoggingIn(false);
         if (result.success) {
@@ -244,61 +256,148 @@ export default function LoginPage({
           </div>
         </div>
 
-        {/* Right Side Login Form */}
+        {/* Right Side Login Terminal (Two-Step Flow) */}
         <div style={{
-          padding: '40px 60px', overflowY: 'auto',
+          padding: '40px 50px', overflowY: 'auto',
           display: 'flex', flexDirection: 'column', justifyContent: 'center',
-          maxWidth: 680, width: '100%', margin: '0 auto',
+          maxWidth: 720, width: '100%', margin: '0 auto',
         }}>
-          {!isSuccess ? (
+          {!selectedRole ? (
+            /* ── STEP 1: SHOW ONLY THE 4 ROLE BUTTONS ──────────────────── */
             <div>
-              <div style={{ marginBottom: 24 }}>
-                <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
-                  Log In to Your Store Account
+              <div style={{ marginBottom: 28 }}>
+                <span className="mono-badge" style={{ backgroundColor: '#F0FDFA', color: '#0D9488', border: '1px solid rgba(13,148,136,0.3)', marginBottom: 12, display: 'inline-flex' }}>
+                  🔑 STEP 1 OF 2 • SELECT STORE ACCOUNT TYPE
+                </span>
+                <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>
+                  Select Your Store Role to Log In
                 </h1>
-                <p style={{ fontSize: 14, color: '#475569' }}>
-                  Enter your User ID, Password, and registered Mobile Number to access your store dashboard.
+                <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.5 }}>
+                  Choose your account type below to open your dedicated login terminal.
                 </p>
               </div>
 
-              {/* Role Select Cards */}
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0D9488', textTransform: 'uppercase', fontFamily: 'monospace', marginBottom: 10 }}>
-                  1. Select Account Type:
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                  {availableRoles.map(role => {
-                    const isSel = selectedRole?.id === role.id;
-                    return (
-                      <div
-                        key={role.id}
-                        onClick={() => handleRoleSelect(role)}
-                        style={{
-                          padding: 14, borderRadius: 12, cursor: 'pointer',
-                          backgroundColor: isSel ? '#F0FDFA' : '#FFFFFF',
-                          border: `2px solid ${isSel ? '#0D9488' : 'rgba(15,23,42,0.1)'}`,
-                          boxShadow: isSel ? '0 4px 14px rgba(13,148,136,0.15)' : 'none',
-                          transition: 'all 0.2s ease',
-                        }}
-                      >
-                        <div style={{ fontSize: 20, marginBottom: 4 }}>{role.icon}</div>
-                        <div style={{ fontSize: 12, fontWeight: 800, color: isSel ? '#0D9488' : '#0F172A' }}>{role.title}</div>
+              {/* 4 Role Selection Cards Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+                {availableRoles.map(role => (
+                  <div
+                    key={role.id}
+                    onClick={() => handleRoleSelect(role)}
+                    style={{
+                      padding: 22, borderRadius: 16, cursor: 'pointer',
+                      backgroundColor: '#FFFFFF',
+                      border: '2px solid rgba(13,148,136,0.2)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                      transition: 'all 0.22s cubic-bezier(0.22, 1, 0.36, 1)',
+                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = '#0D9488';
+                      e.currentTarget.style.backgroundColor = '#F0FDFA';
+                      e.currentTarget.style.transform = 'translateY(-3px)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,148,136,0.15)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = 'rgba(13,148,136,0.2)';
+                      e.currentTarget.style.backgroundColor = '#FFFFFF';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.03)';
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                        <div style={{ fontSize: 26, width: 46, height: 46, borderRadius: 12, backgroundColor: '#F0FDFA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {role.icon}
+                        </div>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 99,
+                          backgroundColor: '#F0FDFA', color: role.color, border: `1px solid ${role.color}`,
+                          fontFamily: 'monospace', textTransform: 'uppercase',
+                        }}>
+                          {role.badge}
+                        </span>
                       </div>
-                    );
-                  })}
+                      <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+                        {role.title}
+                      </h3>
+                      <p style={{ fontSize: 12, color: '#64748B', lineHeight: 1.45, marginBottom: 16 }}>
+                        {role.sub}
+                      </p>
+                    </div>
+
+                    <div style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      fontSize: 13, fontWeight: 700, color: '#0D9488',
+                      paddingTop: 12, borderTop: '1px solid rgba(13,148,136,0.12)',
+                    }}>
+                      <span>Log In as {role.title.split(' ')[0]}</span>
+                      <ChevronRight size={16} color="#0D9488" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : !isSuccess ? (
+            /* ── STEP 2: SHOW CREDENTIALS INPUT FORM FOR SELECTED ROLE ─── */
+            <div>
+              {/* Back to Role Selection Button */}
+              <button
+                onClick={() => setSelectedRole(null)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '8px 16px', borderRadius: 99,
+                  backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+                  color: '#0D9488', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit', marginBottom: 20,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#CCFBF1'; e.currentTarget.style.transform = 'translateX(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#F0FDFA'; e.currentTarget.style.transform = 'translateX(0)'; }}
+              >
+                <ArrowLeft size={16} />
+                <span>← Back to Account Type Selection</span>
+              </button>
+
+              {/* Banner for Selected Role */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: 16, borderRadius: 14,
+                backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+                marginBottom: 24,
+              }}>
+                <div style={{ fontSize: 26, width: 44, height: 44, borderRadius: 12, backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                  {selectedRole.icon}
                 </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0D9488', textTransform: 'uppercase', fontFamily: 'monospace' }}>
+                    STEP 2 OF 2 • {selectedRole.badge}
+                  </div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: '#0F172A' }}>
+                    Logging in as {selectedRole.title}
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Header */}
+              <div style={{ marginBottom: 20 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
+                  Enter Account Credentials
+                </h2>
+                <p style={{ fontSize: 13, color: '#475569' }}>
+                  Provide your User ID / Email, Password, and Registered Mobile Number to access the dashboard.
+                </p>
               </div>
 
               {/* Form Input Fields */}
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                    2. User ID / Registered Email Address *
+                    User ID / Registered Email Address *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. OWNER-METRO-8492 or owner@metrosuperstore.com"
+                    placeholder="Enter your User ID or Email"
                     value={userId}
                     onChange={e => setUserId(e.target.value)}
                     style={{
@@ -311,7 +410,7 @@ export default function LoginPage({
 
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                    3. Account Password *
+                    Account Password *
                   </label>
                   <div style={{ position: 'relative' }}>
                     <input
@@ -341,7 +440,7 @@ export default function LoginPage({
 
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                    4. Registered Mobile Number (Digits Only) *
+                    Registered Mobile Number (Digits Only) *
                   </label>
                   <div style={{ position: 'relative' }}>
                     <Phone size={18} color="#0D9488" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -383,7 +482,7 @@ export default function LoginPage({
                     marginTop: 8,
                   }}
                 >
-                  {isLoggingIn ? 'Verifying Credentials...' : '🔑 Verify & Log In to Dashboard'}
+                  {isLoggingIn ? 'Verifying Credentials...' : `🔑 Verify & Log In as ${selectedRole.title.split(' ')[0]}`}
                 </button>
               </form>
             </div>

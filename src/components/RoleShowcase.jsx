@@ -7,7 +7,7 @@ import useScrollReveal from '../utils/useScrollReveal';
 
 const rolesData = [
   {
-    id: 'owner', title: 'Business Owner', icon: Briefcase, color: '#0D9488',
+    id: 'owner', title: 'Business Owner (You)', icon: Briefcase, color: '#0D9488',
     badge: 'Executive Governance',
     description: 'Real-time 360° financial visibility, predictive inventory warnings, high-level cash runway forecasts, and strategic purchase approvals.',
     features: [
@@ -18,7 +18,7 @@ const rolesData = [
     ],
   },
   {
-    id: 'accountant', title: 'Accountant / CA', icon: Calculator, color: '#0284C7',
+    id: 'accountant', title: 'Store Accountant / CA', icon: Calculator, color: '#0284C7',
     badge: 'Financial & Ledger Role',
     description: 'Instant OCR receipt extraction, duplicate invoice prevention, automated GST compliance filings, and audit-ready P&L reports.',
     features: [
@@ -29,25 +29,25 @@ const rolesData = [
     ],
   },
   {
-    id: 'employee', title: 'Operations & Staff', icon: Users, color: '#0D9488',
-    badge: 'Scoped Staff Role',
-    description: 'Simple mobile receipt capture, departmental expense categorization, and requisition tracking with strict RBAC boundary controls.',
+    id: 'billing', title: 'Store Cashier & Billing Executive', icon: Users, color: '#0D9488',
+    badge: 'POS & Billing Terminal',
+    description: 'Fast customer POS checkout, daily counter cash register reconciliation, instant billing invoice generation, and customer record management.',
     features: [
-      'Mobile Instant Receipt Snap & Upload',
-      'Department-Specific Expense Categorization',
-      'Requisition & Purchase Order Tracking',
-      'Restricted Access to Sensitive Balances',
+      'Fast Customer POS Invoice Generation',
+      'Daily Counter Cash & Register Settlement',
+      'Instant Bill Print & WhatsApp Receipt Share',
+      'Customer Credit & Transaction Log',
     ],
   },
   {
-    id: 'store_manager', title: 'Store Manager', icon: Store, color: '#0F172A',
-    badge: 'Store Operations Role',
-    description: 'Real-time inventory level tracking, low-stock reorder triggers, best-price vendor matching, and daily sales register reconciliation.',
+    id: 'stock_manager', title: 'Stock & Inventory Manager', icon: Store, color: '#0F172A',
+    badge: 'Stock Operations Role',
+    description: 'Real-time inventory level tracking, low-stock reorder triggers, best-price vendor matching, and daily store stock intake logging.',
     features: [
       'Real-Time Stock Level & Low-Stock Alerts',
       'Supplier Price Comparison & Auto-Reordering',
-      'Daily Counter Cash & Register Settlement',
-      'Store Staff Attendance & Shift Scheduling',
+      'Warehouse Stock Intake & SKU Scanner',
+      'Damage & Expiry Inventory Tracking',
     ],
   },
 ];

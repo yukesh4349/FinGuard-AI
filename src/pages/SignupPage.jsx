@@ -343,7 +343,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
               <p style={{ fontSize: 14, color: '#475569', marginBottom: 20 }}>
                 Your account for <strong>{createdUser.company_name}</strong> has been saved in PostgreSQL.
               </p>
-              
+
               <div style={{ backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', borderRadius: 12, padding: 16, marginBottom: 24, textAlign: 'left', fontSize: 13 }}>
                 <div><strong>System Generated Login ID:</strong> <code>{createdUser.user_id}</code></div>
                 <div><strong>Registered Mobile Number:</strong> {createdUser.mobile_number}</div>

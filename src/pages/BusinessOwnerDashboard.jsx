@@ -10,29 +10,27 @@ import {
 } from 'lucide-react';
 import { getStoredEmployees, saveEmployeeToDb, getStoredUsers } from '../services/postgresDb';
 
-// 21 Simple English Modules List
+// Business Owner Dashboard Sidebar Navigation Modules (Strictly 5 Sections)
 const modulesList = [
-  { id: 'overview', title: '1. Dashboard Overview', icon: LayoutDashboard, category: 'Main Dashboard' },
-  { id: 'invoices', title: '2. Bills & Invoices', icon: FileText, category: 'Money & Billing' },
-  { id: 'payments', title: '3. Payments & Receipts', icon: CreditCard, category: 'Money & Billing' },
-  { id: 'expenses', title: '4. Daily Shop Expenses', icon: Receipt, category: 'Money & Billing' },
-  { id: 'inventory', title: '5. Stock & Inventory', icon: Package, category: 'Store Operations' },
-  { id: 'sales', title: '6. Total Sales History', icon: TrendingUp, category: 'Store Operations' },
-  { id: 'vendors', title: '7. Suppliers & Vendors', icon: Users, category: 'Store Operations' },
-  { id: 'purchases', title: '8. Buying Orders', icon: ShoppingBag, category: 'Store Operations' },
-  { id: 'transactions', title: '9. Money Transactions', icon: ArrowLeftRight, category: 'Money & Billing' },
-  { id: 'fraud', title: '10. Fraud & Fake Bill Warnings', icon: ShieldAlert, category: 'AI Security' },
-  { id: 'compliance', title: '11. GST & Tax Compliance', icon: FileCheck, category: 'Taxes' },
-  { id: 'ai_advisor', title: '12. AI Business Helper', icon: Bot, category: 'AI Security' },
-  { id: 'reports', title: '13. Simple Business Reports', icon: BarChart3, category: 'Reports' },
-  { id: 'notifications', title: '14. Notifications Alert', icon: Bell, category: 'Main Dashboard' },
-  { id: 'employees', title: '15. Employee Details', icon: UserCheck, category: 'Team & Staff' },
-  { id: 'user_roles', title: '16. Staff Access & User DB', icon: Shield, category: 'Team & Staff' },
-  { id: 'audit_logs', title: '17. Activity History Logs', icon: Clock, category: 'Reports' },
-  { id: 'documents', title: '18. Bill Files & Documents', icon: Folder, category: 'Store Operations' },
-  { id: 'integrations', title: '19. App Connections', icon: Cpu, category: 'Settings' },
-  { id: 'settings', title: '20. App Settings', icon: Settings, category: 'Settings' },
-  { id: 'profile', title: '21. Owner Account Profile', icon: User, category: 'Settings' },
+  // 1. Dashboard Overview
+  { id: 'overview', title: 'Dashboard Overview', icon: LayoutDashboard, category: 'Main' },
+
+  // 2. Sales & Billing
+  { id: 'invoices', title: 'Bills & Invoices', icon: FileText, category: 'Sales & Billing' },
+  { id: 'payments', title: 'Payments & Receipts', icon: CreditCard, category: 'Sales & Billing' },
+
+  // 3. Finance
+  { id: 'expenses', title: 'Daily Shop Expenses', icon: Receipt, category: 'Finance' },
+  { id: 'transactions', title: 'Money Transactions', icon: ArrowLeftRight, category: 'Finance' },
+  { id: 'compliance', title: 'GST & Tax Compliance', icon: FileCheck, category: 'Finance' },
+
+  // 4. Inventory
+  { id: 'inventory', title: 'Remaining Stock', icon: Package, category: 'Inventory' },
+  { id: 'vendors', title: 'Vendor Details', icon: Users, category: 'Inventory' },
+
+  // 5. Employee Management
+  { id: 'add_employee', title: 'Add New Employee', icon: Plus, category: 'Employee Management' },
+  { id: 'employees', title: 'Employee List & Details', icon: UserCheck, category: 'Employee Management' },
 ];
 
 export default function BusinessOwnerDashboard({
@@ -155,7 +153,7 @@ export default function BusinessOwnerDashboard({
             </div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#FFFFFF' }}>FinGuard AI</div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#0EA5E9', fontFamily: 'monospace' }}>OWNER DASHBOARD</div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#0D9488', fontFamily: 'monospace' }}>OWNER DASHBOARD</div>
             </div>
           </div>
         </div>
@@ -164,13 +162,13 @@ export default function BusinessOwnerDashboard({
         <div style={{ padding: '14px 16px 8px' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8,
-            backgroundColor: '#1E293B', border: '1px solid rgba(13,148,136,0.3)',
+            backgroundColor: '#0F172A', border: '1px solid rgba(13,148,136,0.3)',
             borderRadius: 10, padding: '8px 12px',
           }}>
             <Search size={14} color="#0D9488" />
             <input
               type="text"
-              placeholder="Search 21 Modules..."
+              placeholder="Search Owner Modules..."
               value={moduleSearch}
               onChange={e => setModuleSearch(e.target.value)}
               style={{
@@ -181,9 +179,10 @@ export default function BusinessOwnerDashboard({
           </div>
         </div>
 
-        {/* 21 Navigation Items */}
-        <nav style={{ flex: 1, overflowY: 'auto', padding: '8px 12px' }}>
-          {filteredModules.map((m) => {
+        {/* Structured 5 Section Sidebar Navigation */}
+        <nav style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
+          {/* Top Main Item: Dashboard Overview */}
+          {filteredModules.filter(m => m.category === 'Main').map(m => {
             const Icon = m.icon;
             const active = activeModule === m.id;
             return (
@@ -192,26 +191,67 @@ export default function BusinessOwnerDashboard({
                 onClick={() => handleModuleClick(m.id)}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '9px 12px', borderRadius: 10, marginBottom: 3,
-                  backgroundColor: active ? '#0D9488' : 'transparent',
-                  color: active ? '#FFFFFF' : '#94A3B8',
-                  border: 'none', cursor: 'pointer', textAlign: 'left',
-                  fontFamily: 'inherit', fontSize: 12, fontWeight: active ? 700 : 600,
+                  padding: '11px 14px', borderRadius: 10, marginBottom: 14,
+                  backgroundColor: active ? '#0D9488' : 'rgba(255,255,255,0.06)',
+                  color: '#FFFFFF', border: 'none', cursor: 'pointer', textAlign: 'left',
+                  fontFamily: 'inherit', fontSize: 13, fontWeight: active ? 800 : 600,
+                  boxShadow: active ? '0 4px 14px rgba(13,148,136,0.3)' : 'none',
                   transition: 'all 0.18s ease',
                 }}
-                onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = '#1E293B'; }}
-                onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
-                <Icon size={16} color={active ? '#FFFFFF' : '#0D9488'} />
-                <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {m.title}
-                </span>
-                {m.id === 'fraud' && (
-                  <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 4, backgroundColor: '#ef4444', color: '#FFF', fontWeight: 800 }}>
-                    1 ALERT
-                  </span>
-                )}
+                <Icon size={18} color={active ? '#FFFFFF' : '#0D9488'} />
+                <span style={{ flex: 1 }}>{m.title}</span>
               </button>
+            );
+          })}
+
+          {/* Grouped 4 Sections: Sales & Billing, Finance, Inventory, Employee Management */}
+          {[
+            { cat: 'Sales & Billing', label: 'SALES & BILLING' },
+            { cat: 'Finance', label: 'FINANCE' },
+            { cat: 'Inventory', label: 'INVENTORY' },
+            { cat: 'Employee Management', label: 'EMPLOYEE MANAGEMENT' },
+          ].map(group => {
+            const groupItems = filteredModules.filter(m => m.category === group.cat);
+            if (groupItems.length === 0) return null;
+            return (
+              <div key={group.cat} style={{ marginBottom: 16 }}>
+                <div style={{
+                  fontSize: 10, fontWeight: 800, color: '#0D9488',
+                  fontFamily: 'monospace', textTransform: 'uppercase',
+                  padding: '4px 8px', letterSpacing: '0.06em',
+                }}>
+                  {group.label}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 4 }}>
+                  {groupItems.map(m => {
+                    const Icon = m.icon;
+                    const active = activeModule === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => handleModuleClick(m.id)}
+                        style={{
+                          width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                          padding: '9px 12px', borderRadius: 9,
+                          backgroundColor: active ? '#0D9488' : 'transparent',
+                          color: active ? '#FFFFFF' : '#94A3B8',
+                          border: 'none', cursor: 'pointer', textAlign: 'left',
+                          fontFamily: 'inherit', fontSize: 12, fontWeight: active ? 700 : 500,
+                          transition: 'all 0.18s ease',
+                        }}
+                        onMouseEnter={e => { if (!active) { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#FFFFFF'; } }}
+                        onMouseLeave={e => { if (!active) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#94A3B8'; } }}
+                      >
+                        <Icon size={16} color={active ? '#FFFFFF' : '#0D9488'} />
+                        <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {m.title}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
@@ -223,7 +263,7 @@ export default function BusinessOwnerDashboard({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
             <div style={{
-              width: 34, height: 34, borderRadius: 17, backgroundColor: '#0284C7',
+              width: 34, height: 34, borderRadius: 17, backgroundColor: '#0D9488',
               color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: 800, fontSize: 14, flexShrink: 0,
             }}>
@@ -233,7 +273,7 @@ export default function BusinessOwnerDashboard({
               <div style={{ fontSize: 13, fontWeight: 800, color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {ownerName || 'Business Owner'}
               </div>
-              <div style={{ fontSize: 10, color: '#94A3B8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: 10, color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {companyName}
               </div>
             </div>
@@ -264,9 +304,7 @@ export default function BusinessOwnerDashboard({
             <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
               {modulesList.find(m => m.id === activeModule)?.title}
             </h2>
-            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, backgroundColor: '#F0FDFA', color: '#0D9488', border: '1px solid rgba(13,148,136,0.3)', fontWeight: 700 }}>
-              POSTGRESQL DB CONNECTED
-            </span>
+            
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -327,23 +365,17 @@ export default function BusinessOwnerDashboard({
           {activeModule === 'invoices' && <InvoiceManagementModule onOpenCreateInvoice={onOpenBillingPage} onOpenUpload={onOpenUploadPage} />}
           {activeModule === 'payments' && <PaymentManagementModule />}
           {activeModule === 'expenses' && <ExpenseManagementModule />}
-          {activeModule === 'inventory' && <InventoryManagementModule />}
-          {activeModule === 'sales' && <SalesManagementModule />}
-          {activeModule === 'vendors' && <VendorManagementModule />}
-          {activeModule === 'purchases' && <PurchaseManagementModule />}
           {activeModule === 'transactions' && <TransactionsModule />}
-          {activeModule === 'fraud' && <FraudDetectionModule />}
           {activeModule === 'compliance' && <ComplianceModule />}
-          {activeModule === 'ai_advisor' && <AiAdvisorModule aiMessages={aiMessages} onSend={handleSendAiMessage} inputQuery={inputQuery} setInputQuery={setInputQuery} />}
-          {activeModule === 'reports' && <ReportsModule onOpenReport={() => setShowReportModal(true)} />}
-          {activeModule === 'notifications' && <NotificationsCenterModule onClear={() => setNotificationCount(0)} />}
-          {activeModule === 'employees' && <EmployeeManagementModule empList={empList} onOpenAddEmp={() => setShowAddEmpModal(true)} />}
-          {activeModule === 'user_roles' && <UserRolesModule dbUsersList={dbUsersList} />}
-          {activeModule === 'audit_logs' && <AuditLogsModule />}
-          {activeModule === 'documents' && <DocumentsModule />}
-          {activeModule === 'integrations' && <IntegrationsModule />}
-          {activeModule === 'settings' && <SettingsModule />}
-          {activeModule === 'profile' && <ProfileModule ownerName={ownerName} companyName={companyName} dbUsersList={dbUsersList} />}
+          {activeModule === 'inventory' && <InventoryManagementModule />}
+          {activeModule === 'vendors' && <VendorManagementModule />}
+          {(activeModule === 'employees' || activeModule === 'add_employee') && (
+            <EmployeeManagementModule
+              empList={empList}
+              setEmpList={setEmpList}
+              initialOpenAdd={activeModule === 'add_employee'}
+            />
+          )}
         </div>
       </main>
 
@@ -609,7 +641,7 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
             </div>
             <div style={{ height: 60, display: 'flex', alignItems: 'flex-end', gap: 6, marginTop: 14 }}>
               {[35, 45, 30, 50, 40, 30].map((val, i) => (
-                <div key={i} style={{ flex: 1, backgroundColor: '#0284C7', height: `${val}%`, borderRadius: '3px 3px 0 0' }} title={`Expense: ${val}%`} />
+                <div key={i} style={{ flex: 1, backgroundColor: '#0D9488', height: `${val}%`, borderRadius: '3px 3px 0 0' }} title={`Expense: ${val}%`} />
               ))}
             </div>
           </div>
@@ -636,11 +668,11 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
               </button>
 
               <button onClick={onOpenAddEmp} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#F0FDFA', color: '#0F172A', border: '1.5px solid rgba(13,148,136,0.4)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <UserCheck size={16} color="#0284C7" />
+                <UserCheck size={16} color="#0D9488" />
                 <span>➕ Add New Employee</span>
               </button>
 
-              <button onClick={onOpenReport} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#0284C7', color: '#FFFFFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button onClick={onOpenReport} style={{ padding: '12px 14px', borderRadius: 12, backgroundColor: '#0D9488', color: '#FFFFFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <BarChart3 size={16} color="#FFFFFF" />
                 <span>📊 Report Generator</span>
               </button>
@@ -699,7 +731,7 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
           <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, padding: 18, border: '1px solid rgba(13,148,136,0.2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <UserCheck size={18} color="#0284C7" />
+                <UserCheck size={18} color="#0D9488" />
                 <h4 style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>👥 Employees ({empList.length} Staff Members)</h4>
               </div>
               <button onClick={onOpenAddEmp} style={{ fontSize: 11, color: '#0D9488', fontWeight: 700, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', padding: '4px 10px', borderRadius: 8, cursor: 'pointer' }}>
@@ -1071,19 +1103,245 @@ function NotificationsCenterModule({ onClear }) {
   );
 }
 
-function EmployeeManagementModule({ empList, onOpenAddEmp }) {
+function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false }) {
+  const [showAddModal, setShowAddModal] = useState(initialOpenAdd);
+  const [editingEmp, setEditingEmp] = useState(null);
+
+  // Form states for Add Employee
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('Store Operations Manager');
+  const [phone, setPhone] = useState('');
+  const [salary, setSalary] = useState('');
+
+  // Form states for Edit Employee & Salary Permission
+  const [editName, setEditName] = useState('');
+  const [editRole, setEditRole] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editSalary, setEditSalary] = useState('');
+  const [editStatus, setEditStatus] = useState('Active');
+
+  useEffect(() => {
+    if (initialOpenAdd) setShowAddModal(true);
+  }, [initialOpenAdd]);
+
+  const handleAddSubmit = (e) => {
+    e.preventDefault();
+    if (!name || !phone) return;
+    const formattedSalary = salary ? (salary.includes('₹') ? salary : `₹ ${Number(salary.replace(/\D/g, '')).toLocaleString('en-IN')}`) : '₹ 30,000';
+    const newEmp = {
+      id: `EMP-00${empList.length + 1}`,
+      name,
+      role,
+      phone: phone.replace(/\D/g, ''),
+      salary: formattedSalary,
+      status: 'Active',
+    };
+    const updated = saveEmployeeToDb(newEmp);
+    if (setEmpList) setEmpList(updated);
+    setName('');
+    setPhone('');
+    setSalary('');
+    setShowAddModal(false);
+  };
+
+  const handleOpenEdit = (emp) => {
+    setEditingEmp(emp);
+    setEditName(emp.name);
+    setEditRole(emp.role);
+    setEditPhone(emp.phone);
+    setEditSalary(emp.salary.replace(/[^0-9]/g, ''));
+    setEditStatus(emp.status || 'Active');
+  };
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    if (!editingEmp) return;
+    const formattedSalary = editSalary ? `₹ ${Number(editSalary).toLocaleString('en-IN')}` : editingEmp.salary;
+    const updatedList = empList.map(e => {
+      if (e.id === editingEmp.id) {
+        return {
+          ...e,
+          name: editName,
+          role: editRole,
+          phone: editPhone.replace(/\D/g, ''),
+          salary: formattedSalary,
+          status: editStatus,
+        };
+      }
+      return e;
+    });
+    if (setEmpList) setEmpList(updatedList);
+    try {
+      localStorage.setItem('finguard_postgres_employees', JSON.stringify(updatedList));
+    } catch (err) {
+      console.error(err);
+    }
+    setEditingEmp(null);
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: 16, fontWeight: 800 }}>Employee &amp; Staff Details ({empList.length} Members)</h3>
-        <button onClick={onOpenAddEmp} style={{ padding: '8px 14px', borderRadius: 8, backgroundColor: '#0D9488', color: '#FFF', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-          ➕ Add New Employee
+      {/* Header Bar */}
+      <div style={{
+        backgroundColor: '#FFFFFF', padding: 20, borderRadius: 16,
+        border: '1px solid rgba(13,148,136,0.2)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
+            👥 Employee Management ({empList.length} Active Staff Members)
+          </h3>
+          <p style={{ fontSize: 13, color: '#475569', marginTop: 2 }}>
+            Manage staff profiles, assign store roles, update monthly salary, and grant editing permissions.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          style={{
+            padding: '10px 18px', borderRadius: 10,
+            backgroundColor: '#0D9488', color: '#FFFFFF',
+            border: 'none', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}
+        >
+          <Plus size={16} />
+          <span>+ Add New Employee</span>
         </button>
       </div>
-      <TableCard
-        headers={['Emp ID', 'Staff Name', 'Role Title', 'Mobile Number', 'Salary', 'Status']}
-        rows={empList.map(e => [e.id, e.name, e.role, e.phone, e.salary, e.status])}
-      />
+
+      {/* Employee List Table with Edit Permission & Salary Action */}
+      <div style={{ backgroundColor: '#FFFFFF', borderRadius: 16, border: '1px solid rgba(13,148,136,0.2)', overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+            <thead>
+              <tr style={{ backgroundColor: '#F0FDFA', borderBottom: '1px solid rgba(13,148,136,0.15)', color: '#0D9488', textTransform: 'uppercase', fontSize: 11, fontFamily: 'monospace' }}>
+                <th style={{ padding: '14px 18px', fontWeight: 800 }}>Emp ID</th>
+                <th style={{ padding: '14px 18px', fontWeight: 800 }}>Staff Name</th>
+                <th style={{ padding: '14px 18px', fontWeight: 800 }}>Role Title</th>
+                <th style={{ padding: '14px 18px', fontWeight: 800 }}>Mobile Number</th>
+                <th style={{ padding: '14px 18px', fontWeight: 800 }}>Monthly Salary</th>
+                <th style={{ padding: '14px 18px', fontWeight: 800 }}>Status</th>
+                <th style={{ padding: '14px 18px', fontWeight: 800, textAlign: 'right' }}>Owner Action & Salary Edit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {empList.map((emp) => (
+                <tr key={emp.id} style={{ borderBottom: '1px solid rgba(13,148,136,0.1)' }}>
+                  <td style={{ padding: '14px 18px', fontWeight: 700, color: '#0D9488' }}>{emp.id}</td>
+                  <td style={{ padding: '14px 18px', fontWeight: 700, color: '#0F172A' }}>{emp.name}</td>
+                  <td style={{ padding: '14px 18px', color: '#475569' }}>{emp.role}</td>
+                  <td style={{ padding: '14px 18px', color: '#0F172A', fontWeight: 600 }}>{emp.phone}</td>
+                  <td style={{ padding: '14px 18px', fontWeight: 800, color: '#0D9488' }}>{emp.salary}</td>
+                  <td style={{ padding: '14px 18px' }}>
+                    <span style={{
+                      padding: '3px 8px', borderRadius: 99, fontSize: 11, fontWeight: 700,
+                      backgroundColor: emp.status === 'Active' ? '#f0fdf4' : '#fee2e2',
+                      color: emp.status === 'Active' ? '#16a34a' : '#b91c1c',
+                      border: `1px solid ${emp.status === 'Active' ? '#bbf7d0' : '#fecdd3'}`,
+                    }}>
+                      {emp.status || 'Active'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '14px 18px', textAlign: 'right' }}>
+                    <button
+                      onClick={() => handleOpenEdit(emp)}
+                      style={{
+                        padding: '6px 12px', borderRadius: 8,
+                        backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
+                        color: '#0D9488', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                      }}
+                    >
+                      <Edit3 size={13} />
+                      <span>Edit Details & Salary</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal: Add New Employee */}
+      {showAddModal && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+          <div style={{ backgroundColor: '#FFF', borderRadius: 20, padding: 28, width: 440, maxWidth: '90%', border: '1px solid rgba(13,148,136,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800 }}>➕ Add New Employee</h3>
+              <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Employee Full Name *</label>
+                <input type="text" required placeholder="e.g. Ramesh Verma" value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Role Title *</label>
+                <select value={role} onChange={e => setRole(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }}>
+                  <option value="Store Operations Manager">Store Operations Manager</option>
+                  <option value="Billing Specialist">Billing Specialist</option>
+                  <option value="Inventory Manager">Inventory Manager</option>
+                  <option value="Chief Accountant">Chief Accountant</option>
+                  <option value="Store Assistant">Store Assistant</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Mobile Phone Number *</label>
+                <input type="tel" required maxLength={10} placeholder="10-digit mobile number" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Monthly Salary (₹)</label>
+                <input type="text" placeholder="e.g. 35000" value={salary} onChange={e => setSalary(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }} />
+              </div>
+              <button type="submit" style={{ padding: 12, borderRadius: 10, backgroundColor: '#0D9488', color: '#FFF', border: 'none', fontWeight: 800, cursor: 'pointer', marginTop: 8 }}>
+                Save Employee to PostgreSQL DB
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Edit Employee Details & Update Salary */}
+      {editingEmp && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+          <div style={{ backgroundColor: '#FFF', borderRadius: 20, padding: 28, width: 440, maxWidth: '90%', border: '1px solid rgba(13,148,136,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800 }}>✏️ Edit Employee Details & Salary</h3>
+              <button onClick={() => setEditingEmp(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Employee Name</label>
+                <input type="text" required value={editName} onChange={e => setEditName(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Role Title</label>
+                <input type="text" required value={editRole} onChange={e => setEditRole(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Mobile Number</label>
+                <input type="tel" required maxLength={10} value={editPhone} onChange={e => setEditPhone(e.target.value.replace(/\D/g, ''))} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Update Monthly Salary (Numeric ₹)</label>
+                <input type="number" required value={editSalary} onChange={e => setEditSalary(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none', fontWeight: 700 }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, display: 'block', marginBottom: 4 }}>Employment Status</label>
+                <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid rgba(13,148,136,0.3)', outline: 'none' }}>
+                  <option value="Active">Active</option>
+                  <option value="On Leave">On Leave</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+              <button type="submit" style={{ padding: 12, borderRadius: 10, backgroundColor: '#0D9488', color: '#FFF', border: 'none', fontWeight: 800, cursor: 'pointer', marginTop: 8 }}>
+                Save Updated Details & Salary
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
