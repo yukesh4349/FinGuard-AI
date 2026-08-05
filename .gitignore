@@ -9,10 +9,12 @@ lerna-debug.log*
 
 # Dependencies
 node_modules
+**/node_modules
 .pnpm-store
 
 # Production build output
 dist
+**/dist
 dist-ssr
 *.local
 

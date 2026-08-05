@@ -18,6 +18,42 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create Official Govt GST Rates Table (PostgreSQL)
+CREATE TABLE IF NOT EXISTS official_gst_rates (
+    id SERIAL PRIMARY KEY,
+    category VARCHAR(100) UNIQUE NOT NULL,
+    example VARCHAR(255) NOT NULL,
+    gst_rate_percent NUMERIC(5, 2) NOT NULL,
+    gst_display VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Seed Default Official Indian Govt GST Rates
+INSERT INTO official_gst_rates (category, example, gst_rate_percent, gst_display) VALUES
+('Essential food', 'Fresh fruits & vegetables', 0.00, '0%'),
+('Milk', 'Fresh milk', 0.00, '0%'),
+('Rice/Wheat', 'Unbranded grains', 0.00, '0%'),
+('Packaged food', 'Packaged cereals', 5.00, '5%'),
+('Edible oil', 'Cooking oil', 5.00, '5%'),
+('Tea', 'Tea leaves', 5.00, '5%'),
+('Sugar', 'Refined sugar', 5.00, '5%'),
+('Restaurant', 'Non-luxury restaurants', 5.00, '5%'),
+('Footwear', 'Footwear items', 12.00, '12%'),
+('Mobile phones', 'Smartphones', 18.00, '18%'),
+('Laptops', 'Computers', 18.00, '18%'),
+('Televisions', 'TVs up to applicable slab', 18.00, '18%'),
+('Soap & shampoo', 'Personal care', 18.00, '18%'),
+('Toothpaste', 'Dental care', 18.00, '18%'),
+('Clothing', 'Ready-made garments', 12.00, '12% / 5%'),
+('Furniture', 'Wooden furniture', 18.00, '18%'),
+('Electrical appliances', 'Mixer, fan', 18.00, '18%'),
+('Air conditioners', 'AC units', 28.00, '28%'),
+('Refrigerators', 'Fridge', 18.00, '18%'),
+('Luxury cars', 'Selected vehicles', 28.00, '28% + cess'),
+('Soft drinks', 'Aerated beverages', 28.00, '28%'),
+('Cigarettes', 'Tobacco', 28.00, '28% + cess')
+ON CONFLICT (category) DO NOTHING;
+
 -- Create Index for fast user lookup
 CREATE INDEX IF NOT EXISTS idx_users_mobile ON users(mobile_number);
 CREATE INDEX IF NOT EXISTS idx_users_user_id ON users(user_id);
