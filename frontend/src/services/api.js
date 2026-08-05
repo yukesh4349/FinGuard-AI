@@ -97,11 +97,31 @@ export const apiUpdateInventoryItem = (id, itemData) =>
     body: JSON.stringify(itemData),
   });
 
-export const apiTriggerStockWebhook = (eventType, payload) =>
-  request('/inventory/webhook/trigger', {
+export const EXTERNAL_AGENT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea';
+
+export const apiTriggerStockWebhook = (eventType, payload) => {
+  const bodyData = {
+    eventType,
+    webhookTarget: EXTERNAL_AGENT_WEBHOOK_URL,
+    timestamp: new Date().toISOString(),
+    ...payload,
+  };
+
+  // 1. Send HTTP POST directly to External Agent Webhook URL
+  try {
+    fetch(EXTERNAL_AGENT_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bodyData),
+    }).catch(err => console.log('External Agent Webhook notice:', err));
+  } catch (e) {}
+
+  // 2. Send to Backend Express API endpoint
+  return request('/inventory/webhook/trigger', {
     method: 'POST',
-    body: JSON.stringify({ eventType, ...payload }),
+    body: JSON.stringify(bodyData),
   });
+};
 
 export const apiGetWebhookLogs = () => request('/inventory/webhook/logs');
 

@@ -854,17 +854,17 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
     },
   });
 
-  const [liveSales, setLiveSales] = useState(4829500);
-  const [liveExpenses, setLiveExpenses] = useState(2870000);
+  const [liveSales, setLiveSales] = useState(0);
+  const [liveExpenses, setLiveExpenses] = useState(0);
   const [livePending, setLivePending] = useState(0);
   const [liveStockCards, setLiveStockCards] = useState([]);
-  const [lowStockCount, setLowStockCount] = useState(3);
-  const [liveSuppliers, setLiveSuppliers] = useState(['ABC Wholesale Traders']);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [liveSuppliers, setLiveSuppliers] = useState([]);
   const [liveTransactions, setLiveTransactions] = useState([]);
   const [fraudFeedAlerts, setFraudFeedAlerts] = useState([]);
 
   useEffect(() => {
-    // 1. Calculate live financial totals from database
+    // 1. Calculate live financial totals from database (Starts at ZERO)
     try {
       const storedCustomerSales = JSON.parse(localStorage.getItem('finsight_customer_invoices') || '[]');
       const storedVendorInvoices = JSON.parse(localStorage.getItem('finsight_ocr_invoices') || localStorage.getItem('finsight_invoices') || '[]');
@@ -875,14 +875,16 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
       let calcPending = storedVendorInvoices.filter(b => b.payment_status === 'Pending' || b.status === 'Pending')
         .reduce((acc, b) => acc + (parseFloat(b.grand_total || b.grandTotal || 0) || 0), 0);
 
-      if (calcSales > 0) setLiveSales(calcSales);
-      if (calcExpenses > 0) setLiveExpenses(calcExpenses);
+      setLiveSales(calcSales);
+      setLiveExpenses(calcExpenses);
       setLivePending(calcPending);
 
       // Extract unique suppliers
       if (storedVendorInvoices.length > 0) {
         const uniqueSup = Array.from(new Set(storedVendorInvoices.map(i => i.supplier_name || i.vendor).filter(Boolean)));
-        if (uniqueSup.length > 0) setLiveSuppliers(uniqueSup);
+        setLiveSuppliers(uniqueSup);
+      } else {
+        setLiveSuppliers([]);
       }
 
       // Load live transactions

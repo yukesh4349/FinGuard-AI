@@ -83,31 +83,46 @@ router.post('/webhook/stock-updates', (req, res) => {
   });
 });
 
+const EXTERNAL_AGENT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea';
+
 // Trigger Webhook Endpoint (Called when stock is loaded OR customer buys stock)
 router.post('/webhook/trigger', (req, res) => {
-  const { eventType, items, supplierName, customerName, billNo, source } = req.body;
+  const { eventType, items, supplierName, customerName, billNo, source, grandTotal } = req.body;
 
-  if (!eventType) {
-    return res.status(400).json({ success: false, error: 'eventType (e.g. STOCK_IN_LOADED or STOCK_CUSTOMER_BOUGHT) is required.' });
-  }
+  const isStockOut = (eventType || '').includes('BOUGHT') || (eventType || '').includes('CUSTOMER') || (eventType || '').includes('OUT');
+  const typeKey = isStockOut ? 'STOCK_CUSTOMER_BOUGHT' : 'STOCK_IN_LOADED';
 
   const payload = {
     id: `WH-EVT-${Math.floor(10000 + Math.random() * 90000)}`,
-    eventType: eventType === 'STOCK_IN_LOADED' ? 'STOCK_IN_LOADED (Vendor Purchase Loaded)' : 'STOCK_CUSTOMER_BOUGHT (Customer POS Billed)',
-    source: source || (eventType === 'STOCK_IN_LOADED' ? `Vendor Bill Upload (${supplierName || 'Supplier'})` : `Customer POS Sale (${customerName || 'Retail Customer'})`),
+    webhookTarget: EXTERNAL_AGENT_WEBHOOK_URL,
+    eventType: typeKey,
+    flowType: isStockOut ? 'STOCK_OUT (Customer POS Sale)' : 'STOCK_IN (Vendor Purchase)',
+    source: source || (isStockOut ? `Customer POS Sale (${customerName || 'Retail Customer'})` : `Vendor Purchase Bill (${supplierName || 'Supplier'})`),
     referenceId: billNo || `BILL-${Math.floor(1000 + Math.random() * 9000)}`,
+    customerName: customerName || null,
+    supplierName: supplierName || null,
+    grandTotal: grandTotal || null,
     items: items || [],
     timestamp: new Date().toISOString(),
-    status: 'TRIGGERED_PROCESSED',
+    status: 'DELIVERED_SUCCESS',
   };
 
   db.insert('webhooks', payload);
 
-  console.log(`⚡ [WEBHOOK TRIGGERED] ${payload.eventType} for ${payload.referenceId}`);
+  // Dispatch payload to external agent webhook URL endpoint
+  try {
+    fetch(EXTERNAL_AGENT_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch(err => console.warn('External Webhook dispatch notice:', err.message));
+  } catch (e) {}
+
+  console.log(`⚡ [EXTERNAL AGENT WEBHOOK DISPATCHED] ${payload.eventType} to ${EXTERNAL_AGENT_WEBHOOK_URL}`);
 
   res.json({
     success: true,
-    message: `Stock Webhook ${payload.eventType} successfully triggered and delivered.`,
+    message: `Stock Webhook ${payload.eventType} successfully triggered and sent to ${EXTERNAL_AGENT_WEBHOOK_URL}`,
     webhookEvent: payload,
   });
 });

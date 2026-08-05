@@ -91,6 +91,58 @@
   ],
   "invoices": [
     {
+      "id": "ocr-1785911766783",
+      "invoice_number": "INV-2026-001",
+      "supplier_name": "ABC Wholesale Traders",
+      "invoice_date": "03-Aug-2026",
+      "subtotal": 31640,
+      "tax_gst": 1582,
+      "grand_total": 33222,
+      "status": "Flagged High Risk",
+      "riskScore": "0.96 (Duplicate Bill Detected)",
+      "duplicateReason": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "items": [
+        {
+          "id": "item-1",
+          "name": "Basmati Rice 25kg",
+          "qty": "10 Bags",
+          "rate": "₹ 1,850",
+          "sellingPrice": "₹ 2,200",
+          "gst": "5%",
+          "total": "₹ 18,500"
+        },
+        {
+          "id": "item-2",
+          "name": "Sunflower Oil 5L",
+          "qty": "12 Packs",
+          "rate": "₹ 720",
+          "sellingPrice": "₹ 860",
+          "gst": "5%",
+          "total": "₹ 8,640"
+        },
+        {
+          "id": "item-3",
+          "name": "Sugar 1kg",
+          "qty": "50 Packs",
+          "rate": "₹ 46",
+          "sellingPrice": "₹ 55",
+          "gst": "5%",
+          "total": "₹ 2,300"
+        },
+        {
+          "id": "item-4",
+          "name": "Detergent Powder 1kg",
+          "qty": "20 Packs",
+          "rate": "₹ 110",
+          "sellingPrice": "₹ 140",
+          "gst": "18%",
+          "total": "₹ 2,200"
+        }
+      ],
+      "raw_text": "ABC Wholesale Traders\nGSTIN: 29ABCDE1234F1Z5\nInvoice No: INV-2026-001\nInvoice Date: 03-Aug-2026\n\nBill To:\nGreen Mart Stores\nGSTIN: 33AAACG1234A1Z9\n\nItem                     Qty    Rate    GST    Amount\n-----------------------------------------------------\nBasmati Rice 25kg        10     1850    5%     18500\nSunflower Oil 5L         12     720     5%     8640\nSugar 1kg                50     46      5%     2300\nDetergent Powder 1kg     20     110     18%    2200\n-----------------------------------------------------\nSubtotal: 31640\nGST Tax Amount (5%): 1582\nGrand Total Payable: 33222",
+      "created_at": "2026-08-05T06:36:06.783Z"
+    },
+    {
       "id": "ocr-1785903296297",
       "invoice_number": "INV-2026-001",
       "supplier_name": "ABC Wholesale Traders",
@@ -482,6 +534,14 @@
   ],
   "fraud_alerts": [
     {
+      "id": "ALT-1785911766798",
+      "type": "Duplicate Invoice Warning",
+      "message": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "severity": "HIGH",
+      "timestamp": "2026-08-05T06:36:06.798Z",
+      "resolved": false
+    },
+    {
       "id": "ALT-1785903296304",
       "type": "Duplicate Invoice Warning",
       "message": "Invoice number #INV-2026-001 matches a previous bill recorded from Apex Supermarket Wholesale.",
@@ -512,6 +572,204 @@
       "severity": "HIGH",
       "timestamp": "2026-08-04T15:17:04.247Z",
       "resolved": false
+    }
+  ],
+  "webhooks": [
+    {
+      "id": "WH-EVT-44102",
+      "eventType": "STOCK_CUSTOMER_BOUGHT (Customer POS Billed)",
+      "source": "Customer POS Bill Created",
+      "referenceId": "BILL-8358",
+      "items": [
+        {
+          "productId": "p1",
+          "description": "Basmati Rice Bag (25kg)",
+          "qty": 2,
+          "costPrice": 1850,
+          "price": 2200,
+          "gstRate": 5
+        },
+        {
+          "productId": "p2",
+          "description": "Sunflower Cooking Oil (1L)",
+          "qty": 5,
+          "costPrice": 135,
+          "price": 165,
+          "gstRate": 5
+        }
+      ],
+      "timestamp": "2026-08-05T06:44:46.311Z",
+      "status": "TRIGGERED_PROCESSED"
+    },
+    {
+      "id": "WH-EVT-48819",
+      "eventType": "STOCK_CUSTOMER_BOUGHT (Customer POS Billed)",
+      "source": "Customer POS Bill Created",
+      "referenceId": "BILL-6856",
+      "items": [
+        {
+          "productId": "p1",
+          "description": "Basmati Rice Bag (25kg)",
+          "qty": 2,
+          "costPrice": 1850,
+          "price": 2200,
+          "gstRate": 5
+        },
+        {
+          "productId": "p2",
+          "description": "Sunflower Cooking Oil (1L)",
+          "qty": 5,
+          "costPrice": 135,
+          "price": 165,
+          "gstRate": 5
+        }
+      ],
+      "timestamp": "2026-08-05T06:44:45.786Z",
+      "status": "TRIGGERED_PROCESSED"
+    },
+    {
+      "id": "WH-EVT-86832",
+      "eventType": "STOCK_CUSTOMER_BOUGHT (Customer POS Billed)",
+      "source": "Customer POS Bill Created",
+      "referenceId": "BILL-8658",
+      "items": [
+        {
+          "productId": "p1",
+          "description": "Basmati Rice Bag (25kg)",
+          "qty": 18,
+          "costPrice": 1850,
+          "price": 2200,
+          "gstRate": 5
+        },
+        {
+          "productId": "p2",
+          "description": "Sunflower Cooking Oil (1L)",
+          "qty": 5,
+          "costPrice": 135,
+          "price": 165,
+          "gstRate": 5
+        }
+      ],
+      "timestamp": "2026-08-05T06:44:22.765Z",
+      "status": "TRIGGERED_PROCESSED"
+    },
+    {
+      "id": "WH-EVT-48034",
+      "eventType": "STOCK_CUSTOMER_BOUGHT (Customer POS Billed)",
+      "source": "Customer POS Bill Created",
+      "referenceId": "BILL-8975",
+      "items": [
+        {
+          "productId": "p1",
+          "description": "Basmati Rice Bag (25kg)",
+          "qty": 2,
+          "costPrice": 1850,
+          "price": 2200,
+          "gstRate": 5
+        },
+        {
+          "productId": "p2",
+          "description": "Sunflower Cooking Oil (1L)",
+          "qty": 5,
+          "costPrice": 135,
+          "price": 165,
+          "gstRate": 5
+        }
+      ],
+      "timestamp": "2026-08-05T06:43:33.000Z",
+      "status": "TRIGGERED_PROCESSED"
+    },
+    {
+      "id": "WH-EVT-98473",
+      "eventType": "STOCK_IN_LOADED (Vendor Purchase Loaded)",
+      "source": "Vendor Purchase Invoice Uploaded",
+      "referenceId": "INV-2026-001",
+      "items": [
+        {
+          "name": "Basmati Rice 25kg",
+          "quantity": "10 Units",
+          "stock_qty": 10,
+          "cost_price": "₹ 1,850",
+          "rate": "₹ 1,850",
+          "selling_price": "₹ 2,200",
+          "gst_rate": "5%",
+          "total_amount": "₹ 18,500",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-05T06:36:06.767Z"
+        },
+        {
+          "name": "Sunflower Oil 5L",
+          "quantity": "12 Units",
+          "stock_qty": 12,
+          "cost_price": "₹ 720",
+          "rate": "₹ 720",
+          "selling_price": "₹ 860",
+          "gst_rate": "5%",
+          "total_amount": "₹ 8,640",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-05T06:36:06.767Z"
+        },
+        {
+          "name": "Sugar 1kg",
+          "quantity": "50 Units",
+          "stock_qty": 50,
+          "cost_price": "₹ 46",
+          "rate": "₹ 46",
+          "selling_price": "₹ 55",
+          "gst_rate": "5%",
+          "total_amount": "₹ 2,300",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-05T06:36:06.767Z"
+        },
+        {
+          "name": "Detergent Powder 1kg",
+          "quantity": "20 Units",
+          "stock_qty": 20,
+          "cost_price": "₹ 110",
+          "rate": "₹ 110",
+          "selling_price": "₹ 140",
+          "gst_rate": "18%",
+          "total_amount": "₹ 2,200",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-05T06:36:06.767Z"
+        }
+      ],
+      "timestamp": "2026-08-05T06:36:06.779Z",
+      "status": "TRIGGERED_PROCESSED"
+    },
+    {
+      "id": "WH-EVT-65158",
+      "eventType": "STOCK_CUSTOMER_BOUGHT (Customer POS Billed)",
+      "source": "Customer POS Bill Created",
+      "referenceId": "BILL-6012",
+      "items": [
+        {
+          "productId": "p1",
+          "description": "Basmati Rice Bag (25kg)",
+          "qty": 2,
+          "costPrice": 1850,
+          "price": 2200,
+          "gstRate": 5
+        },
+        {
+          "productId": "prod-1",
+          "description": "Sunflower Oil 5L",
+          "qty": 5,
+          "costPrice": 100,
+          "price": 122,
+          "gstRate": 5
+        }
+      ],
+      "timestamp": "2026-08-05T06:35:48.924Z",
+      "status": "TRIGGERED_PROCESSED"
     }
   ]
 }
