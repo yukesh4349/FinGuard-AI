@@ -4,7 +4,7 @@ import {
   Sparkles, ShieldCheck, Download, Trash2, Plus, Edit3, Save, RefreshCw, Cpu, Image as ImageIcon, Eye, FileCode, Building2, Calendar, Hash, Percent, Database
 } from 'lucide-react';
 import { saveOcrDataToSupabase } from '../services/supabaseClient';
-import { apiUploadOcrInvoice } from '../services/api';
+import { apiUploadOcrInvoice, apiTriggerStockWebhook } from '../services/api';
 import {
   getOfficialGstRatesFromPostgres,
   addOfficialGstRateToPostgres,
@@ -383,6 +383,14 @@ Grand Total Payable: 33222`;
       });
 
       localStorage.setItem('finsight_stock_inventory', JSON.stringify(mergedStock));
+
+      // 2. Trigger Secondary Stock Webhook for STOCK_IN_LOADED event
+      apiTriggerStockWebhook('STOCK_IN_LOADED', {
+        supplierName: editSupplier,
+        billNo: editInvoiceNo,
+        items: newStockEntries,
+        source: 'Vendor Purchase Invoice Uploaded',
+      }).catch(err => console.log('Webhook trigger notice:', err));
     } catch (e) {}
 
     // 2. Record Financial Cash Outflow (Transaction OUT) & Expense if Paid

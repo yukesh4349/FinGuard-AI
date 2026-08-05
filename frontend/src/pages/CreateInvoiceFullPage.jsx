@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, FileText, Plus, Trash2, CheckCircle2, Printer, Download, TrendingUp, Package, Percent } from 'lucide-react';
+import { apiTriggerStockWebhook } from '../services/api';
 
 export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
   const [theme] = useState(() => {
@@ -166,6 +167,14 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
       localStorage.setItem('finsight_stock_inventory', JSON.stringify(updatedStock));
       localStorage.setItem('finguard_stock_inventory', JSON.stringify(updatedStock));
       window.dispatchEvent(new Event('storage'));
+
+      // 2. Trigger Secondary Stock Webhook for STOCK_CUSTOMER_BOUGHT event
+      apiTriggerStockWebhook('STOCK_CUSTOMER_BOUGHT', {
+        customerName: customerName,
+        billNo: generatedBillNo,
+        items: items,
+        source: 'Customer POS Bill Created',
+      }).catch(err => console.log('Webhook trigger notice:', err));
     } catch (err) {
       console.error('Stock auto-deduction error:', err);
     }

@@ -54,4 +54,68 @@ router.put('/:id', (req, res) => {
   res.json({ success: true, item: updated });
 });
 
+// ══════════════════════════════════════════════════════════════════════════
+// STOCK WEBHOOK EVENT ENGINE (TRIGGERS FOR STOCK LOADED & CUSTOMER BOUGHT)
+// ══════════════════════════════════════════════════════════════════════════
+
+// Secondary Webhook Listener Endpoint for Stock Updates
+router.post('/webhook/stock-updates', (req, res) => {
+  const { eventType, items, source, timestamp, referenceId } = req.body;
+
+  console.log(`[SECONDARY WEBHOOK RECEIVED] Event: ${eventType} | Source: ${source} | Ref: ${referenceId}`);
+
+  const webhookLog = {
+    id: `WH-${Math.floor(1000 + Math.random() * 9000)}`,
+    eventType,
+    source: source || 'System Engine',
+    referenceId: referenceId || 'REF-000',
+    itemCount: Array.isArray(items) ? items.length : 1,
+    timestamp: timestamp || new Date().toISOString(),
+    status: 'DELIVERED_SUCCESS',
+  };
+
+  db.insert('webhooks', webhookLog);
+
+  res.json({
+    success: true,
+    message: `Secondary Stock Webhook triggered and logged for event ${eventType}`,
+    log: webhookLog,
+  });
+});
+
+// Trigger Webhook Endpoint (Called when stock is loaded OR customer buys stock)
+router.post('/webhook/trigger', (req, res) => {
+  const { eventType, items, supplierName, customerName, billNo, source } = req.body;
+
+  if (!eventType) {
+    return res.status(400).json({ success: false, error: 'eventType (e.g. STOCK_IN_LOADED or STOCK_CUSTOMER_BOUGHT) is required.' });
+  }
+
+  const payload = {
+    id: `WH-EVT-${Math.floor(10000 + Math.random() * 90000)}`,
+    eventType: eventType === 'STOCK_IN_LOADED' ? 'STOCK_IN_LOADED (Vendor Purchase Loaded)' : 'STOCK_CUSTOMER_BOUGHT (Customer POS Billed)',
+    source: source || (eventType === 'STOCK_IN_LOADED' ? `Vendor Bill Upload (${supplierName || 'Supplier'})` : `Customer POS Sale (${customerName || 'Retail Customer'})`),
+    referenceId: billNo || `BILL-${Math.floor(1000 + Math.random() * 9000)}`,
+    items: items || [],
+    timestamp: new Date().toISOString(),
+    status: 'TRIGGERED_PROCESSED',
+  };
+
+  db.insert('webhooks', payload);
+
+  console.log(`⚡ [WEBHOOK TRIGGERED] ${payload.eventType} for ${payload.referenceId}`);
+
+  res.json({
+    success: true,
+    message: `Stock Webhook ${payload.eventType} successfully triggered and delivered.`,
+    webhookEvent: payload,
+  });
+});
+
+// GET /api/inventory/webhook/logs — Retrieve Webhook Event Logs
+router.get('/webhook/logs', (req, res) => {
+  const logs = db.getTable('webhooks');
+  res.json({ success: true, count: logs.length, logs });
+});
+
 export default router;

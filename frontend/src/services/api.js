@@ -84,7 +84,7 @@ export const apiCreateTransaction = (txnData) =>
     body: JSON.stringify(txnData),
   });
 
-// Inventory API
+// Inventory & Stock Webhook API
 export const apiGetInventory = () => request('/inventory');
 export const apiCreateInventoryItem = (itemData) =>
   request('/inventory', {
@@ -96,6 +96,14 @@ export const apiUpdateInventoryItem = (id, itemData) =>
     method: 'PUT',
     body: JSON.stringify(itemData),
   });
+
+export const apiTriggerStockWebhook = (eventType, payload) =>
+  request('/inventory/webhook/trigger', {
+    method: 'POST',
+    body: JSON.stringify({ eventType, ...payload }),
+  });
+
+export const apiGetWebhookLogs = () => request('/inventory/webhook/logs');
 
 // Vendors API
 export const apiGetVendors = () => request('/vendors');
