@@ -255,12 +255,15 @@ Grand Total Payable: 33222`;
     });
 
     // Run AI Duplicate Invoice & Fraud Interceptor Check
+    const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+    const activeUserId = activeUser.user_id || activeUser.email || 'user';
+
     const dupCheck = checkDuplicateInvoiceAndFraud({
       supplierName,
       invoiceNumber: invoiceNo,
       invoiceDate,
       grandTotal: `₹ ${grandTotalVal.toLocaleString('en-IN')}`,
-    });
+    }, activeUserId);
 
     if (dupCheck.isDuplicate) {
       setDuplicateAlert(dupCheck.alert);
@@ -343,9 +346,13 @@ Grand Total Payable: 33222`;
     const computedDueDate = paymentStatus === 'Pending' ? calculateDueDate() : '';
     const grandTotalNum = parseFloat((editGrandTotal || '0').replace(/[^0-9.]/g, '')) || 0;
 
+    const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+    const activeUserKey = (activeUser.user_id || activeUser.email || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
+
     // 1. Sync items to Stock Inventory DB with their Retail Selling MRP & INCREMENT QUANTITIES!
     try {
-      const existingStock = JSON.parse(localStorage.getItem('finsight_stock_inventory') || '[]');
+      const stockKey = `finsight_stock_inventory_${activeUserKey}`;
+      const existingStock = JSON.parse(localStorage.getItem(stockKey) || localStorage.getItem('finsight_stock_inventory') || '[]');
       const newStockEntries = editItems.map(it => {
         const qtyNum = parseInt(String(it.qty || '1').replace(/[^0-9]/g, '')) || 1;
         const rateVal = parseFloat(String(it.rate || '100').replace(/[^0-9.]/g, '')) || 100;
@@ -356,7 +363,7 @@ Grand Total Payable: 33222`;
           stock_qty: qtyNum,
           cost_price: `₹ ${rateVal.toLocaleString('en-IN')}`,
           rate: `₹ ${rateVal.toLocaleString('en-IN')}`,
-          selling_price: it.sellingPrice ? it.sellingPrice : '', // Optional retail MRP!
+          selling_price: it.sellingPrice ? it.sellingPrice : '',
           gst_rate: it.gst || '5%',
           total_amount: it.total || `₹ ${(qtyNum * rateVal).toLocaleString('en-IN')}`,
           supplier_name: editSupplier,
@@ -382,6 +389,7 @@ Grand Total Payable: 33222`;
         }
       });
 
+      localStorage.setItem(stockKey, JSON.stringify(mergedStock));
       localStorage.setItem('finsight_stock_inventory', JSON.stringify(mergedStock));
 
       // 2. Trigger Secondary Stock Webhook for STOCK_IN_LOADED event
@@ -396,7 +404,8 @@ Grand Total Payable: 33222`;
     // 2. Record Financial Cash Outflow (Transaction OUT) & Expense if Paid
     if (paymentStatus === 'Paid' && grandTotalNum > 0) {
       try {
-        const existingTransactions = JSON.parse(localStorage.getItem('finsight_transactions') || '[]');
+        const txKey = `finsight_transactions_${activeUserKey}`;
+        const existingTransactions = JSON.parse(localStorage.getItem(txKey) || localStorage.getItem('finsight_transactions') || '[]');
         existingTransactions.unshift({
           id: `tx-${Date.now()}`,
           date: editDate || new Date().toISOString().split('T')[0],
@@ -404,11 +413,13 @@ Grand Total Payable: 33222`;
           description: `Vendor Bill Payment for Inv #${editInvoiceNo} (${editSupplier})`,
           category: 'Supplier Purchase',
           amount: `₹ ${grandTotalNum.toLocaleString('en-IN')}`,
-          balance: `₹ 4,85,000`,
+          balance: `₹ ${(grandTotalNum).toLocaleString('en-IN')}`,
         });
+        localStorage.setItem(txKey, JSON.stringify(existingTransactions));
         localStorage.setItem('finsight_transactions', JSON.stringify(existingTransactions));
 
-        const existingExpenses = JSON.parse(localStorage.getItem('finsight_expenses') || '[]');
+        const expKey = `finsight_expenses_${activeUserKey}`;
+        const existingExpenses = JSON.parse(localStorage.getItem(expKey) || localStorage.getItem('finsight_expenses') || '[]');
         existingExpenses.unshift({
           id: `exp-${Date.now()}`,
           vendor: editSupplier,
@@ -418,11 +429,13 @@ Grand Total Payable: 33222`;
           date: editDate || new Date().toISOString().split('T')[0],
           status: 'Paid',
         });
+        localStorage.setItem(expKey, JSON.stringify(existingExpenses));
         localStorage.setItem('finsight_expenses', JSON.stringify(existingExpenses));
       } catch (e) {}
     } else if (paymentStatus === 'Pending') {
       try {
-        const existingExpenses = JSON.parse(localStorage.getItem('finsight_expenses') || '[]');
+        const expKey = `finsight_expenses_${activeUserKey}`;
+        const existingExpenses = JSON.parse(localStorage.getItem(expKey) || localStorage.getItem('finsight_expenses') || '[]');
         existingExpenses.unshift({
           id: `exp-${Date.now()}`,
           vendor: editSupplier,
@@ -433,6 +446,7 @@ Grand Total Payable: 33222`;
           dueDate: computedDueDate,
           status: 'Pending',
         });
+        localStorage.setItem(expKey, JSON.stringify(existingExpenses));
         localStorage.setItem('finsight_expenses', JSON.stringify(existingExpenses));
       } catch (e) {}
     }
@@ -448,7 +462,7 @@ Grand Total Payable: 33222`;
       payment_status: paymentStatus,
       due_date: computedDueDate,
       items: editItems,
-    });
+    }, activeUserKey);
 
     try {
       await apiUploadOcrInvoice({

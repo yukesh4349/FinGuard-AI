@@ -10,9 +10,16 @@ router.get('/stats', (req, res) => {
   const inventory = db.getTable('inventory');
   const fraudAlerts = db.getTable('fraud_alerts');
 
+  const cleanNum = (val) => {
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    if (!val) return 0;
+    const parsed = parseFloat(String(val).replace(/[^0-9.]/g, ''));
+    return isNaN(parsed) || !isFinite(parsed) ? 0 : parsed;
+  };
+
   // Compute stats dynamically from database records
-  const totalInvoicesVal = invoices.reduce((acc, inv) => acc + (inv.grand_total || 0), 0);
-  const totalTaxGst = invoices.reduce((acc, inv) => acc + (inv.tax_gst || 0), 0);
+  const totalInvoicesVal = invoices.reduce((acc, inv) => acc + cleanNum(inv.grand_total || 0), 0);
+  const totalTaxGst = invoices.reduce((acc, inv) => acc + cleanNum(inv.tax_gst || 0), 0);
   const lowStockCount = inventory.filter(i => i.stockQty <= (i.minAlertThreshold || 15)).length;
   const highRiskCount = invoices.filter(inv => inv.status === 'Flagged High Risk').length;
   const activeAlertsCount = fraudAlerts.filter(a => !a.resolved).length;
@@ -28,9 +35,9 @@ router.get('/stats', (req, res) => {
       highRiskInvoicesCount: highRiskCount,
       activeAlertsCount,
       sparklines: {
-        revenue: [40, 55, 70, 60, 85, 95],
-        profit: [20, 25, 38, 42, 50, 64],
-        gst: [12, 18, 22, 28, 32, 48],
+        revenue: [0, 0, 0, 0, 0, 0],
+        profit: [0, 0, 0, 0, 0, 0],
+        gst: [0, 0, 0, 0, 0, 0],
       },
     },
   });

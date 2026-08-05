@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import {
   ShieldCheck, ArrowLeft, CheckCircle2, Sparkles, Building2, Phone, Mail, Lock, User, AlertCircle
 } from 'lucide-react';
-import { registerUserInPostgres } from '../services/postgresDb';
+import { registerUserInPostgres, triggerWebhookNode } from '../services/postgresDb';
 
 export default function SignupPage({ onBack, onNavigateToLogin }) {
+  const [ownerName, setOwnerName] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [businessType, setBusinessType] = useState('Grocery & Supermarket');
   const [mobileNum, setMobileNum] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,32 +17,85 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
   const [errorMessage, setErrorMessage] = useState('');
   const [createdUser, setCreatedUser] = useState(null);
 
+  // Email OTP Verification state
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [otpError, setOtpError] = useState('');
+
   const handleMobileChange = (e) => {
     const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
     setMobileNum(cleaned);
   };
 
-  const handleSubmit = async (e) => {
+  const handleTriggerOtp = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setErrorMessage('');
 
+    if (!ownerName.trim()) {
+      setErrorMessage('Please enter the Name of the Owner.');
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setIsSubmitting(false);
       setErrorMessage('Passwords do not match. Please enter the same password in both fields.');
       return;
     }
 
     if (mobileNum.length < 10) {
-      setIsSubmitting(false);
       setErrorMessage('Please enter a valid 10-digit mobile number.');
       return;
     }
 
+    if (!email || !email.includes('@')) {
+      setErrorMessage('Please enter a valid email address.');
+      return;
+    }
+
+    // Generate 6-digit Email OTP
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    setGeneratedOtp(code);
+    setOtpInput('');
+    setOtpError('');
+    setShowOtpModal(true);
+
+    // Call Webhook 1 with generated OTP details
     try {
-      // Save new account into PostgreSQL database
+      await triggerWebhookNode({
+        event: 'send_email_otp',
+        owner_name: ownerName,
+        company_name: companyName,
+        company_address: companyAddress,
+        business_type: businessType,
+        mobile_number: mobileNum,
+        email: email,
+        otp: code,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('Webhook trigger notice:', err);
+    }
+  };
+
+  const handleVerifyOtpAndCreate = async (e) => {
+    e.preventDefault();
+    setOtpError('');
+
+    if (otpInput.trim() !== generatedOtp) {
+      setOtpError('Invalid 6-digit OTP code. Please check your email and try again.');
+      return;
+    }
+
+    setShowOtpModal(false);
+    setIsSubmitting(true);
+
+    try {
+      // Save new store account
       const result = await registerUserInPostgres({
+        ownerName,
         companyName,
+        companyAddress,
+        businessType,
         mobileNumber: mobileNum,
         email,
         password,
@@ -50,13 +106,21 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
         setIsSubmitting(false);
         if (result.success) {
           setCreatedUser(result.user);
+          const activeUserObj = {
+            user_id: result.user?.user_id || email,
+            owner_name: ownerName,
+            company_name: companyName,
+            company_address: companyAddress,
+            email: email,
+          };
+          localStorage.setItem('finsight_active_user', JSON.stringify(activeUserObj));
         } else {
           setErrorMessage(result.message || 'Error creating account.');
         }
       }, 600);
     } catch (err) {
       setIsSubmitting(false);
-      setErrorMessage('Database error. Please try again.');
+      setErrorMessage('Error registering account. Please try again.');
     }
   };
 
@@ -83,7 +147,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '8px 16px', borderRadius: 99,
             backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)',
-            color: '#F3CD97', fontSize: 13, fontWeight: 700,
+            color: '#B4781C', fontSize: 13, fontWeight: 700,
             cursor: 'pointer', fontFamily: 'inherit',
             transition: 'all 0.2s ease',
           }}
@@ -139,7 +203,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
             </p>
           </div>
 
-          {/* Graphic Image Banner */}
+          {/* Graphic Image Banner (Sign Up Image) */}
           <div style={{
             position: 'relative', zIndex: 10, margin: '20px 0',
             borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(243,205,151,0.3)',
@@ -147,7 +211,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
             backgroundColor: '#1E293B',
           }}>
             <img
-              src="/assets/normal_shop_owner.png"
+              src="/assets/signup_banner.png"
               alt="FinSight AI Easy Business Protection"
               style={{
                 width: '100%', height: 260, objectFit: 'cover', display: 'block',
@@ -164,7 +228,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                 <Sparkles size={14} color="#F3CD97" /> See Beyond the Numbers
               </div>
               <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
-                Backend Database Sync • Simple English Interface
+                Instant Setup • Simple English Interface
               </div>
             </div>
           </div>
@@ -187,14 +251,37 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                   Create Your Store Account
                 </h1>
                 <p style={{ fontSize: 14, color: '#475569' }}>
-                  Register your business to set up your PostgreSQL account with custom password protection.
+                  Register your business to set up your account with password protection.
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <form onSubmit={handleTriggerOtp} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* 1. Name of the Owner */}
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                    1. Business / Store Name *
+                    1. Name of the Owner *
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <User size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Ramesh Kumar"
+                      value={ownerName}
+                      onChange={e => setOwnerName(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 16px 12px 42px', borderRadius: 10,
+                        border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                        fontSize: 14, color: '#0F172A', outline: 'none',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Business / Store Name */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                    2. Business / Store Name *
                   </label>
                   <div style={{ position: 'relative' }}>
                     <Building2 size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -216,7 +303,48 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                      2. Mobile Number (Digits Only) *
+                      3. Store Location / Address *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. MG Road, Chennai, TN"
+                      value={companyAddress}
+                      onChange={e => setCompanyAddress(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 16px', borderRadius: 10,
+                        border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                        fontSize: 14, color: '#0F172A', outline: 'none',
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                      4. Store Category / Type *
+                    </label>
+                    <select
+                      value={businessType}
+                      onChange={e => setBusinessType(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 16px', borderRadius: 10,
+                        border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                        fontSize: 14, color: '#0F172A', outline: 'none', fontWeight: 600,
+                      }}
+                    >
+                      <option value="Grocery & Supermarket">Grocery &amp; Supermarket</option>
+                      <option value="FMCG & Retail Mart">FMCG &amp; Retail Mart</option>
+                      <option value="Electronics & Hardware">Electronics &amp; Hardware</option>
+                      <option value="Pharmacy & Healthcare">Pharmacy &amp; Healthcare</option>
+                      <option value="Textile & Garments">Textile &amp; Garments</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                      5. Mobile Number (10 Digits) *
                     </label>
                     <div style={{ position: 'relative' }}>
                       <Phone size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -239,7 +367,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
 
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                      3. Email Address *
+                      6. Email Address *
                     </label>
                     <div style={{ position: 'relative' }}>
                       <Mail size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -262,7 +390,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                      4. Create Password *
+                      7. Create Password *
                     </label>
                     <div style={{ position: 'relative' }}>
                       <Lock size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -283,7 +411,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
 
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                      5. Confirm Password *
+                      8. Confirm Password *
                     </label>
                     <div style={{ position: 'relative' }}>
                       <Lock size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -324,7 +452,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                     marginTop: 8,
                   }}
                 >
-                  {isSubmitting ? 'Saving to PostgreSQL Database...' : '✨ Create Account & Register Store'}
+                  {isSubmitting ? 'Creating Account...' : '📧 Verify Email & Register Store'}
                 </button>
               </form>
             </div>
@@ -333,15 +461,17 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
               <div style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#f0fdf4', border: '2px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <CheckCircle2 size={36} color="#16a34a" />
               </div>
-              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>Account Created Successfully!</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>Store Account Registered!</h2>
               <p style={{ fontSize: 14, color: '#475569', marginBottom: 20 }}>
-                Your account for <strong>{createdUser.company_name}</strong> has been saved in PostgreSQL.
+                Your business account for <strong>{createdUser.company_name}</strong> has been created.
               </p>
 
               <div style={{ backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', borderRadius: 12, padding: 16, marginBottom: 24, textAlign: 'left', fontSize: 13 }}>
-                <div><strong>System Generated Login ID:</strong> <code>{createdUser.user_id}</code></div>
-                <div><strong>Registered Mobile Number:</strong> {createdUser.mobile_number}</div>
-                <div><strong>Email Address:</strong> {createdUser.email}</div>
+                <div><strong>Owner Name:</strong> {ownerName || 'Store Owner'}</div>
+                <div><strong>System User ID:</strong> <code>{createdUser.user_id}</code></div>
+                <div><strong>Store Address:</strong> {companyAddress || 'Not Provided'}</div>
+                <div><strong>Registered Mobile:</strong> {createdUser.mobile_number}</div>
+                <div><strong>Verified Email:</strong> {createdUser.email}</div>
               </div>
 
               <button
@@ -355,6 +485,66 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
           )}
         </div>
       </main>
+
+      {/* ── EMAIL OTP VERIFICATION MODAL ─────────────────────────────── */}
+      {showOtpModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          backgroundColor: 'rgba(15,23,42,0.75)', backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        }}>
+          <div style={{
+            backgroundColor: '#FFFFFF', borderRadius: 20, padding: 28, width: 420, maxWidth: '100%',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid rgba(13,148,136,0.3)',
+            textAlign: 'center',
+          }}>
+            <div style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: '#F0FDFA', border: '1px solid rgba(13,148,136,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <Mail size={26} color="#F3CD97" />
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', marginBottom: 6 }}>Verify Email Address</h3>
+            <p style={{ fontSize: 13, color: '#475569', marginBottom: 16 }}>
+              A 6-digit verification code has been sent to <strong>{email}</strong>. Please check your inbox and enter the code below.
+            </p>
+
+            <form onSubmit={handleVerifyOtpAndCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <input
+                type="text"
+                required
+                maxLength={6}
+                placeholder="Enter 6-digit OTP"
+                value={otpInput}
+                onChange={e => setOtpInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: 10, textAlign: 'center',
+                  fontSize: 22, fontWeight: 800, letterSpacing: '0.25em', fontFamily: 'monospace',
+                  border: '2px solid rgba(13,148,136,0.5)', outline: 'none', backgroundColor: '#F8FAFC',
+                }}
+              />
+
+              {otpError && (
+                <div style={{ color: '#b91c1c', fontSize: 12, fontWeight: 600 }}>{otpError}</div>
+              )}
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowOtpModal(false)}
+                  style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid #CBD5E1', backgroundColor: '#F1F5F9', color: '#475569', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="liquid-btn liquid-btn-primary"
+                  style={{ flex: 1, padding: 12, borderRadius: 10, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+                >
+                  Verify &amp; Create
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

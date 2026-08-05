@@ -67,7 +67,7 @@ export default function RoiCalculator() {
             <div style={{ marginBottom: 28 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <label style={{ color: '#334155', fontSize: 14, fontWeight: 600 }}>Monthly Revenue Volume</label>
-                <span style={{ color: '#F3CD97', fontSize: 17, fontWeight: 800 }}>${monthlyRevenue.toLocaleString()}</span>
+                <span style={{ color: '#F3CD97', fontSize: 17, fontWeight: 800 }}>₹ {monthlyRevenue.toLocaleString('en-IN')}</span>
               </div>
               <input
                 type="range" min="10000" max="250000" step="5000"
@@ -76,8 +76,8 @@ export default function RoiCalculator() {
                 style={{ width: '100%', accentColor: '#F3CD97', cursor: 'pointer', height: 8, borderRadius: 4 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                <span style={{ color: '#64748B', fontSize: 11 }}>$10,000</span>
-                <span style={{ color: '#64748B', fontSize: 11 }}>$250,000</span>
+                <span style={{ color: '#64748B', fontSize: 11 }}>₹ 10,000</span>
+                <span style={{ color: '#64748B', fontSize: 11 }}>₹ 2,50,000</span>
               </div>
             </div>
 

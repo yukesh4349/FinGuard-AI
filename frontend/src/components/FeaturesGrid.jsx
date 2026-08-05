@@ -4,37 +4,37 @@ import useScrollReveal from '../utils/useScrollReveal';
 
 const featuresList = [
   {
-    id: 1, icon: ScanText, title: 'Instant Bill Photo & Receipt Scanner',
+    id: 1, icon: ScanText, imgSrc: '/assets/feature_ocr_scanner.png', title: 'Instant Bill Photo & Receipt Scanner',
     category: 'Invoice Service', tag: 'Bill Reader',
     desc: 'Extract line items, GST numbers, supplier names, and total amounts from bill photos with high precision.',
     details: 'Automates matching with store records and alerts upcoming bill due dates.',
   },
   {
-    id: 2, icon: ShieldAlert, title: 'AI Fake Bill & Overcharge Protection',
+    id: 2, icon: ShieldAlert, imgSrc: '/assets/feature_fake_bill.png', title: 'AI Fake Bill & Overcharge Protection',
     category: 'Security Service', tag: 'Fake Bill Shield',
     desc: 'Real-time AI security to instantly block duplicate invoices, wrong bills, or supplier price overcharging.',
     details: 'Blocks fake bill payments before money leaves your account.',
   },
   {
-    id: 3, icon: TrendingUp, title: 'AI Demand & Stock Low Warnings',
+    id: 3, icon: TrendingUp, imgSrc: '/assets/feature_stock_alert.png', title: 'AI Demand & Stock Low Warnings',
     category: 'Stock Service', tag: 'Stock Alert',
     desc: 'Predict stock needs based on sales history so your retail shop never runs out of popular items.',
     details: 'Automates reorder recommendations to keep healthy stock levels.',
   },
   {
-    id: 4, icon: ShoppingBag, title: 'Supplier Price Comparison & Buying Orders',
+    id: 4, icon: ShoppingBag, imgSrc: '/assets/feature_supplier_compare.png', title: 'Supplier Price Comparison & Buying Orders',
     category: 'Purchase Service', tag: 'Cost Saver',
     desc: 'Compare wholesale item prices across registered suppliers to ensure you buy at the lowest market rate.',
     details: 'Dispatches automated buying orders directly to approved suppliers.',
   },
   {
-    id: 5, icon: Bot, title: '24/7 AI Chatbot Business Helper',
+    id: 5, icon: Bot, imgSrc: '/assets/feature_ai_chatbot.png', title: '24/7 AI Chatbot Business Helper',
     category: 'AI Advisory Service', tag: 'AI Assistant',
     desc: 'Ask questions in simple English about your store profits, sales, GST taxes, and cash flow trajectory.',
     details: 'Always active to answer questions and give smart store tips.',
   },
   {
-    id: 6, icon: FileText, title: 'Automated GST Tax Filing & Simple Reports',
+    id: 6, icon: FileText, imgSrc: '/assets/feature_gst_filing.png', title: 'Automated GST Tax Filing & Simple Reports',
     category: 'Compliance Service', tag: 'GST Filing',
     desc: 'Generate GSTR-1 and GSTR-3B tax audit summaries with automatic WhatsApp and SMS alerts.',
     details: 'Download simple profit & loss statements to PDF or Excel formats.',
@@ -43,7 +43,6 @@ const featuresList = [
 
 function FeatureCard({ feat, delayClass }) {
   const [hovered, setHovered] = useState(false);
-  const Icon = feat.icon;
 
   return (
     <div
@@ -52,36 +51,34 @@ function FeatureCard({ feat, delayClass }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         flex: '1 1 320px',
-        padding: 28,
+        padding: 24,
         display: 'flex',
         flexDirection: 'column',
         cursor: 'pointer',
         backgroundColor: hovered ? '#FFFFFF' : '#FFFDF7',
         borderColor: hovered ? 'rgba(243,205,151,0.6)' : 'rgba(243,205,151,0.3)',
+        borderRadius: 16,
+        overflow: 'hidden',
         transition: 'transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s cubic-bezier(0.22,1,0.36,1)',
       }}
     >
-      {/* Animated top accent line */}
+      {/* Feature Image Illustration */}
       <div style={{
-        height: 3,
-        borderRadius: 99,
-        marginBottom: 20,
-        background: hovered ? '#B4781C' : 'transparent',
-        transition: 'background 0.35s ease',
-        width: hovered ? '100%' : '0%',
-      }} />
+        width: '100%', height: 160, borderRadius: 12, overflow: 'hidden',
+        marginBottom: 18, border: '1px solid rgba(243,205,151,0.3)',
+        backgroundColor: '#0F172A',
+      }}>
+        <img
+          src={feat.imgSrc}
+          alt={feat.title}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.3s ease' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)'; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+        />
+      </div>
 
       {/* Card header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: 10,
-          backgroundColor: hovered ? '#FDF4E3' : '#FFFDF7',
-          border: `1px solid ${hovered ? 'rgba(180,120,28,0.5)' : 'rgba(243,205,151,0.4)'}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.25s ease',
-        }}>
-          <Icon size={22} color="#B4781C" />
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <span style={{
           padding: '4px 10px', borderRadius: 8,
           backgroundColor: '#FFFDF7',

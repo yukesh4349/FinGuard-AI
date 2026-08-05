@@ -211,8 +211,8 @@ export default function RoleShowcase({ onOpenModal }) {
                     <div style={{ fontSize: 20, fontWeight: 800, color: '#FFFFFF' }}>₹ 1,84,500 <span style={{ fontSize: 11, color: '#4ade80' }}>✓ Active</span></div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 14, border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <div style={{ fontSize: 10, color: '#CBD5E1', textTransform: 'uppercase', marginBottom: 4, fontWeight: 700 }}>Database Status</div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: '#F3CD97' }}>100% Online • Backend Database Connected</div>
+                    <div style={{ fontSize: 10, color: '#CBD5E1', textTransform: 'uppercase', marginBottom: 4, fontWeight: 700 }}>System Status</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: '#F3CD97' }}>100% Online • Real-time Protection Active</div>
                   </div>
                 </div>
 

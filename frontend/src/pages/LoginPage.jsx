@@ -13,6 +13,7 @@ const availableRoles = [
     icon: '👑',
     color: '#F3CD97',
     badge: 'FULL ACCESS',
+    imgSrc: '/assets/role_owner.png',
   },
   {
     id: 'accountant',
@@ -21,6 +22,7 @@ const availableRoles = [
     icon: '📊',
     color: '#F3CD97',
     badge: 'TAX & BILLS',
+    imgSrc: '/assets/role_accountant.png',
   },
   {
     id: 'billing',
@@ -29,6 +31,7 @@ const availableRoles = [
     icon: '💳',
     color: '#F3CD97',
     badge: 'POS & BILLING',
+    imgSrc: '/assets/role_billing.png',
   },
   {
     id: 'stock_manager',
@@ -37,6 +40,7 @@ const availableRoles = [
     icon: '📦',
     color: '#F3CD97',
     badge: 'STOCK & INVENTORY',
+    imgSrc: '/assets/role_stock_manager.png',
   },
 ];
 
@@ -48,11 +52,11 @@ export default function LoginPage({
   onNavigateToDashboard,
 }) {
   const [selectedRole, setSelectedRole] = useState(null);
-  const [userId, setUserId] = useState(initialOwnerId || '');
-  const [password, setPassword] = useState(initialOwnerPass || '');
+  const [userId, setUserId] = useState('');
+  const [password, setPassword] = useState('');
   const [mobileNum, setMobileNum] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [companyName, setCompanyName] = useState('Metro Superstore Ltd');
+  const [companyName, setCompanyName] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -67,30 +71,11 @@ export default function LoginPage({
       const match = availableRoles.find(r => r.id === initialRole);
       if (match) setSelectedRole(match);
     }
-    if (initialOwnerId) setUserId(initialOwnerId);
-    if (initialOwnerPass) setPassword(initialOwnerPass);
-  }, [initialRole, initialOwnerId, initialOwnerPass]);
+  }, [initialRole]);
 
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
     setErrorMessage('');
-    if (role.id === 'owner') {
-      setUserId(initialOwnerId || 'OWNER-METRO-8492');
-      setPassword(initialOwnerPass || 'FG-8924-XK9');
-      setMobileNum('9876543210');
-    } else if (role.id === 'accountant') {
-      setUserId('accountant@metrosuperstore.com');
-      setPassword('FG-CA-2026');
-      setMobileNum('9876523451');
-    } else if (role.id === 'billing') {
-      setUserId('cashier.billing@metrosuperstore.com');
-      setPassword('FG-BILL-789');
-      setMobileNum('9876545673');
-    } else if (role.id === 'stock_manager') {
-      setUserId('manager.stock@metrosuperstore.com');
-      setPassword('FG-STOCK-552');
-      setMobileNum('9876534562');
-    }
   };
 
   const handleMobileChange = (e) => {
@@ -103,6 +88,18 @@ export default function LoginPage({
     setIsLoggingIn(true);
     setErrorMessage('');
 
+    if (!userId.trim()) {
+      setIsLoggingIn(false);
+      setErrorMessage('Please enter your registered Email or User ID.');
+      return;
+    }
+
+    if (!password) {
+      setIsLoggingIn(false);
+      setErrorMessage('Please enter your account password.');
+      return;
+    }
+
     if (!mobileNum || mobileNum.length < 10) {
       setIsLoggingIn(false);
       setErrorMessage('Please enter your registered 10-digit mobile number.');
@@ -110,24 +107,29 @@ export default function LoginPage({
     }
 
     try {
-      // Query PostgreSQL database service for authentication checking ID, Password, and Mobile Number strictly
       const result = await authenticateUserInPostgres(userId, password, mobileNum);
 
       setTimeout(() => {
         setIsLoggingIn(false);
         if (result.success) {
           setIsSuccess(true);
+          const activeUserObj = {
+            user_id: result.user?.user_id || userId,
+            company_name: result.user?.company_name || companyName,
+            email: result.user?.email || userId,
+          };
+          localStorage.setItem('finsight_active_user', JSON.stringify(activeUserObj));
           if (result.user?.company_name) setCompanyName(result.user.company_name);
           if (onNavigateToDashboard) {
             onNavigateToDashboard(selectedRole ? selectedRole.id : 'owner', result.user?.company_name || companyName, userId || 'OWNER-USER');
           }
         } else {
-          setErrorMessage(result.message || 'Invalid User ID, Password, or Mobile Number.');
+          setErrorMessage(result.message || 'Invalid Email, Password, or Mobile Number.');
         }
       }, 500);
     } catch (err) {
       setIsLoggingIn(false);
-      setErrorMessage('Database connection error. Please try again.');
+      setErrorMessage('Connection error. Please check your network and try again.');
     }
   };
 
@@ -140,6 +142,10 @@ export default function LoginPage({
       onBack();
     }
   };
+
+  // Determine current active banner image (Switches dynamically between 5 images)
+  const currentBannerImg = selectedRole ? selectedRole.imgSrc : '/assets/login_default.png';
+  const currentBannerTitle = selectedRole ? selectedRole.title : 'Simple Shop & Bill Protection';
 
   return (
     <div style={{
@@ -183,10 +189,10 @@ export default function LoginPage({
           </span>
         </div>
 
-        {/* PostgreSQL Indicator Badge */}
+        {/* Security Indicator Badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#B4781C', fontWeight: 700, backgroundColor: '#FFFDF7', padding: '4px 12px', borderRadius: 99, border: '1px solid rgba(243,205,151,0.5)' }}>
-          <Database size={14} color="#B4781C" />
-          <span>Backend Auth Active</span>
+          <ShieldCheck size={14} color="#B4781C" />
+          <span>Verified Secure Access</span>
         </div>
       </header>
 
@@ -196,7 +202,7 @@ export default function LoginPage({
         height: 'calc(100vh - 66px)', overflow: 'hidden',
         backgroundColor: '#F8FAFC',
       }}>
-        {/* Left Side Visual Banner */}
+        {/* Left Side Visual Banner (Dynamic Image Swap) */}
         <div style={{
           backgroundColor: '#0F172A', color: '#FFFFFF',
           padding: '32px', display: 'flex', flexDirection: 'column',
@@ -208,14 +214,14 @@ export default function LoginPage({
               🛡️ SAFE &amp; EASY LOGIN
             </span>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: '#FFFFFF', lineHeight: 1.25, marginBottom: 8 }}>
-              Simple Shop &amp; Bill Protection
+              {currentBannerTitle}
             </h2>
             <p style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.5, fontWeight: 500 }}>
               FinSight AI helps you see beyond the numbers. Keep your shop safe from wrong bills, duplicate payments, and lost profits.
             </p>
           </div>
 
-          {/* Center Graphic Image (Normal Shop Owner Image) */}
+          {/* Center Graphic Image (Swaps dynamically between the 5 generated images) */}
           <div style={{
             position: 'relative', zIndex: 10, margin: '20px 0',
             borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(243,205,151,0.3)',
@@ -223,10 +229,12 @@ export default function LoginPage({
             backgroundColor: '#1E293B',
           }}>
             <img
-              src="/assets/normal_shop_owner.png"
-              alt="Shop Owner Managing Business Bills"
+              key={currentBannerImg}
+              src={currentBannerImg}
+              alt={currentBannerTitle}
               style={{
                 width: '100%', height: 260, objectFit: 'cover', display: 'block',
+                transition: 'opacity 0.3s ease',
               }}
               onError={(e) => {
                 e.currentTarget.src = '/assets/hero_dashboard.png';
@@ -240,7 +248,7 @@ export default function LoginPage({
                 <Sparkles size={14} color="#F3CD97" /> See Beyond the Numbers
               </div>
               <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
-                Backend Database Sync • Easy AI Dashboard
+                Instant Verification • Simple Business Interface
               </div>
             </div>
           </div>

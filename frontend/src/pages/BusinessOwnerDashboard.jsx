@@ -10,7 +10,7 @@ import {
   Activity, Zap
 } from 'lucide-react';
 import { getStoredEmployees, saveEmployeeToDb, getStoredUsers, getOfficialGstRatesFromPostgres, addOfficialGstRateToPostgres, getStoredFraudAlerts } from '../services/postgresDb';
-import { saveStockToSupabase } from '../services/supabaseClient';
+import { saveStockToSupabase, getStaffFromSupabase, addStaffToSupabase, getInventoryFromSupabase } from '../services/supabaseClient';
 import {
   apiGetDashboardStats,
   apiGetInvoices,
@@ -88,16 +88,22 @@ export default function BusinessOwnerDashboard({
   const [reportGenerated, setReportGenerated] = useState(false);
 
   // Form states for modals
+  const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserId = activeUserSession.user_id || ownerName || 'user';
+
   const [empName, setEmpName] = useState('');
   const [empRole, setEmpRole] = useState('Store Executive');
   const [empPhone, setEmpPhone] = useState('');
   const [empSalary, setEmpSalary] = useState('');
-  const [empList, setEmpList] = useState(getStoredEmployees());
+  const [empList, setEmpList] = useState([]);
   const [dbUsersList, setDbUsersList] = useState([]);
 
   useEffect(() => {
     setDbUsersList(getStoredUsers());
-  }, []);
+    getStaffFromSupabase(activeUserId).then(list => {
+      if (list) setEmpList(list);
+    });
+  }, [activeUserId]);
 
   useEffect(() => {
     if (moduleId && modulesList.some(m => m.id === moduleId)) {
@@ -136,24 +142,26 @@ export default function BusinessOwnerDashboard({
     }, 400);
   };
 
-  const handleAddEmployeeSubmit = (e) => {
+  const handleAddEmployeeSubmit = async (e) => {
     e.preventDefault();
     if (!empName || !empPhone) return;
     const newEmp = {
       id: `EMP-${Math.floor(100 + Math.random() * 900)}`,
+      user_id: activeUserId,
       name: empName,
       role: empRole,
       phone: empPhone,
       salary: `₹ ${empSalary || '30,000'}`,
       status: 'Active',
+      joined_date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     };
-    const updated = saveEmployeeToDb(newEmp);
+    const updated = await addStaffToSupabase(newEmp);
     setEmpList(updated);
     setEmpName('');
     setEmpPhone('');
     setEmpSalary('');
     setShowAddEmpModal(false);
-    alert(`Success: Employee ${empName} added to company records!`);
+    alert(`Success: Staff member ${empName} saved to Supabase DB for ${companyName}!`);
   };
 
   return (
@@ -864,101 +872,107 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
   const [fraudFeedAlerts, setFraudFeedAlerts] = useState([]);
 
   useEffect(() => {
-    // 1. Calculate live financial totals from database (Starts at ZERO)
+    // 1. Calculate live financial totals from database scoped strictly to active logged-in user/company
     try {
-      const storedCustomerSales = JSON.parse(localStorage.getItem('finsight_customer_invoices') || '[]');
-      const storedVendorInvoices = JSON.parse(localStorage.getItem('finsight_ocr_invoices') || localStorage.getItem('finsight_invoices') || '[]');
-      const storedTx = JSON.parse(localStorage.getItem('finsight_transactions') || '[]');
+      const cleanNum = (val) => {
+        if (typeof val === 'number') return isNaN(val) ? 0 : val;
+        if (!val) return 0;
+        const parsed = parseFloat(String(val).replace(/[^0-9.]/g, ''));
+        return isNaN(parsed) || !isFinite(parsed) ? 0 : parsed;
+      };
 
-      let calcSales = storedCustomerSales.reduce((acc, b) => acc + (parseFloat(b.grandTotal || b.grand_total || 0) || 0), 0);
-      let calcExpenses = storedVendorInvoices.reduce((acc, b) => acc + (parseFloat(b.grand_total || b.grandTotal || 0) || 0), 0);
-      let calcPending = storedVendorInvoices.filter(b => b.payment_status === 'Pending' || b.status === 'Pending')
-        .reduce((acc, b) => acc + (parseFloat(b.grand_total || b.grandTotal || 0) || 0), 0);
+      const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+      const activeUserKey = (activeUser.user_id || activeUser.email || companyName || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      // Load user-partitioned storage keys
+      const storedCustomerSales = JSON.parse(localStorage.getItem(`finsight_customer_invoices_${activeUserKey}`) || '[]');
+      const storedVendorInvoices = JSON.parse(localStorage.getItem(`finsight_ocr_invoices_${activeUserKey}`) || '[]');
+      const storedTx = JSON.parse(localStorage.getItem(`finsight_transactions_${activeUserKey}`) || '[]');
+      const storedStock = JSON.parse(localStorage.getItem(`finsight_stock_inventory_${activeUserKey}`) || '[]');
+
+      // Filter and sanitize entries
+      const sanitizedSales = storedCustomerSales.filter(b => cleanNum(b.grandTotal || b.grand_total || 0) < 100000000);
+      const sanitizedVendor = storedVendorInvoices.filter(b => cleanNum(b.grand_total || b.grandTotal || 0) < 100000000);
+
+      let calcSales = sanitizedSales.reduce((acc, b) => acc + cleanNum(b.grandTotal || b.grand_total || 0), 0);
+      let calcExpenses = sanitizedVendor.reduce((acc, b) => acc + cleanNum(b.grand_total || b.grandTotal || 0), 0);
+      let calcPending = sanitizedVendor.filter(b => b.payment_status === 'Pending' || b.status === 'Pending')
+        .reduce((acc, b) => acc + cleanNum(b.grand_total || b.grandTotal || 0), 0);
 
       setLiveSales(calcSales);
       setLiveExpenses(calcExpenses);
       setLivePending(calcPending);
 
-      // Extract unique suppliers
-      if (storedVendorInvoices.length > 0) {
-        const uniqueSup = Array.from(new Set(storedVendorInvoices.map(i => i.supplier_name || i.vendor).filter(Boolean)));
+      // Extract unique suppliers for current user
+      if (sanitizedVendor.length > 0) {
+        const uniqueSup = Array.from(new Set(sanitizedVendor.map(i => i.supplier_name || i.vendor).filter(Boolean)));
         setLiveSuppliers(uniqueSup);
       } else {
         setLiveSuppliers([]);
       }
 
-      // Load live transactions
-      if (storedTx.length > 0) {
-        setLiveTransactions(storedTx);
-      } else {
-        setLiveTransactions([
-          { id: 'TRX-9011', date: '03 Aug 2026, 09:30 AM', type: 'IN', description: 'Daily Store Retail Customer Sales', category: 'Sales Revenue', amount: '+₹ 1,45,000', balance: '₹ 14,80,000' },
-          { id: 'TRX-9010', date: '02 Aug 2026, 04:15 PM', type: 'OUT', description: 'Vendor Payment - ABC Wholesale Traders', category: 'Supplier Bills', amount: '-₹ 33,222', balance: '₹ 13,35,000' },
-          { id: 'TRX-9009', date: '01 Aug 2026, 06:00 PM', type: 'OUT', description: 'Store Electricity Bill Payment', category: 'Shop Utilities', amount: '-₹ 18,400', balance: '₹ 13,80,000' },
-        ]);
-      }
+      // Load live transactions for current user
+      setLiveTransactions(storedTx);
 
-      // 2. Read live stock inventory for Shop Stock Details card
-      const storedStock = JSON.parse(localStorage.getItem('finsight_stock_inventory') || '[]');
-      if (storedStock.length > 0) {
-        const map = new Map();
-        storedStock.forEach(st => {
-          const rawName = (st.name || st.item_name || 'Store Goods').trim();
-          const key = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
-          const qty = parseInt(String(st.stock_qty || st.quantity || '0').replace(/[^0-9]/g, '')) || 0;
-          if (map.has(key)) {
-            map.get(key).qty += qty;
-          } else {
-            map.set(key, { name: rawName, qty });
-          }
-        });
+      // 2. Read live stock inventory for current user from Supabase DB
+      getInventoryFromSupabase(activeUserId).then(dbStock => {
+        const stockItems = dbStock && dbStock.length > 0 ? dbStock : storedStock;
+        if (stockItems && stockItems.length > 0) {
+          const map = new Map();
+          stockItems.forEach(st => {
+            const rawName = (st.name || st.item_name || 'Store Goods').trim();
+            const key = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const qty = parseInt(String(st.stock_qty !== undefined ? st.stock_qty : st.quantity || '0').replace(/[^0-9]/g, '')) || 0;
+            if (map.has(key)) {
+              map.get(key).qty += qty;
+            } else {
+              map.set(key, { name: rawName, qty });
+            }
+          });
 
-        const cards = Array.from(map.values()).slice(0, 3).map(item => ({
-          name: item.name,
-          qty: `${item.qty} Units Left`,
-          pct: Math.min(100, Math.round((item.qty / 50) * 100)),
-          color: item.qty <= 15 ? 'var(--fg-danger)' : 'var(--fg-success)',
-        }));
+          const cards = Array.from(map.values()).slice(0, 3).map(item => ({
+            name: item.name,
+            qty: `${item.qty} Units Left`,
+            pct: Math.min(100, Math.round((item.qty / 50) * 100)),
+            color: item.qty <= 15 ? 'var(--fg-danger)' : 'var(--fg-success)',
+          }));
 
-        setLiveStockCards(cards);
-        setLowStockCount(Array.from(map.values()).filter(i => i.qty <= 15).length);
-      }
+          setLiveStockCards(cards);
+          setLowStockCount(Array.from(map.values()).filter(i => i.qty <= 15).length);
+        } else {
+          setLiveStockCards([]);
+          setLowStockCount(0);
+        }
+      });
 
-      // 3. Compile live AI Intelligence & Security Alerts
+      // 3. Compile live AI Intelligence & Security Alerts for user
       const alerts = [];
-      const duplicateBills = storedVendorInvoices.filter(b => b.status === 'Flagged High Risk' || b.duplicateReason);
+      const duplicateBills = sanitizedVendor.filter(b => b.status === 'Flagged High Risk' || b.duplicateReason);
       if (duplicateBills.length > 0) {
         duplicateBills.forEach(b => {
           alerts.push({
             type: 'FAKE / DUPLICATE BILL DETECTED',
             color: 'var(--fg-danger)',
-            message: `Intercepted duplicate invoice #${b.invoice_number} of ₹ ${Number(b.grand_total || 0).toLocaleString('en-IN')} from ${b.supplier_name}. Matches previously saved bill!`,
+            message: `Intercepted duplicate invoice #${b.invoice_number} of ₹ ${cleanNum(b.grand_total || 0).toLocaleString('en-IN')} from ${b.supplier_name}. Matches previously saved bill!`,
             time: 'Just Now',
           });
         });
       }
 
-      const pendingBill = storedVendorInvoices.find(b => b.payment_status === 'Pending');
+      const pendingBill = sanitizedVendor.find(b => b.payment_status === 'Pending');
       if (pendingBill) {
         alerts.push({
           type: 'UPCOMING BILL PAYMENT DUE',
           color: 'var(--fg-warning)',
-          message: `Supplier payment of ₹ ${(pendingBill.grand_total || 0).toLocaleString()} to ${pendingBill.supplier_name} is due on ${pendingBill.due_date || '15 Days'}.`,
+          message: `Supplier payment of ₹ ${cleanNum(pendingBill.grand_total || 0).toLocaleString()} to ${pendingBill.supplier_name} is due.`,
           time: 'Upcoming Due Date',
         });
       }
 
       alerts.push({
-        type: 'STAFF SALARY PAYOUT SCHEDULED',
-        color: 'var(--fg-success)',
-        message: `Monthly store staff salary payout of ₹ 1,45,000 scheduled for 10th Aug. Verified against attendance ledger.`,
-        time: 'Scheduled Event',
-      });
-
-      alerts.push({
         type: 'GOVT GST TAX AUDITOR VERIFIED',
         color: 'var(--fg-accent)',
-        message: `Official Govt GST rates verified against PostgreSQL DB. Vendor GST rates compliant.`,
+        message: `Official Govt GST rates verified against DB for ${companyName}. System compliant.`,
         time: 'Govt Compliance',
       });
 
@@ -971,7 +985,7 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
   }, []);
 
   const liveTotalRevenue = liveSales;
-  const liveNetProfit = Math.max(145000, liveSales - liveExpenses);
+  const liveNetProfit = liveSales - liveExpenses;
   const livePendingBills = livePending;
   const liveSalesVsExpenses = liveExpenses;
 
@@ -1089,19 +1103,21 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
               </span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-              {(liveStockCards.length > 0 ? liveStockCards : [
-                { name: 'Basmati Rice 25kg', qty: '60 Units Left', pct: 80, color: 'var(--fg-success)' },
-                { name: 'Sunflower Oil 5L', qty: '48 Units Left', pct: 64, color: 'var(--fg-success)' },
-                { name: 'Sugar 1kg', qty: '200 Units Left', pct: 100, color: 'var(--fg-success)' },
-              ]).map((item, i) => (
-                <div key={i} style={{ background: 'var(--fg-bg-secondary)', padding: 12, borderRadius: 10, border: '1px solid var(--fg-border-subtle)' }}>
-                  <div style={{ fontSize: 11, color: 'var(--fg-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
-                  <div style={{ fontWeight: 800, color: item.color, marginTop: 4, fontSize: 12 }}>{item.qty}</div>
-                  <div className="fg-progress-bar" style={{ marginTop: 8 }}>
-                    <div className="fg-progress-fill" style={{ width: `${item.pct}%`, background: item.color }} />
+              {liveStockCards.length > 0 ? (
+                liveStockCards.map((item, i) => (
+                  <div key={i} style={{ background: 'var(--fg-bg-secondary)', padding: 12, borderRadius: 10, border: '1px solid var(--fg-border-subtle)' }}>
+                    <div style={{ fontSize: 11, color: 'var(--fg-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
+                    <div style={{ fontWeight: 800, color: item.color, marginTop: 4, fontSize: 12 }}>{item.qty}</div>
+                    <div className="fg-progress-bar" style={{ marginTop: 8 }}>
+                      <div className="fg-progress-fill" style={{ width: `${item.pct}%`, background: item.color }} />
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div style={{ gridColumn: 'span 3', padding: 18, textAlign: 'center', fontSize: 12, color: 'var(--fg-text-muted)', background: 'var(--fg-bg-secondary)', borderRadius: 10 }}>
+                  📦 No stock items in inventory yet. Click <strong>"+ Add New Stock Product"</strong> or upload a vendor invoice to add items to your store.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -1246,57 +1262,131 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
    ═════════════════════════════════════════════════════════════════════ */
 
 function InvoiceManagementModule({ onOpenCreateInvoice, onOpenUpload }) {
+  const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserKey = String(activeUserSession.user_id || activeUserSession.email || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
   const [invoices, setInvoices] = useState([]);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   useEffect(() => {
-    apiGetInvoices().then(res => {
-      if (res && res.invoices) setInvoices(res.invoices);
-    }).catch(err => console.error(err));
-  }, []);
+    try {
+      const stored = JSON.parse(localStorage.getItem(`finsight_ocr_invoices_${activeUserKey}`) || '[]');
+      setInvoices(stored);
+    } catch (e) {}
+  }, [activeUserKey]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)' }}>Invoice Management Terminal</h3>
+        <div>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)' }}>Bills &amp; Invoices Management</h3>
+          <p style={{ fontSize: 12, color: 'var(--fg-text-muted)', marginTop: 2 }}>Manage uploaded vendor bills and customer POS sales receipts</p>
+        </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onOpenUpload} className="fg-btn-ghost" style={{ padding: '8px 14px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Upload size={14} /> Scan Supplier Invoice
+          <button onClick={onOpenUpload} className="lc-liquid-btn-primary" style={{ padding: '8px 14px', fontSize: 12 }}>
+            <Upload size={14} /> Upload Vendor Invoice
           </button>
-          <button onClick={onOpenCreateInvoice} className="fg-btn-primary" style={{ padding: '8px 14px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Plus size={14} /> Create Customer Bill
+          <button onClick={onOpenCreateInvoice} className="lc-liquid-btn-ghost" style={{ padding: '8px 14px', fontSize: 12 }}>
+            <Plus size={14} /> Create Customer POS Bill
           </button>
         </div>
       </div>
+
       <TableCard
-        headers={['Invoice ID', 'Customer / Vendor', 'Date', 'Amount', 'Status', 'Risk Score']}
+        headers={['Invoice No', 'Date', 'Supplier / Customer', 'Total Amount (₹)', 'Payment Status', 'Actions']}
         rows={invoices.map(inv => [
-          inv.invoice_number || inv.id,
-          inv.supplier_name || 'Customer',
-          inv.invoice_date || '2026-08-04',
-          `₹ ${inv.grand_total ? inv.grand_total.toLocaleString('en-IN') : 0}`,
-          inv.status || 'Verified',
-          inv.riskScore || 'Safe',
+          inv.invoice_number || inv.billNo || 'INV-101',
+          (inv.invoice_date || inv.date || '2026-08-05').split('T')[0],
+          inv.supplier_name || inv.customerName || 'Store Vendor',
+          <strong style={{ color: 'var(--fg-success)' }}>₹ {parseFloat(String(inv.grand_total || inv.grandTotal || 0).replace(/[^0-9.]/g, '')).toLocaleString('en-IN')}</strong>,
+          <span style={{ color: inv.payment_status === 'Pending' ? 'var(--fg-warning)' : 'var(--fg-success)', fontWeight: 800 }}>
+            {inv.payment_status || 'Paid'}
+          </span>,
+          <button
+            onClick={() => setSelectedInvoice(inv)}
+            style={{ padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: 'var(--fg-accent-soft)', border: '1px solid var(--fg-border-accent)', color: 'var(--fg-accent)', cursor: 'pointer' }}
+          >
+            👁️ View Details
+          </button>
         ])}
       />
+
+      {selectedInvoice && (
+        <div className="fg-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="lc-glass-card" style={{ width: 560, padding: 24, borderRadius: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--fg-border)', paddingBottom: 10, marginBottom: 14 }}>
+              <h4 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)' }}>Invoice Details #{selectedInvoice.invoice_number || selectedInvoice.billNo}</h4>
+              <button onClick={() => setSelectedInvoice(null)} style={{ background: 'none', border: 'none', color: 'var(--fg-text-muted)', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--fg-text-secondary)', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+              <div>Supplier / Customer: <strong style={{ color: 'var(--fg-text-primary)' }}>{selectedInvoice.supplier_name || selectedInvoice.customerName}</strong></div>
+              <div>Date: <strong style={{ color: 'var(--fg-text-primary)' }}>{(selectedInvoice.invoice_date || selectedInvoice.date || '').split('T')[0]}</strong></div>
+              <div>Status: <strong style={{ color: selectedInvoice.payment_status === 'Pending' ? 'var(--fg-warning)' : 'var(--fg-success)' }}>{selectedInvoice.payment_status || 'Paid'}</strong></div>
+              <div>Grand Total: <strong style={{ color: 'var(--fg-success)', fontSize: 16 }}>₹ {parseFloat(String(selectedInvoice.grand_total || selectedInvoice.grandTotal || 0).replace(/[^0-9.]/g, '')).toLocaleString('en-IN')}</strong></div>
+            </div>
+            <button onClick={() => setSelectedInvoice(null)} className="lc-liquid-btn-ghost" style={{ width: '100%', padding: 10 }}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function PaymentManagementModule() {
+  const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserKey = String(activeUserSession.user_id || activeUserSession.email || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
   const [payments, setPayments] = useState([]);
+  const [pendingTotal, setPendingTotal] = useState(0);
+  const [paidTotal, setPaidTotal] = useState(0);
 
   useEffect(() => {
-    apiGetPayments().then(res => {
-      if (res && res.payments) setPayments(res.payments);
-    }).catch(err => console.error(err));
-  }, []);
+    try {
+      const storedOcr = JSON.parse(localStorage.getItem(`finsight_ocr_invoices_${activeUserKey}`) || '[]');
+      const storedExp = JSON.parse(localStorage.getItem(`finsight_expenses_${activeUserKey}`) || '[]');
+      
+      let pending = 0;
+      let paid = 0;
+      const list = [];
+
+      storedOcr.forEach(inv => {
+        const amt = parseFloat(String(inv.grand_total || inv.grandTotal || 0).replace(/[^0-9.]/g, '')) || 0;
+        if (inv.payment_status === 'Pending') pending += amt;
+        else paid += amt;
+
+        list.push({
+          id: inv.invoice_number || `INV-${list.length + 1}`,
+          recipient: inv.supplier_name || 'Vendor Supplier',
+          mode: 'Bank Transfer / UPI',
+          amount: `₹ ${amt.toLocaleString('en-IN')}`,
+          status: inv.payment_status || 'Paid',
+        });
+      });
+
+      storedExp.forEach(exp => {
+        const amt = parseFloat(String(exp.amount || 0).replace(/[^0-9.]/g, '')) || 0;
+        if (exp.status === 'Pending') pending += amt;
+        else paid += amt;
+
+        list.push({
+          id: exp.id || `EXP-${list.length + 1}`,
+          recipient: exp.vendor || exp.paidTo || 'Shop Expense',
+          mode: 'Cash / UPI',
+          amount: `₹ ${amt.toLocaleString('en-IN')}`,
+          status: exp.status || 'Paid',
+        });
+      });
+
+      setPendingTotal(pending);
+      setPaidTotal(paid);
+      setPayments(list);
+    } catch (e) {}
+  }, [activeUserKey]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-        <KpiCard title="Pending Payments" value="₹ 3,45,000" change="4 Invoices" positive={false} icon={Clock} />
-        <KpiCard title="Paid Payments (This Month)" value="₹ 24,10,000" change="18 Receipts" positive icon={CheckCircle2} />
-        <KpiCard title="Upcoming Due (Next 7 Days)" value="₹ 1,80,000" change="2 Reminders Sent" positive icon={Bell} />
+        <KpiCard title="Pending Payments" value={`₹ ${pendingTotal.toLocaleString('en-IN')}`} change="Unpaid Supplier Credit" positive={false} icon={Clock} />
+        <KpiCard title="Paid Outflows" value={`₹ ${paidTotal.toLocaleString('en-IN')}`} change="Settled Vendor Receipts" positive icon={CheckCircle2} />
+        <KpiCard title="Total Payment Records" value={`${payments.length} Records`} change="User Synced" positive icon={Bell} />
       </div>
       <TableCard
         headers={['Transaction ID', 'Payee / Recipient', 'Payment Method', 'Amount', 'Status']}
@@ -1305,7 +1395,7 @@ function PaymentManagementModule() {
           p.recipient,
           p.mode,
           p.amount,
-          p.status,
+          <span style={{ color: p.status === 'Pending' ? 'var(--fg-warning)' : 'var(--fg-success)', fontWeight: 800 }}>{p.status}</span>
         ])}
       />
     </div>
@@ -1313,38 +1403,45 @@ function PaymentManagementModule() {
 }
 
 function ExpenseManagementModule() {
+  const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserKey = String(activeUserSession.user_id || activeUserSession.email || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
   const [expenses, setExpenses] = useState([]);
 
   useEffect(() => {
-    apiGetExpenses().then(res => {
-      if (res && res.expenses) setExpenses(res.expenses);
-    }).catch(err => console.error(err));
-  }, []);
+    try {
+      const storedExp = JSON.parse(localStorage.getItem(`finsight_expenses_${activeUserKey}`) || '[]');
+      setExpenses(storedExp);
+    } catch (e) {}
+  }, [activeUserKey]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)' }}>Shop Expenses &amp; Employee Claims</h3>
-        <button className="fg-btn-primary" style={{ padding: '8px 14px', fontSize: 12 }}>
-          + Add New Expense Claim
-        </button>
+        <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)' }}>Shop Expenses &amp; Outflows</h3>
       </div>
       <TableCard
-        headers={['Expense ID', 'Date', 'Paid To', 'Category', 'Amount', 'Status']}
+        headers={['Expense ID', 'Date', 'Paid To / Vendor', 'Category', 'Amount', 'Status']}
         rows={expenses.map(e => [
           e.id,
-          e.date,
-          e.paidTo,
-          e.category,
-          e.amount,
-          e.status,
+          e.date || new Date().toISOString().split('T')[0],
+          e.vendor || e.paidTo || 'Supplier',
+          e.category || 'General',
+          <strong style={{ color: 'var(--fg-warning)' }}>₹ {parseFloat(String(e.amount || 0).replace(/[^0-9.]/g, '')).toLocaleString('en-IN')}</strong>,
+          <span style={{ color: e.status === 'Pending' ? 'var(--fg-warning)' : 'var(--fg-success)', fontWeight: 800 }}>{e.status || 'Paid'}</span>
         ])}
       />
     </div>
   );
 }
 
+
+
 function InventoryManagementModule() {
+  const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserId = activeUserSession.user_id || activeUserSession.email || 'user';
+  const activeUserKey = String(activeUserId).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const stockStorageKey = `finsight_stock_inventory_${activeUserKey}`;
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditPriceModal, setShowEditPriceModal] = useState(false);
   const [showReturnVendorModal, setShowReturnVendorModal] = useState(false);
@@ -1366,7 +1463,7 @@ function InventoryManagementModule() {
   const consolidateStockList = (rawItems) => {
     const map = new Map();
 
-    rawItems.forEach((st) => {
+    (rawItems || []).forEach((st) => {
       const rawName = (st.name || st.item_name || 'Store Goods').trim();
       const key = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
       const qty = parseInt(String(st.stock_qty !== undefined ? st.stock_qty : (st.stockQty !== undefined ? st.stockQty : st.quantity || '0')).replace(/[^0-9]/g, ''));
@@ -1387,7 +1484,7 @@ function InventoryManagementModule() {
           id: st.id || `SKU-${1000 + map.size}`,
           name: rawName,
           category: category,
-          stockQty: isNaN(qty) ? 10 : qty,
+          stockQty: isNaN(qty) ? 0 : qty,
           unitPrice: cost,
           sellingPrice: selling,
           supplier: supplier,
@@ -1395,48 +1492,28 @@ function InventoryManagementModule() {
       }
     });
 
-    const consolidated = Array.from(map.values()).map(st => ({
+    return Array.from(map.values()).map(st => ({
       ...st,
       status: st.stockQty <= 15 ? 'Low Stock Alert' : 'Healthy Stock',
     }));
-
-    try {
-      localStorage.setItem('finsight_stock_inventory', JSON.stringify(consolidated.map(st => ({
-        id: st.id,
-        name: st.name,
-        category: st.category,
-        stock_qty: st.stockQty,
-        quantity: `${st.stockQty} Units`,
-        cost_price: st.unitPrice,
-        rate: st.unitPrice,
-        selling_price: st.sellingPrice,
-        supplier_name: st.supplier,
-      }))));
-    } catch (e) {}
-
-    return consolidated;
   };
 
   useEffect(() => {
-    const loadStock = () => {
+    let isMounted = true;
+    const loadStock = async () => {
       try {
-        const localStock = JSON.parse(localStorage.getItem('finsight_stock_inventory') || '[]');
-        if (localStock.length > 0) {
-          setStockList(consolidateStockList(localStock));
-        } else {
-          apiGetInventory().then(res => {
-            if (res && res.inventory) {
-              setStockList(consolidateStockList(res.inventory));
-            }
-          }).catch(err => console.error(err));
+        const dbItems = await getInventoryFromSupabase(activeUserId);
+        const localRaw = JSON.parse(localStorage.getItem(stockStorageKey) || '[]');
+        const combined = (dbItems && dbItems.length > 0) ? dbItems : localRaw;
+        if (isMounted) {
+          setStockList(consolidateStockList(combined));
         }
       } catch (e) {}
     };
 
     loadStock();
-    window.addEventListener('storage', loadStock);
-    return () => window.removeEventListener('storage', loadStock);
-  }, []);
+    return () => { isMounted = false; };
+  }, [activeUserId, stockStorageKey]);
 
   const handleAddStockSubmit = async (e) => {
     e.preventDefault();
@@ -1459,6 +1536,32 @@ function InventoryManagementModule() {
     const updated = consolidateStockList([newItem, ...stockList]);
     setStockList(updated);
 
+    try {
+      localStorage.setItem(stockStorageKey, JSON.stringify(updated.map(st => ({
+        id: st.id,
+        name: st.name,
+        category: st.category,
+        stock_qty: st.stockQty,
+        quantity: `${st.stockQty} Units`,
+        cost_price: st.unitPrice,
+        rate: st.unitPrice,
+        selling_price: st.sellingPrice,
+        supplier_name: st.supplier,
+      }))));
+    } catch (e) {}
+
+    // Save to Supabase DB
+    await saveStockToSupabase({
+      userId: activeUserId,
+      supplierName: supplier,
+      items: [{
+        name: itemName,
+        qty: parseInt(qty) || 1,
+        rate: `₹ ${costNum.toLocaleString('en-IN')}`,
+        sellingPrice: sellNum,
+      }]
+    });
+
     setItemName(''); setQty(''); setCostRate(''); setSellingRate('');
     setShowAddModal(false);
   };
@@ -1480,7 +1583,7 @@ function InventoryManagementModule() {
     setStockList(updated);
 
     try {
-      localStorage.setItem('finsight_stock_inventory', JSON.stringify(updated.map(st => ({
+      localStorage.setItem(stockStorageKey, JSON.stringify(updated.map(st => ({
         name: st.name,
         category: st.category,
         stock_qty: st.stockQty,
@@ -2740,7 +2843,7 @@ function ProfileModule({ ownerName, companyName, dbUsersList = [] }) {
       <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--fg-text-primary)' }}>👑 {ownerName}</h3>
       <div style={{ fontSize: 13, color: 'var(--fg-text-secondary)' }}>Company: <strong style={{ color: 'var(--fg-text-primary)' }}>{companyName}</strong></div>
       <div style={{ fontSize: 13, color: 'var(--fg-text-secondary)' }}>Role: Business Owner</div>
-      <div style={{ fontSize: 13, color: 'var(--fg-accent)', fontWeight: 700, marginTop: 8 }}>✓ PostgreSQL Database Connected ({dbUsersList.length} total users managed)</div>
+      <div style={{ fontSize: 13, color: 'var(--fg-accent)', fontWeight: 700, marginTop: 8 }}>✓ FinSight AI Workspace Verified</div>
     </div>
   );
 }
@@ -2777,19 +2880,27 @@ function TableCard({ headers, rows }) {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, rIdx) => (
-              <tr key={rIdx}>
-                {row.map((cell, cIdx) => (
-                  <td key={cIdx} style={{
-                    padding: '13px 16px',
-                    color: cIdx === 0 ? 'var(--fg-accent)' : 'var(--fg-text-primary)',
-                    fontWeight: cIdx === 0 ? 700 : 500,
-                  }}>
-                    {cell}
-                  </td>
-                ))}
+            {rows && rows.length > 0 ? (
+              rows.map((row, rIdx) => (
+                <tr key={rIdx}>
+                  {row.map((cell, cIdx) => (
+                    <td key={cIdx} style={{
+                      padding: '13px 16px',
+                      color: cIdx === 0 ? 'var(--fg-accent)' : 'var(--fg-text-primary)',
+                      fontWeight: cIdx === 0 ? 700 : 500,
+                    }}>
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={headers ? headers.length : 5} style={{ padding: '28px 16px', textAlign: 'center', color: 'var(--fg-text-muted)', fontSize: 13 }}>
+                  No recorded entries found for your store account.
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

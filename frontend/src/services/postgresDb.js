@@ -235,23 +235,45 @@ export function getStoredFraudAlerts() {
   return raw ? JSON.parse(raw) : [];
 }
 
-export function getStoredInvoices() {
+export function getStoredInvoices(userId) {
   try {
-    const raw = localStorage.getItem('finsight_invoices') || localStorage.getItem('finguard_invoices');
+    let key = 'finsight_ocr_invoices';
+    if (userId) {
+      const cleanKey = String(userId).toLowerCase().replace(/[^a-z0-9]/g, '');
+      key = `finsight_ocr_invoices_${cleanKey}`;
+    } else {
+      const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+      if (activeUser.user_id || activeUser.email) {
+        const cleanKey = String(activeUser.user_id || activeUser.email).toLowerCase().replace(/[^a-z0-9]/g, '');
+        key = `finsight_ocr_invoices_${cleanKey}`;
+      }
+    }
+    const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw);
   } catch (e) {}
   return [];
 }
 
-export function saveInvoiceToStore(inv) {
-  const current = getStoredInvoices();
+export function saveInvoiceToStore(inv, userId) {
+  const current = getStoredInvoices(userId);
   current.unshift(inv);
-  localStorage.setItem('finsight_invoices', JSON.stringify(current));
+  let key = 'finsight_ocr_invoices';
+  if (userId) {
+    const cleanKey = String(userId).toLowerCase().replace(/[^a-z0-9]/g, '');
+    key = `finsight_ocr_invoices_${cleanKey}`;
+  } else {
+    const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+    if (activeUser.user_id || activeUser.email) {
+      const cleanKey = String(activeUser.user_id || activeUser.email).toLowerCase().replace(/[^a-z0-9]/g, '');
+      key = `finsight_ocr_invoices_${cleanKey}`;
+    }
+  }
+  localStorage.setItem(key, JSON.stringify(current));
   return current;
 }
 
-export function checkDuplicateInvoiceAndFraud(newInvoice = {}) {
-  const storedInvoices = getStoredInvoices();
+export function checkDuplicateInvoiceAndFraud(newInvoice = {}, userId) {
+  const storedInvoices = getStoredInvoices(userId);
   const normNo = (newInvoice.invoiceNumber || newInvoice.invoice_number || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const normSupplier = (newInvoice.supplierName || newInvoice.supplier_name || '').toLowerCase().trim();
   const totalVal = parseFloat(String(newInvoice.grandTotal || newInvoice.grand_total || '0').replace(/[^0-9.]/g, '')) || 0;

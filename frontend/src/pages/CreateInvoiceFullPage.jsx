@@ -8,40 +8,36 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
   });
 
   // Available Store Products from DB / Stock Inventory
+  const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserKey = String(activeUserSession.user_id || activeUserSession.email || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
+
   const [availableStock, setAvailableStock] = useState(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem('finguard_stock_inventory') || '[]');
+      const stockKey = `finsight_stock_inventory_${activeUserKey}`;
+      const stored = JSON.parse(localStorage.getItem(stockKey) || localStorage.getItem('finsight_stock_inventory') || '[]');
       if (stored.length > 0) {
         return stored.map((st, i) => {
-          const rateVal = parseFloat((st.rate || '0').replace(/[^0-9.]/g, '')) || 100;
+          const rateVal = parseFloat(String(st.unit_price || st.rate || st.cost_price || '0').replace(/[^0-9.]/g, '')) || 100;
+          const sellVal = parseFloat(String(st.selling_price || st.sellingPrice || '').replace(/[^0-9.]/g, '')) || Math.round(rateVal * 1.2);
           return {
             id: `prod-${i}`,
             name: st.name || st.item_name || 'Stock Product',
             costPrice: rateVal,
-            sellingPrice: Math.round(rateVal * 1.22), // 22% retail margin
+            sellingPrice: sellVal,
             gstRate: st.name && st.name.toLowerCase().includes('detergent') ? 18 : 5,
-            stockQty: parseFloat((st.quantity || '10').replace(/[^0-9.]/g, '')) || 10,
-            unit: (st.quantity || '').includes('Bag') ? 'Bags' : 'Packs',
+            stockQty: parseFloat(String(st.stock_qty !== undefined ? st.stock_qty : st.quantity || '0').replace(/[^0-9.]/g, '')) || 0,
+            unit: 'Units',
           };
         });
       }
     } catch (e) {}
 
-    return [
-      { id: 'p1', name: 'Basmati Rice Bag (25kg)', costPrice: 1850, sellingPrice: 2200, gstRate: 5, stockQty: 10, unit: 'Bags' },
-      { id: 'p2', name: 'Sunflower Cooking Oil (1L)', costPrice: 135, sellingPrice: 165, gstRate: 5, stockQty: 20, unit: 'Packs' },
-      { id: 'p3', name: 'Refined Sugar (1kg)', costPrice: 45, sellingPrice: 55, gstRate: 5, stockQty: 15, unit: 'Packs' },
-      { id: 'p4', name: 'Detergent Powder (1kg)', costPrice: 110, sellingPrice: 140, gstRate: 18, stockQty: 20, unit: 'Packs' },
-      { id: 'p5', name: 'Wheat Flour (10kg)', costPrice: 380, sellingPrice: 450, gstRate: 5, stockQty: 120, unit: 'Bags' },
-    ];
+    return [];
   });
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [items, setItems] = useState([
-    { productId: 'p1', description: 'Basmati Rice Bag (25kg)', qty: 2, costPrice: 1850, price: 2200, gstRate: 5 },
-    { productId: 'p2', description: 'Sunflower Cooking Oil (1L)', qty: 5, costPrice: 135, price: 165, gstRate: 5 },
-  ]);
+  const [items, setItems] = useState([]);
 
   const [billSummary, setBillSummary] = useState(null);
 
@@ -91,15 +87,23 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
     });
   };
 
+  // Helper to safely convert string/numbers into clean numbers
+  const parseVal = (val) => {
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    if (!val) return 0;
+    const parsed = parseFloat(String(val).replace(/[^0-9.]/g, ''));
+    return isNaN(parsed) || !isFinite(parsed) ? 0 : parsed;
+  };
+
   // Calculations
   const calculateNetSubtotal = () => {
-    return items.reduce((acc, item) => acc + (Number(item.qty || 0) * Number(item.price || 0)), 0);
+    return items.reduce((acc, item) => acc + (parseVal(item.qty) * parseVal(item.price)), 0);
   };
 
   const calculateTotalGstTax = () => {
     return items.reduce((acc, item) => {
-      const lineSubtotal = Number(item.qty || 0) * Number(item.price || 0);
-      const lineTax = Math.round(lineSubtotal * (Number(item.gstRate || 5) / 100));
+      const lineSubtotal = parseVal(item.qty) * parseVal(item.price);
+      const lineTax = Math.round(lineSubtotal * (parseVal(item.gstRate || 5) / 100));
       return acc + lineTax;
     }, 0);
   };
@@ -110,8 +114,8 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
 
   const calculateTotalGrossProfit = () => {
     return items.reduce((acc, item) => {
-      const unitMargin = Number(item.price || 0) - Number(item.costPrice || 0);
-      return acc + (unitMargin * Number(item.qty || 0));
+      const unitMargin = parseVal(item.price) - parseVal(item.costPrice);
+      return acc + (unitMargin * parseVal(item.qty));
     }, 0);
   };
 
@@ -126,31 +130,22 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
     const profitEarned = calculateTotalGrossProfit();
     const generatedBillNo = `BILL-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // 1. Deduct Sold Quantity from Available Stock in localStorage and sync with Inventory state
+    // 1. Deduct Sold Quantity from Available Stock in user-partitioned localStorage
     try {
-      const storedStock = JSON.parse(localStorage.getItem('finsight_stock_inventory') || localStorage.getItem('finguard_stock_inventory') || '[]');
-      const defaultStockList = storedStock.length > 0 ? storedStock : [
-        { id: 'SKU-1000', name: 'Basmati Rice 25kg', item_name: 'Basmati Rice 25kg', category: 'General Store', stock_qty: 60, cost_price: '₹ 1,850', selling_price: '₹ 2,200', supplier_name: 'ABC Wholesale Traders' },
-        { id: 'SKU-1001', name: 'Sunflower Oil 5L', item_name: 'Sunflower Oil 5L', category: 'General Store', stock_qty: 48, cost_price: '₹ 720', selling_price: '₹ 860', supplier_name: 'ABC Wholesale Traders' },
-        { id: 'SKU-1002', name: 'Sugar 1kg', item_name: 'Sugar 1kg', category: 'General Store', stock_qty: 200, cost_price: '₹ 46', selling_price: '₹ 55', supplier_name: 'ABC Wholesale Traders' },
-        { id: 'SKU-1003', name: 'Detergent Powder 1kg', item_name: 'Detergent Powder 1kg', category: 'General Store', stock_qty: 50, cost_price: '₹ 110', selling_price: '₹ 140', supplier_name: 'ABC Wholesale Traders' },
-      ];
-
+      const stockKey = `finsight_stock_inventory_${activeUserKey}`;
+      const storedStock = JSON.parse(localStorage.getItem(stockKey) || '[]');
+      
       const sanitize = str => (str || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
 
-      const updatedStock = defaultStockList.map(st => {
-        const stockKey = sanitize(st.name || st.item_name || '');
+      const updatedStock = storedStock.map(st => {
+        const itemKeyInStock = sanitize(st.name || st.item_name || '');
         const matchItem = items.find(it => {
           const itemKey = sanitize(it.description || it.name || '');
-          return (itemKey && stockKey && (itemKey.includes(stockKey) || stockKey.includes(itemKey))) ||
-                 (itemKey.includes('rice') && stockKey.includes('rice')) ||
-                 (itemKey.includes('oil') && stockKey.includes('oil')) ||
-                 (itemKey.includes('sugar') && stockKey.includes('sugar')) ||
-                 (itemKey.includes('detergent') && stockKey.includes('detergent'));
+          return itemKey && itemKeyInStock && (itemKey.includes(itemKeyInStock) || itemKeyInStock.includes(itemKey));
         });
 
         if (matchItem) {
-          const currentQty = parseInt(String(st.stock_qty || st.stockQty || st.quantity || '10').replace(/[^0-9]/g, '')) || 10;
+          const currentQty = parseInt(String(st.stock_qty !== undefined ? st.stock_qty : st.quantity || '0').replace(/[^0-9]/g, '')) || 0;
           const soldQty = Number(matchItem.qty || 1);
           const newQty = Math.max(0, currentQty - soldQty);
           return {
@@ -164,9 +159,7 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
         return st;
       });
 
-      localStorage.setItem('finsight_stock_inventory', JSON.stringify(updatedStock));
-      localStorage.setItem('finguard_stock_inventory', JSON.stringify(updatedStock));
-      window.dispatchEvent(new Event('storage'));
+      localStorage.setItem(stockKey, JSON.stringify(updatedStock));
 
       // 2. Trigger Secondary Stock Webhook for STOCK_CUSTOMER_BOUGHT event
       apiTriggerStockWebhook('STOCK_CUSTOMER_BOUGHT', {
@@ -179,9 +172,14 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
       console.error('Stock auto-deduction error:', err);
     }
 
+    // Get Active Logged In User Key for multi-tenancy storage scoping
+    const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+    const activeUserKey = (activeUser.user_id || activeUser.email || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
+
     // 2. Record Financial Cash Inflow (Transaction IN) for Customer Payment
     try {
-      const existingTransactions = JSON.parse(localStorage.getItem('finsight_transactions') || '[]');
+      const txKey = `finsight_transactions_${activeUserKey}`;
+      const existingTransactions = JSON.parse(localStorage.getItem(txKey) || localStorage.getItem('finsight_transactions') || '[]');
       existingTransactions.unshift({
         id: `tx-${Date.now()}`,
         date: new Date().toISOString().split('T')[0],
@@ -189,8 +187,9 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
         description: `Customer POS Sale (Bill #${generatedBillNo} - ${customerName})`,
         category: 'Customer Sale',
         amount: `₹ ${grandTotal.toLocaleString('en-IN')}`,
-        balance: `₹ 4,85,000`,
+        balance: `₹ ${(grandTotal).toLocaleString('en-IN')}`,
       });
+      localStorage.setItem(txKey, JSON.stringify(existingTransactions));
       localStorage.setItem('finsight_transactions', JSON.stringify(existingTransactions));
     } catch (e) {}
 
@@ -214,8 +213,10 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
     };
 
     try {
-      const storedBills = JSON.parse(localStorage.getItem('finsight_customer_invoices') || '[]');
+      const billsKey = `finsight_customer_invoices_${activeUserKey}`;
+      const storedBills = JSON.parse(localStorage.getItem(billsKey) || localStorage.getItem('finsight_customer_invoices') || '[]');
       storedBills.unshift(billRecord);
+      localStorage.setItem(billsKey, JSON.stringify(storedBills));
       localStorage.setItem('finsight_customer_invoices', JSON.stringify(storedBills));
     } catch (err) {}
 
