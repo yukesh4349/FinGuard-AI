@@ -81,7 +81,7 @@ export default function BusinessOwnerDashboard({
     setTheme(nextTheme);
     try {
       localStorage.setItem('finguard_theme', nextTheme);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   // Modals state
@@ -983,7 +983,7 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
       });
 
       setFraudFeedAlerts(alerts);
-    } catch (e) {}
+    } catch (e) { }
 
     apiGetDashboardStats().then(res => {
       if (res && res.stats) setStats(res.stats);
@@ -998,19 +998,8 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
 
-      {/* ── KPI CARDS (WITH MINI SVG LINE GRAPHS) ────────────────────────── */}
-      <div className="fg-anim-load-1">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div>
-            <h3 style={{ fontSize: 17, fontWeight: 800, color: 'var(--fg-text-primary)' }}>Business Performance (Live Backend DB Synced)</h3>
-            <p style={{ fontSize: 12, color: 'var(--fg-text-muted)', marginTop: 2 }}>Real-time calculated totals for {companyName}</p>
-          </div>
-          <span className="fg-ai-badge">
-            <Activity size={12} />
-            LIVE DB CALC
-          </span>
-        </div>
-
+      {/* ── KPI CARDS ────────────────────────── */}
+      <div className="fg-anim-load-1" style={{ marginBottom: 18 }}>
         <div className="fg-kpi-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
           {/* Profit & Loss */}
           <div className="lc-glass-card fg-kpi-1" style={{ padding: 18 }}>
@@ -1020,9 +1009,6 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
               <div style={{ fontSize: 11, color: 'var(--fg-success)', fontWeight: 700, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <ArrowUpRight size={12} /> +18.8% Net Margin
               </div>
-            </div>
-            <div style={{ height: 42, marginTop: 14 }}>
-              <MiniLineSparkline data={stats.sparklines?.profit || [40, 55, 70, 60, 85, 95]} color="#20D67A" />
             </div>
           </div>
 
@@ -1035,9 +1021,6 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
                 <ArrowUpRight size={12} /> +12.4% Sales Growth
               </div>
             </div>
-            <div style={{ height: 42, marginTop: 14 }}>
-              <MiniLineSparkline data={stats.sparklines?.revenue || [50, 65, 80, 75, 90, 100]} color="#00D9C0" />
-            </div>
           </div>
 
           {/* Pending Bills */}
@@ -1049,9 +1032,6 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
                 <Clock size={12} /> Due Payment Terms
               </div>
             </div>
-            <div style={{ height: 42, marginTop: 14 }}>
-              <MiniLineSparkline data={[80, 60, 45, 30, 50, 40]} color="#FFB020" />
-            </div>
           </div>
 
           {/* Sales vs Expenses (Money Out) */}
@@ -1062,9 +1042,6 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
               <div style={{ fontSize: 11, color: 'var(--fg-success)', fontWeight: 700, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <ArrowDownRight size={12} /> Supplier Purchases
               </div>
-            </div>
-            <div style={{ height: 42, marginTop: 14 }}>
-              <MiniLineSparkline data={[35, 45, 30, 50, 40, 30]} color="#00D9C0" />
             </div>
           </div>
         </div>
@@ -1245,20 +1222,6 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
         />
       </div>
 
-      {/* ── DUAL-LINE TIME-SERIES CHART AT THE BOTTOM ─────────────────── */}
-      <div className="fg-anim-load-8">
-        <DualLineChart
-          labels={['Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Aug 2026']}
-          line1Data={[28.4, 34.2, 41.8, 38.5, 44.9, Math.round((liveTotalRevenue / 100000) * 10) / 10]}
-          line2Data={[26.0, 31.5, 37.8, 41.0, 43.5, 49.8]}
-          line1Label={`Live Store Cash Flow (₹ ${(liveTotalRevenue / 100000).toFixed(1)}L)`}
-          line2Label="AI Working Capital Forecast (₹ 49.8L)"
-          line1Color="#00D9C0"
-          line2Color="#9B7CFF"
-          height={210}
-        />
-      </div>
-
     </div>
   );
 }
@@ -1277,7 +1240,7 @@ function InvoiceManagementModule({ onOpenCreateInvoice, onOpenUpload }) {
     try {
       const stored = JSON.parse(localStorage.getItem(`finsight_ocr_invoices_${activeUserKey}`) || '[]');
       setInvoices(stored);
-    } catch (e) {}
+    } catch (e) { }
   }, [activeUserKey]);
 
   return (
@@ -1348,7 +1311,7 @@ function PaymentManagementModule() {
     try {
       const storedOcr = JSON.parse(localStorage.getItem(`finsight_ocr_invoices_${activeUserKey}`) || '[]');
       const storedExp = JSON.parse(localStorage.getItem(`finsight_expenses_${activeUserKey}`) || '[]');
-      
+
       let pending = 0;
       let paid = 0;
       const list = [];
@@ -1384,7 +1347,7 @@ function PaymentManagementModule() {
       setPendingTotal(pending);
       setPaidTotal(paid);
       setPayments(list);
-    } catch (e) {}
+    } catch (e) { }
   }, [activeUserKey]);
 
   return (
@@ -1417,7 +1380,7 @@ function ExpenseManagementModule() {
     try {
       const storedExp = JSON.parse(localStorage.getItem(`finsight_expenses_${activeUserKey}`) || '[]');
       setExpenses(storedExp);
-    } catch (e) {}
+    } catch (e) { }
   }, [activeUserKey]);
 
   return (
@@ -1451,10 +1414,10 @@ function InventoryManagementModule() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditPriceModal, setShowEditPriceModal] = useState(false);
   const [showReturnVendorModal, setShowReturnVendorModal] = useState(false);
-  
+
   const [editingItemIndex, setEditingItemIndex] = useState(null);
   const [editPriceVal, setEditPriceVal] = useState('');
-  
+
   const [selectedStockItem, setSelectedStockItem] = useState(null);
   const [returnQtyVal, setReturnQtyVal] = useState('1');
   const [returnReason, setReturnReason] = useState('Damaged Goods / Expired Stock');
@@ -1520,7 +1483,7 @@ function InventoryManagementModule() {
         if (isMounted) {
           setStockList(consolidateStockList(combined));
         }
-      } catch (e) {}
+      } catch (e) { }
     };
 
     loadStock();
@@ -1560,7 +1523,7 @@ function InventoryManagementModule() {
         selling_price: st.sellingPrice,
         supplier_name: st.supplier,
       }))));
-    } catch (e) {}
+    } catch (e) { }
 
     // Save to Supabase DB
     await saveStockToSupabase({
@@ -1589,7 +1552,7 @@ function InventoryManagementModule() {
     e.preventDefault();
     if (editingItemIndex === null) return;
     const newMRP = editPriceVal ? `₹ ${parseFloat(editPriceVal).toLocaleString('en-IN')}` : '';
-    
+
     const updated = [...stockList];
     updated[editingItemIndex].sellingPrice = newMRP;
     setStockList(updated);
@@ -1605,10 +1568,10 @@ function InventoryManagementModule() {
         selling_price: st.sellingPrice,
         supplier_name: st.supplier,
       }))));
-    } catch (e) {}
+    } catch (e) { }
 
     setShowEditPriceModal(false);
-    updateStockMrpInSupabase(activeUserId, selectedStockItem.name, newMRP).catch(() => {});
+    updateStockMrpInSupabase(activeUserId, selectedStockItem.name, newMRP).catch(() => { });
     alert(`Success: Retail Selling MRP for '${updated[editingItemIndex].name}' updated to ${newMRP || 'Not Set (Cost Price Default)'}!`);
   };
 
@@ -1629,9 +1592,9 @@ function InventoryManagementModule() {
           selling_price: st.sellingPrice,
           supplier_name: st.supplier,
         }))));
-      } catch (e) {}
+      } catch (e) { }
 
-      deleteStockFromSupabase(activeUserId, item.name).catch(() => {});
+      deleteStockFromSupabase(activeUserId, item.name).catch(() => { });
     }
   };
 
@@ -1683,7 +1646,7 @@ function InventoryManagementModule() {
         balance: `₹ 4,85,000`,
       });
       localStorage.setItem('finsight_transactions', JSON.stringify(existingTx));
-    } catch (e) {}
+    } catch (e) { }
 
     setShowReturnVendorModal(false);
     alert(`Success: Returned ${returnQtyNum} Units of '${selectedStockItem.name}' to Vendor ${selectedStockItem.supplier}.\nStock quantity reduced & Vendor Debit Note generated!`);
@@ -1868,7 +1831,7 @@ function SalesManagementModule() {
           { billNo: 'BILL-902', customerName: 'Apex Traders Bulk', customerPhone: '+91 98123 45678', createdAt: '2026-08-03T14:15:00Z', grandTotal: 145000, subtotal: 125000, gstTax: 20000, items: [{ description: 'Bulk Wholesale Goods', qty: 100, price: 1250, total: 125000 }] },
         ]);
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   return (
@@ -1982,7 +1945,7 @@ function VendorManagementModule() {
   useEffect(() => {
     try {
       const storedInvoices = JSON.parse(localStorage.getItem('finsight_ocr_invoices') || localStorage.getItem('finsight_invoices') || '[]');
-      
+
       if (storedInvoices.length > 0) {
         const vendorMap = new Map();
         storedInvoices.forEach((inv, i) => {
@@ -2019,14 +1982,14 @@ function VendorManagementModule() {
           { id: 'VND-101', name: 'ABC Wholesale Traders', contactPerson: 'Suresh Patel', phone: '+91 97654 32109', gstin: '27CCCCA901213Z3', trustScore: '98% High Trust', totalBilled: 33222, paidAmount: 33222, pendingAmount: 0, billsCount: 1 }
         ]);
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   const handleOpenVendorModal = (vendor) => {
     setSelectedVendor(vendor);
     try {
       const storedInvoices = JSON.parse(localStorage.getItem('finsight_ocr_invoices') || localStorage.getItem('finsight_invoices') || '[]');
-      const matches = storedInvoices.filter(inv => 
+      const matches = storedInvoices.filter(inv =>
         (inv.supplier_name || inv.vendor || '').toLowerCase().includes(vendor.name.toLowerCase()) ||
         vendor.name.toLowerCase().includes((inv.supplier_name || inv.vendor || '').toLowerCase())
       );
@@ -2192,7 +2155,7 @@ function PurchaseManagementModule() {
           { invoice_number: 'INV-2026-002', supplier_name: 'Global FMCG Supplies Ltd', invoice_date: '2026-08-02', subtotal: 80000, tax_gst: 14400, grand_total: 94400, payment_status: 'Pending', due_date: '2026-08-17', items: [{ name: 'Basmati Premium Rice 25kg', qty: '40 Bags', rate: '₹ 2,000', total: '₹ 80,000' }] },
         ]);
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   return (
@@ -2317,9 +2280,9 @@ function TransactionsModule() {
       } else {
         apiGetTransactions().then(res => {
           if (res && res.transactions) setTransactions(res.transactions);
-        }).catch(() => {});
+        }).catch(() => { });
       }
-    } catch (e) {}
+    } catch (e) { }
   }, [activeUserKey]);
 
   return (
@@ -2385,7 +2348,7 @@ function AuditLogsModule() {
           </h3>
           <p style={{ fontSize: 11, color: 'var(--fg-text-muted)', marginTop: 2 }}>Complete activity trail of stock additions, deletions, MRP price updates, customer POS sales, and vendor bill uploads saved in Supabase</p>
         </div>
-        
+
         <div style={{ display: 'flex', gap: 8 }}>
           {['ALL', 'Inventory', 'Price Management', 'POS Sales', 'Vendor Billing'].map(cat => (
             <button
@@ -2471,7 +2434,7 @@ function ComplianceModule() {
   const [catExample, setCatExample] = useState('');
   const [catRate, setCatRate] = useState('18');
 
-  const filteredRates = gstRates.filter(r => 
+  const filteredRates = gstRates.filter(r =>
     r.category.toLowerCase().includes(searchFilter.toLowerCase()) ||
     r.example.toLowerCase().includes(searchFilter.toLowerCase()) ||
     r.display.toLowerCase().includes(searchFilter.toLowerCase())
@@ -2928,7 +2891,7 @@ function SettingsModule() {
   return (
     <div className="lc-glass-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
       <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)' }}>App, Theme &amp; Webhook Workflows Settings</h3>
-      
+
       <div style={{ fontSize: 13, color: 'var(--fg-text-secondary)', lineHeight: 1.8 }}>
         • Database: PostgreSQL &amp; Supabase Storage Connected<br />
         • Main Admin Account: <code style={{ color: 'var(--fg-accent)' }}>admin@finsight.ai</code> / <code style={{ color: 'var(--fg-accent)' }}>admin123</code><br />

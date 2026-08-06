@@ -50,6 +50,10 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
   const [creditDays, setCreditDays] = useState('30');
   const [customDueDate, setCustomDueDate] = useState('');
 
+  // Multiple File Upload Queue State
+  const [fileQueue, setFileQueue] = useState([]);
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
+
   // Dynamically load Tesseract.js for in-house OCR text extraction
   useEffect(() => {
     if (!window.Tesseract) {
@@ -65,10 +69,19 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setSelectedFile(null);
     setPreviewUrl(null);
+    setRawDocumentText('');
+    setEditSupplier('');
+    setEditInvoiceNo('');
+    setEditDate('');
+    setEditSubtotal('');
+    setEditTaxGst('');
+    setEditGrandTotal('');
+    setEditItems([]);
+    setFileQueue([]);
+    setActiveFileIndex(0);
     setScanResult(null);
     setIsScanning(false);
     setStatusMessage('');
-    setRawDocumentText('');
     setShowRawText(false);
   };
 
@@ -141,18 +154,24 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
     // 1. Initial dynamic seed parsing
     parseDocumentData('', file.name);
 
-    // 2. Invoke Express Backend Server OCR Engine
+    // 2. Invoke Express Backend Server OCR Engine (NVIDIA Nemotron Vision AI)
     try {
       const serverResult = await apiScanOcrFile(file);
       if (serverResult && serverResult.success && serverResult.ocrData) {
-        const { rawText, ocrData } = serverResult;
-        if (rawText && rawText.length > 10) {
-          setRawDocumentText(rawText);
-          parseDocumentData(rawText, file.name);
-          setIsScanning(false);
-          setStatusMessage('✓ Neural OCR Text Extracted Successfully!');
-          return;
-        }
+        const { ocrData, rawText } = serverResult;
+
+        if (ocrData.supplierName) setEditSupplier(ocrData.supplierName);
+        if (ocrData.invoiceNumber) setEditInvoiceNo(ocrData.invoiceNumber);
+        if (ocrData.invoiceDate) setEditDate(ocrData.invoiceDate);
+        if (ocrData.subtotal !== undefined) setEditSubtotal(typeof ocrData.subtotal === 'number' ? `₹ ${ocrData.subtotal.toLocaleString('en-IN')}` : String(ocrData.subtotal));
+        if (ocrData.taxGst !== undefined) setEditTaxGst(typeof ocrData.taxGst === 'number' ? `₹ ${ocrData.taxGst.toLocaleString('en-IN')}` : String(ocrData.taxGst));
+        if (ocrData.grandTotal !== undefined) setEditGrandTotal(typeof ocrData.grandTotal === 'number' ? `₹ ${ocrData.grandTotal.toLocaleString('en-IN')}` : String(ocrData.grandTotal));
+        if (ocrData.items && ocrData.items.length > 0) setEditItems(ocrData.items);
+        if (rawText) setRawDocumentText(rawText);
+
+        setIsScanning(false);
+        setStatusMessage(`✓ Neural OCR Text Extracted Successfully (${serverResult.engine || 'NVIDIA Nemotron Vision AI'})!`);
+        return;
       }
     } catch (serverErr) {
       console.warn('Backend server OCR notice:', serverErr.message);
@@ -177,6 +196,21 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
       setIsScanning(false);
       setStatusMessage('✓ Document Extracted Successfully!');
     }, 300);
+  };
+
+  const handleMultipleFilesSelect = async (filesList) => {
+    if (!filesList || filesList.length === 0) return;
+    const files = Array.from(filesList);
+    setFileQueue(files);
+    setActiveFileIndex(0);
+    handleFileSelect(files[0]);
+  };
+
+  const handleSelectQueuedFile = (index) => {
+    if (fileQueue[index]) {
+      setActiveFileIndex(index);
+      handleFileSelect(fileQueue[index]);
+    }
   };
 
   /* ─────────────────────────────────────────────────────────────
@@ -712,7 +746,7 @@ Grand Total: ₹ ${grandTotalVal.toLocaleString('en-IN')}`;
               />
             </label>
 
-            {/* Option 2: Upload File */}
+            {/* Option 2: Upload Files (Supports Single or Multiple Batch Upload) */}
             <label style={{
               background: 'var(--fg-surface)', borderRadius: 16, padding: '28px 24px',
               border: '2px dashed var(--fg-border-accent)', cursor: 'pointer',
@@ -720,15 +754,48 @@ Grand Total: ₹ ${grandTotalVal.toLocaleString('en-IN')}`;
               textAlign: 'center', minHeight: 170,
             }}>
               <Upload size={34} color="var(--fg-accent)" style={{ marginBottom: 10 }} />
-              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--fg-text-primary)' }}>Browse &amp; Upload Bill File</div>
-              <div style={{ fontSize: 12, color: 'var(--fg-text-muted)', marginTop: 4 }}>Supports PDF, PNG, JPG, JPEG files</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--fg-text-primary)' }}>Browse &amp; Upload Bill Files (Multiple Allowed)</div>
+              <div style={{ fontSize: 12, color: 'var(--fg-text-muted)', marginTop: 4 }}>Select single or multiple PDF, PNG, JPG, JPEG invoice files</div>
               <input
                 type="file"
+                multiple
                 accept="image/*,application/pdf"
-                onChange={e => handleFileSelect(e.target.files[0])}
+                onChange={e => handleMultipleFilesSelect(e.target.files)}
                 style={{ display: 'none' }}
               />
             </label>
+
+            {/* Multi-File Upload Batch Queue Selector Bar */}
+            {fileQueue.length > 1 && (
+              <div style={{
+                padding: '12px 14px', borderRadius: 14, background: 'var(--fg-surface)',
+                border: '1px solid var(--fg-border-accent)', display: 'flex',
+                flexDirection: 'column', gap: 10,
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--fg-text-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>📂 Batch Invoice Queue ({fileQueue.length} Files Selected)</span>
+                  <span style={{ fontSize: 11, color: 'var(--fg-accent)', fontWeight: 700 }}>Active: File {activeFileIndex + 1} of {fileQueue.length}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                  {fileQueue.map((f, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectQueuedFile(idx)}
+                      className={`fg-btn-${activeFileIndex === idx ? 'primary' : 'dark'}`}
+                      style={{
+                        padding: '7px 12px', fontSize: 11, fontWeight: 700, borderRadius: 99,
+                        whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span>📄 File {idx + 1}: {f.name.slice(0, 16)}</span>
+                      {activeFileIndex === idx && <CheckCircle2 size={12} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Selected File Card */}
             {selectedFile && (
@@ -741,7 +808,7 @@ Grand Total: ₹ ${grandTotalVal.toLocaleString('en-IN')}`;
                   <ImageIcon size={20} color="var(--fg-accent)" />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--fg-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {selectedFile.name}
+                      {selectedFile.name} {fileQueue.length > 1 ? `(File ${activeFileIndex + 1} of ${fileQueue.length})` : ''}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--fg-text-muted)' }}>
                       {(selectedFile.size / 1024).toFixed(1)} KB • Document Loaded
