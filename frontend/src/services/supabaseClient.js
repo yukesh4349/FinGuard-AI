@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { triggerWebhookNode, triggerStockWebhookNode } from './postgresDb';
 
 // Supabase Environment Credentials (Configured in .env file)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder_key';
+const supabaseUrl = (import.meta.env && import.meta.env.VITE_SUPABASE_URL) || 'https://lmsiipuvxewlqpxdshgt.supabase.co';
+const supabaseAnonKey = (import.meta.env && import.meta.env.VITE_SUPABASE_ANON_KEY) || 'sb_publishable_1vj4oGFG77XC5HGL5Vn_cg_CDD6kEgU';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
