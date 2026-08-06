@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  ShieldCheck, ArrowLeft, CheckCircle2, Sparkles, Building2, Phone, Mail, Lock, User, AlertCircle
+  ShieldCheck, ArrowLeft, CheckCircle2, Sparkles, Building2, Phone, Mail, Lock, User, AlertCircle, Users
 } from 'lucide-react';
 import { registerUserInPostgres, triggerWebhookNode } from '../services/postgresDb';
 
@@ -9,6 +9,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
   const [companyName, setCompanyName] = useState('');
   const [companyAddress, setCompanyAddress] = useState('');
   const [businessType, setBusinessType] = useState('Grocery & Supermarket');
+  const [employeeCount, setEmployeeCount] = useState('5');
   const [mobileNum, setMobileNum] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,6 +35,11 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
 
     if (!ownerName.trim()) {
       setErrorMessage('Please enter the Name of the Owner.');
+      return;
+    }
+
+    if (!employeeCount || Number(employeeCount) < 1) {
+      setErrorMessage('Please enter a valid number of employees in your store (at least 1).');
       return;
     }
 
@@ -67,6 +73,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
         company_name: companyName,
         company_address: companyAddress,
         business_type: businessType,
+        employee_count: employeeCount,
         mobile_number: mobileNum,
         email: email,
         otp: code,
@@ -96,6 +103,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
         companyName,
         companyAddress,
         businessType,
+        employeeCount,
         mobileNumber: mobileNum,
         email,
         password,
@@ -111,6 +119,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
             owner_name: ownerName,
             company_name: companyName,
             company_address: companyAddress,
+            employee_count: employeeCount,
             email: email,
           };
           localStorage.setItem('finsight_active_user', JSON.stringify(activeUserObj));
@@ -160,9 +169,9 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
 
         {/* Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/favcon_logo.png" alt="FinSight Logo" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
+          <img src="/favcon_logo.png" alt="Finora Logo" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
           <span style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
-            FinSight <span style={{ color: '#B4781C' }}>AI</span>
+            Finora
           </span>
         </div>
 
@@ -212,7 +221,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
           }}>
             <img
               src="/assets/signup_banner.png"
-              alt="FinSight AI Easy Business Protection"
+              alt="Finora Smart Business Protection"
               style={{
                 width: '100%', height: 260, objectFit: 'cover', display: 'block',
               }}
@@ -225,7 +234,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
               backdropFilter: 'blur(8px)', borderTop: '1px solid rgba(243,205,151,0.2)',
             }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={14} color="#F3CD97" /> See Beyond the Numbers
+                <Sparkles size={14} color="#F3CD97" /> Smart Finance, Smarter Business
               </div>
               <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
                 Instant Setup • Simple English Interface
@@ -234,7 +243,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
           </div>
 
           <div style={{ position: 'relative', zIndex: 10, fontSize: 11, color: '#94A3B8' }}>
-            FinSight AI © 2026 • Encrypted Authentication
+            Finora © 2026 • Encrypted Authentication
           </div>
         </div>
 
@@ -278,10 +287,10 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                   </div>
                 </div>
 
-                {/* 2. Business / Store Name */}
+                {/* 2. store Name */}
                 <div>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                    2. Business / Store Name *
+                    2. Store Name *
                   </label>
                   <div style={{ position: 'relative' }}>
                     <Building2 size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -332,11 +341,13 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                         fontSize: 14, color: '#0F172A', outline: 'none', fontWeight: 600,
                       }}
                     >
-                      <option value="Grocery & Supermarket">Grocery &amp; Supermarket</option>
-                      <option value="FMCG & Retail Mart">FMCG &amp; Retail Mart</option>
-                      <option value="Electronics & Hardware">Electronics &amp; Hardware</option>
-                      <option value="Pharmacy & Healthcare">Pharmacy &amp; Healthcare</option>
-                      <option value="Textile & Garments">Textile &amp; Garments</option>
+                      <option value="Supermarket">Supermarket</option>
+                      <option value="Retail Mart">Retail Mart</option>
+                      <option value="Electronics">Electronics</option>
+                      <option value="Pharmacy">Pharmacy</option>
+                      <option value="Textile">Textile</option>
+                      <option value="Hardware">Hardware</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
@@ -344,7 +355,29 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                      5. Mobile Number (10 Digits) *
+                      5. No. of Employees in Store *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Users size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        placeholder="e.g. 5"
+                        value={employeeCount}
+                        onChange={e => setEmployeeCount(e.target.value)}
+                        style={{
+                          width: '100%', padding: '12px 16px 12px 42px', borderRadius: 10,
+                          border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                          fontSize: 14, color: '#0F172A', outline: 'none', fontWeight: 700,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                      6. Mobile Number (10 Digits) *
                     </label>
                     <div style={{ position: 'relative' }}>
                       <Phone size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -364,33 +397,33 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                       />
                     </div>
                   </div>
+                </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                      6. Email Address *
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <Mail size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
-                      <input
-                        type="email"
-                        required
-                        placeholder="e.g. owner@store.com"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        style={{
-                          width: '100%', padding: '12px 16px 12px 42px', borderRadius: 10,
-                          border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
-                          fontSize: 14, color: '#0F172A', outline: 'none',
-                        }}
-                      />
-                    </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
+                    7. Email Address *
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Mail size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. owner@store.com"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 16px 12px 42px', borderRadius: 10,
+                        border: '1px solid rgba(13,148,136,0.3)', backgroundColor: '#FFFFFF',
+                        fontSize: 14, color: '#0F172A', outline: 'none',
+                      }}
+                    />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                      7. Create Password *
+                      8. Create Password *
                     </label>
                     <div style={{ position: 'relative' }}>
                       <Lock size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -411,7 +444,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
 
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                      8. Confirm Password *
+                      9. Confirm Password *
                     </label>
                     <div style={{ position: 'relative' }}>
                       <Lock size={18} color="#F3CD97" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
@@ -470,6 +503,7 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
                 <div><strong>Owner Name:</strong> {ownerName || 'Store Owner'}</div>
                 <div><strong>System User ID:</strong> <code>{createdUser.user_id}</code></div>
                 <div><strong>Store Address:</strong> {companyAddress || 'Not Provided'}</div>
+                <div><strong>Store Employees:</strong> {employeeCount || createdUser.employee_count || '5'} Staff Members</div>
                 <div><strong>Registered Mobile:</strong> {createdUser.mobile_number}</div>
                 <div><strong>Verified Email:</strong> {createdUser.email}</div>
               </div>

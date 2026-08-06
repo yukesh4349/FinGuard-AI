@@ -183,9 +183,9 @@ export default function LoginPage({
 
         {/* Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img src="/favcon_logo.png" alt="FinSight Logo" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
+          <img src="/favcon_logo.png" alt="Finora Logo" style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 8 }} />
           <span style={{ fontSize: 18, fontWeight: 800, color: '#0F172A' }}>
-            FinSight <span style={{ color: '#B4781C' }}>AI</span>
+            Finora
           </span>
         </div>
 
@@ -217,7 +217,7 @@ export default function LoginPage({
               {currentBannerTitle}
             </h2>
             <p style={{ fontSize: 13, color: '#CBD5E1', lineHeight: 1.5, fontWeight: 500 }}>
-              FinSight AI helps you see beyond the numbers. Keep your shop safe from wrong bills, duplicate payments, and lost profits.
+              Finora — Smart Finance, Smarter Business. Keep your shop safe from wrong bills, duplicate payments, and lost profits.
             </p>
           </div>
 
@@ -245,7 +245,7 @@ export default function LoginPage({
               backdropFilter: 'blur(8px)', borderTop: '1px solid rgba(243,205,151,0.2)',
             }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={14} color="#F3CD97" /> See Beyond the Numbers
+                <Sparkles size={14} color="#F3CD97" /> Smart Finance, Smarter Business
               </div>
               <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>
                 Instant Verification • Simple Business Interface
@@ -254,7 +254,7 @@ export default function LoginPage({
           </div>
 
           <div style={{ position: 'relative', zIndex: 10, fontSize: 11, color: '#94A3B8' }}>
-            FinSight AI © 2026 • Encrypted Authentication
+            Finora © 2026 • Encrypted Authentication
           </div>
         </div>
 

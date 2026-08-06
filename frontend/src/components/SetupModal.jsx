@@ -23,7 +23,7 @@ const coreModules = [
   { id: 'ocr', title: 'Bill Photo Scanner', desc: 'Extract line items & GST automatically', icon: FileText },
   { id: 'fraud', title: 'Duplicate Bill Alert', desc: 'Screen duplicate bills & wrong charges', icon: Shield },
   { id: 'stock', title: 'Demand & Stock Warning', desc: 'Forecast reorders & supplier Lead time', icon: Layers },
-  { id: 'gemini', title: 'FinSight 24/7 AI Helper', desc: 'Ask questions in plain English', icon: Bot },
+  { id: 'gemini', title: 'Finora 24/7 AI Helper', desc: 'Ask questions in plain English', icon: Bot },
 ];
 
 export default function SetupModal({ isOpen, onClose }) {
@@ -112,10 +112,10 @@ export default function SetupModal({ isOpen, onClose }) {
               <CheckCircle2 size={36} color="#16a34a" />
             </div>
             <h2 style={{ fontSize: 26, fontWeight: 800, color: '#0F172A', marginBottom: 8 }}>
-              FinSight Workspace Created!
+              Finora Workspace Created!
             </h2>
             <p style={{ color: '#334155', fontSize: 15, lineHeight: 1.6, maxWidth: 460, margin: '0 auto 24px', fontWeight: 500 }}>
-              Your workspace for <strong>{companyName || 'Your Business'}</strong> is ready at <strong>{subdomain || 'workspace'}.finsight.ai</strong>
+              Your workspace for <strong>{companyName || 'Your Business'}</strong> is ready at <strong>{subdomain || 'workspace'}.finora.app</strong>
             </p>
 
             <div style={{
@@ -146,7 +146,7 @@ export default function SetupModal({ isOpen, onClose }) {
               className="liquid-btn liquid-btn-primary"
               style={{ width: '100%', padding: '14px 24px', fontSize: 15, borderRadius: 12, justifyContent: 'center' }}
             >
-              <span style={{ color: '#0F172A', fontWeight: 800 }}>Open FinSight Dashboard</span>
+              <span style={{ color: '#0F172A', fontWeight: 800 }}>Open Finora Dashboard</span>
               <ArrowRight size={16} color="#0F172A" />
             </button>
           </div>
@@ -159,7 +159,7 @@ export default function SetupModal({ isOpen, onClose }) {
                 SETUP WIZARD // STEP {step} OF 2
               </div>
               <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>
-                {step === 1 ? 'Set Up FinSight for Your Business' : 'Configure Store Parameters'}
+                {step === 1 ? 'Set Up Finora for Your Business' : 'Configure Store Parameters'}
               </h2>
               <p style={{ color: '#334155', fontSize: 14, fontWeight: 500 }}>
                 {step === 1 ? 'Enter your store details to set up your account.' : 'Tailor bill scanning, duplicate warnings, and team roles for your store.'}
@@ -347,7 +347,7 @@ export default function SetupModal({ isOpen, onClose }) {
 
                 <div>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                    FinSight Subdomain URL
+                    Finora Subdomain URL
                   </label>
                   <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#FFFDF7', border: '1px solid rgba(243,205,151,0.4)', borderRadius: 10, padding: '0 14px' }}>
                     <input
@@ -360,7 +360,7 @@ export default function SetupModal({ isOpen, onClose }) {
                         fontSize: 14, fontWeight: 700, color: '#0F172A', outline: 'none', fontFamily: 'inherit',
                       }}
                     />
-                    <span style={{ fontSize: 13, color: '#B4781C', fontWeight: 700 }}>.finsight.ai</span>
+                    <span style={{ fontSize: 13, color: '#B4781C', fontWeight: 700 }}>.finora.app</span>
                   </div>
                 </div>
 

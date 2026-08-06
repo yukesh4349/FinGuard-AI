@@ -13,7 +13,7 @@ const rolesList = [
     color: '#F3CD97',
     badge: 'FULL ACCESS',
     demoEmail: 'owner@metrosuperstore.com',
-    permissions: ['Cash Flow & Profitability Overview', 'Inventory Alerting & Approval Rights', '24/7 FinSight AI Advisor'],
+    permissions: ['Cash Flow & Profitability Overview', 'Inventory Alerting & Approval Rights', '24/7 Finora AI Advisor'],
   },
   {
     id: 'accountant',

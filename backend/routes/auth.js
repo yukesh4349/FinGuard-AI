@@ -10,6 +10,9 @@ router.get('/users', (req, res) => {
     id: u.id,
     user_id: u.user_id,
     company_name: u.company_name,
+    company_address: u.company_address || '',
+    business_type: u.business_type || '',
+    employee_count: u.employee_count || '5',
     mobile_number: u.mobile_number,
     email: u.email,
     role: u.role,
@@ -42,6 +45,9 @@ router.post('/login', (req, res) => {
       id: user.id,
       user_id: user.user_id,
       company_name: user.company_name,
+      company_address: user.company_address || '',
+      business_type: user.business_type || '',
+      employee_count: user.employee_count || '5',
       mobile_number: user.mobile_number,
       email: user.email,
       role: user.role,
@@ -51,7 +57,7 @@ router.post('/login', (req, res) => {
 
 // POST /api/auth/signup
 router.post('/signup', (req, res) => {
-  const { companyName, mobileNumber, email, password, role } = req.body;
+  const { companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role } = req.body;
   if (!companyName || !mobileNumber || !password) {
     return res.status(400).json({ success: false, error: 'Company Name, Mobile Number, and Password are required.' });
   }
@@ -67,6 +73,9 @@ router.post('/signup', (req, res) => {
     id: users.length + 1,
     user_id: newId,
     company_name: companyName,
+    company_address: companyAddress || '',
+    business_type: businessType || 'General Store',
+    employee_count: String(employeeCount || req.body.employee_count || '5'),
     mobile_number: mobileNumber,
     email: email || `${mobileNumber}@finguard.ai`,
     password_hash: password,
@@ -83,6 +92,9 @@ router.post('/signup', (req, res) => {
       id: newUser.id,
       user_id: newUser.user_id,
       company_name: newUser.company_name,
+      company_address: newUser.company_address,
+      business_type: newUser.business_type,
+      employee_count: newUser.employee_count,
       mobile_number: newUser.mobile_number,
       email: newUser.email,
       role: newUser.role,

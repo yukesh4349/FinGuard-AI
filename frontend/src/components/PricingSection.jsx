@@ -5,7 +5,7 @@ import useScrollReveal from '../utils/useScrollReveal';
 const options = [
   {
     id: 'standard',
-    name: 'FinSight Store Account',
+    name: 'Finora Store Account',
     sub: 'For small stores, retail shops, and growing business ledgers',
     badge: 'QUICK START',
     features: [
@@ -16,17 +16,17 @@ const options = [
       'WhatsApp & Email Reminders',
       'Protected Cloud Ledger Backup',
     ],
-    buttonText: 'Create FinSight Account',
+    buttonText: 'Create Finora Account',
     icon: UserPlus,
     primary: false,
   },
   {
     id: 'enterprise',
-    name: 'FinSight Workspace Access',
+    name: 'Finora Workspace Access',
     sub: 'For existing store owners, accountants, cashiers, and managers',
     badge: 'EXISTING MEMBERS',
     features: [
-      'Log In to Your FinSight Workspace',
+      'Log In to Your Finora Workspace',
       '24/7 AI Chatbot Assistant',
       'Real-Time Demand & Stock Forecasts',
       'Best Price Supplier Purchase Orders',
@@ -62,10 +62,10 @@ export default function PricingSection({ onOpenModal }) {
             color: '#0F172A', fontSize: 'clamp(28px, 4vw, 40px)',
             fontWeight: 800, letterSpacing: '-0.8px', marginBottom: 12,
           }}>
-            Set Up FinSight for Your Business
+            Set Up Finora for Your Business
           </h2>
           <p style={{ color: '#334155', fontSize: 16, lineHeight: 1.65, maxWidth: 580, margin: '0 auto', fontWeight: 500 }}>
-            See beyond the numbers. Create a new account for your store or log in directly to your workspace.
+            Smart Finance, Smarter Business. Create a new account for your store or log in directly to your workspace.
           </p>
         </div>
 

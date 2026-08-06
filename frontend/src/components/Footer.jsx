@@ -107,13 +107,13 @@ export default function Footer({ onOpenModal }) {
           {/* Brand col */}
           <div style={{ flex: '2 1 280px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <img src="/favcon_logo.png" alt="FinSight Logo" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
+              <img src="/favcon_logo.png" alt="Finora Logo" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
               <span style={{ color: '#0F172A', fontSize: 20, fontWeight: 800 }}>
-                FinSight <span style={{ color: '#B4781C' }}>AI</span>
+                Finora
               </span>
             </div>
             <p style={{ color: '#334155', fontSize: 14, lineHeight: 1.6, marginBottom: 20, maxWidth: 360, fontWeight: 500 }}>
-              See beyond the numbers. The smart financial app built for small retail stores, shops, and growing businesses.
+              Smart Finance, Smarter Business. Built for retail stores, shops, and growing businesses.
             </p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -164,7 +164,7 @@ export default function Footer({ onOpenModal }) {
           paddingTop: 24, borderTop: '1px solid rgba(243,205,151,0.3)', gap: 14,
         }}>
           <p style={{ color: '#334155', fontSize: 13, fontWeight: 500 }}>
-            © {new Date().getFullYear()} FinSight AI Platform. See beyond the numbers. All rights reserved.
+            © {new Date().getFullYear()} Finora Platform. Smart Finance, Smarter Business. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: 20 }}>
             {['Privacy Policy', 'Terms of Service', 'Security Audit'].map((item) => (

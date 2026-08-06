@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, FileText, Plus, Trash2, CheckCircle2, Printer, Download, TrendingUp, Package, Percent } from 'lucide-react';
 import { apiTriggerStockWebhook } from '../services/api';
+import { saveCustomerBillToSupabase, getInventoryFromSupabase } from '../services/supabaseClient';
 
 export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
   const [theme] = useState(() => {
@@ -11,29 +12,58 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
   const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
   const activeUserKey = String(activeUserSession.user_id || activeUserSession.email || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
 
+  // Helper to consolidate stock list by product name for dropdown
+  const consolidateAvailableStock = (rawList) => {
+    if (!rawList || rawList.length === 0) return [];
+    const map = new Map();
+
+    rawList.forEach((st) => {
+      const rawName = (st.name || st.item_name || 'Stock Product').trim();
+      const key = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const rateVal = parseFloat(String(st.unit_price || st.rate || st.cost_price || st.costPrice || '0').replace(/[^0-9.]/g, '')) || 100;
+      const sellVal = parseFloat(String(st.selling_price || st.sellingPrice || st.price || '').replace(/[^0-9.]/g, '')) || Math.round(rateVal * 1.2);
+      const qtyVal = parseFloat(String(st.stock_qty !== undefined ? st.stock_qty : (st.stockQty !== undefined ? st.stockQty : st.quantity || '0')).replace(/[^0-9.]/g, '')) || 0;
+      const gstVal = st.gstRate !== undefined ? st.gstRate : (rawName.toLowerCase().includes('detergent') ? 18 : 5);
+
+      if (map.has(key)) {
+        const existing = map.get(key);
+        existing.stockQty += qtyVal;
+        if (sellVal > 0) existing.sellingPrice = sellVal;
+        if (rateVal > 0) existing.costPrice = rateVal;
+      } else {
+        map.set(key, {
+          id: `prod-${key}`,
+          name: rawName,
+          costPrice: rateVal,
+          sellingPrice: sellVal,
+          gstRate: gstVal,
+          stockQty: qtyVal,
+          unit: 'Units',
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  };
+
   const [availableStock, setAvailableStock] = useState(() => {
     try {
       const stockKey = `finsight_stock_inventory_${activeUserKey}`;
       const stored = JSON.parse(localStorage.getItem(stockKey) || localStorage.getItem('finsight_stock_inventory') || '[]');
-      if (stored.length > 0) {
-        return stored.map((st, i) => {
-          const rateVal = parseFloat(String(st.unit_price || st.rate || st.cost_price || '0').replace(/[^0-9.]/g, '')) || 100;
-          const sellVal = parseFloat(String(st.selling_price || st.sellingPrice || '').replace(/[^0-9.]/g, '')) || Math.round(rateVal * 1.2);
-          return {
-            id: `prod-${i}`,
-            name: st.name || st.item_name || 'Stock Product',
-            costPrice: rateVal,
-            sellingPrice: sellVal,
-            gstRate: st.name && st.name.toLowerCase().includes('detergent') ? 18 : 5,
-            stockQty: parseFloat(String(st.stock_qty !== undefined ? st.stock_qty : st.quantity || '0').replace(/[^0-9.]/g, '')) || 0,
-            unit: 'Units',
-          };
-        });
-      }
+      return consolidateAvailableStock(stored);
     } catch (e) {}
 
     return [];
   });
+
+  useEffect(() => {
+    const activeUserId = activeUserSession.user_id || activeUserSession.email || 'user';
+    getInventoryFromSupabase(activeUserId).then(stored => {
+      if (stored && stored.length > 0) {
+        setAvailableStock(consolidateAvailableStock(stored));
+      }
+    });
+  }, [activeUserKey]);
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -43,11 +73,15 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
 
   // Handle Product Dropdown Selection
   const handleProductSelect = (index, prodId) => {
-    const selectedProd = availableStock.find(p => p.id === prodId);
+    const selectedProd = availableStock.find(p => p.id === prodId || p.name === prodId);
     if (!selectedProd) return;
 
     setItems(prev => {
       const copy = [...prev];
+      const currentQty = copy[index] ? copy[index].qty : 1;
+      const maxQty = selectedProd.stockQty > 0 ? selectedProd.stockQty : 1;
+      const validQty = Math.min(currentQty, maxQty);
+
       copy[index] = {
         ...copy[index],
         productId: selectedProd.id,
@@ -55,19 +89,21 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
         costPrice: selectedProd.costPrice,
         price: selectedProd.sellingPrice,
         gstRate: selectedProd.gstRate,
+        qty: validQty,
       };
       return copy;
     });
   };
 
   const handleAddItem = () => {
-    const defaultProd = availableStock[0] || { id: 'p1', name: 'Custom Product', costPrice: 100, sellingPrice: 120, gstRate: 5 };
+    const defaultProd = availableStock[0] || { id: 'p1', name: 'Custom Product', costPrice: 100, sellingPrice: 120, gstRate: 5, stockQty: 10 };
+    const defaultQty = Math.min(1, defaultProd.stockQty > 0 ? defaultProd.stockQty : 1);
     setItems(prev => [
       ...prev,
       {
         productId: defaultProd.id,
         description: defaultProd.name,
-        qty: 1,
+        qty: defaultQty,
         costPrice: defaultProd.costPrice,
         price: defaultProd.sellingPrice,
         gstRate: defaultProd.gstRate,
@@ -82,7 +118,19 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
   const handleItemChange = (index, field, val) => {
     setItems(prev => {
       const copy = [...prev];
-      copy[index][field] = val;
+      const target = copy[index];
+      let finalVal = val;
+
+      if (field === 'qty') {
+        const prod = availableStock.find(p => p.id === target.productId || p.name === target.description);
+        const maxAvailable = prod ? prod.stockQty : 9999;
+        if (val > maxAvailable) {
+          alert(`⚠️ Stock Limit Exceeded: Only ${maxAvailable} units of '${target.description || 'this product'}' are remaining in stock! Quantity set to ${maxAvailable}.`);
+          finalVal = maxAvailable;
+        }
+      }
+
+      copy[index] = { ...target, [field]: finalVal };
       return copy;
     });
   };
@@ -130,38 +178,16 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
     const profitEarned = calculateTotalGrossProfit();
     const generatedBillNo = `BILL-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // 1. Deduct Sold Quantity from Available Stock in user-partitioned localStorage
+    // Get Active Logged In User for multi-tenancy scoping
+    const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+    const activeUserId = activeUser.user_id || activeUser.email || 'user';
+    const activeUserKey = String(activeUserId).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // 1. Stock deduction is handled inside saveCustomerBillToSupabase → deductStockInSupabase
+    //    (both localStorage and Supabase inventory table are updated there)
+    
+    // Trigger Secondary Stock Webhook for STOCK_CUSTOMER_BOUGHT event
     try {
-      const stockKey = `finsight_stock_inventory_${activeUserKey}`;
-      const storedStock = JSON.parse(localStorage.getItem(stockKey) || '[]');
-      
-      const sanitize = str => (str || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-
-      const updatedStock = storedStock.map(st => {
-        const itemKeyInStock = sanitize(st.name || st.item_name || '');
-        const matchItem = items.find(it => {
-          const itemKey = sanitize(it.description || it.name || '');
-          return itemKey && itemKeyInStock && (itemKey.includes(itemKeyInStock) || itemKeyInStock.includes(itemKey));
-        });
-
-        if (matchItem) {
-          const currentQty = parseInt(String(st.stock_qty !== undefined ? st.stock_qty : st.quantity || '0').replace(/[^0-9]/g, '')) || 0;
-          const soldQty = Number(matchItem.qty || 1);
-          const newQty = Math.max(0, currentQty - soldQty);
-          return {
-            ...st,
-            stock_qty: newQty,
-            stockQty: newQty,
-            quantity: `${newQty} Units`,
-            updated_at: new Date().toISOString(),
-          };
-        }
-        return st;
-      });
-
-      localStorage.setItem(stockKey, JSON.stringify(updatedStock));
-
-      // 2. Trigger Secondary Stock Webhook for STOCK_CUSTOMER_BOUGHT event
       apiTriggerStockWebhook('STOCK_CUSTOMER_BOUGHT', {
         customerName: customerName,
         billNo: generatedBillNo,
@@ -169,12 +195,8 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
         source: 'Customer POS Bill Created',
       }).catch(err => console.log('Webhook trigger notice:', err));
     } catch (err) {
-      console.error('Stock auto-deduction error:', err);
+      console.error('Stock webhook error:', err);
     }
-
-    // Get Active Logged In User Key for multi-tenancy storage scoping
-    const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
-    const activeUserKey = (activeUser.user_id || activeUser.email || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
 
     // 2. Record Financial Cash Inflow (Transaction IN) for Customer Payment
     try {
@@ -219,6 +241,19 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
       localStorage.setItem(billsKey, JSON.stringify(storedBills));
       localStorage.setItem('finsight_customer_invoices', JSON.stringify(storedBills));
     } catch (err) {}
+
+    // 4. Save Customer POS Bill to Supabase DB & Deduct Stock in Supabase
+    saveCustomerBillToSupabase({
+      userId: activeUserId,
+      billNo: generatedBillNo,
+      customerName,
+      customerPhone,
+      items,
+      subtotal: netSub,
+      gstTax,
+      grandTotal,
+      profitEarned,
+    }).catch(err => console.warn('Supabase customer bill save notice:', err));
 
     setBillSummary(billRecord);
   };
@@ -375,10 +410,11 @@ export default function CreateInvoiceFullPage({ onBack, onInvoiceCreated }) {
                       <td style={{ padding: 8 }}>
                         <input
                           type="number"
+                          disabled={true}
+                          title="Wholesale Cost price is locked & non-editable"
                           value={item.costPrice}
-                          onChange={e => handleItemChange(idx, 'costPrice', parseFloat(e.target.value) || 0)}
                           className="fg-input"
-                          style={{ padding: '8px 10px', fontSize: 12, color: 'var(--fg-text-muted)' }}
+                          style={{ padding: '8px 10px', fontSize: 12, color: 'var(--fg-text-muted)', background: 'var(--fg-bg-secondary)', cursor: 'not-allowed' }}
                         />
                       </td>
                       <td style={{ padding: 8 }}>

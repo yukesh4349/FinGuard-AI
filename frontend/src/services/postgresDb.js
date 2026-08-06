@@ -38,16 +38,16 @@ export function getStoredUsers() {
   return [];
 }
 
-export async function registerUserInPostgres({ companyName, mobileNumber, email, password, role = 'owner' }) {
+export async function registerUserInPostgres({ companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role = 'owner' }) {
   // Sync to Supabase
   try {
-    await registerUserInSupabase({ companyName, mobileNumber, email, password, role });
+    await registerUserInSupabase({ companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role });
   } catch (supaErr) {
     console.warn('[Supabase Registration Sync]:', supaErr);
   }
 
   try {
-    const res = await apiSignup({ companyName, mobileNumber, email, password, role });
+    const res = await apiSignup({ companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role });
     if (res.success) {
       triggerWebhookNode({
         event: 'user_signup',
@@ -57,6 +57,9 @@ export async function registerUserInPostgres({ companyName, mobileNumber, email,
         name: companyName,
         email,
         company_name: companyName,
+        company_address: companyAddress,
+        business_type: businessType,
+        employee_count: employeeCount,
       });
       return { success: true, user: res.user, message: res.message };
     }
@@ -68,6 +71,9 @@ export async function registerUserInPostgres({ companyName, mobileNumber, email,
   const fallbackUser = {
     user_id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
     company_name: companyName,
+    company_address: companyAddress || '',
+    business_type: businessType || 'Supermarket',
+    employee_count: employeeCount || '5',
     mobile_number: mobileNumber,
     email: email.toLowerCase().trim(),
     password_hash: password,

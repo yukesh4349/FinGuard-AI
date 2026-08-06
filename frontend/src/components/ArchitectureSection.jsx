@@ -65,10 +65,10 @@ export default function ArchitectureSection() {
             color: '#1E1B18', fontSize: 'clamp(26px, 3.5vw, 38px)',
             fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 12,
           }}>
-            FinSight AI System Architecture
+            Finora System Architecture
           </h2>
           <p style={{ color: '#6E675F', fontSize: 16, lineHeight: 1.6, maxWidth: 680, margin: '0 auto' }}>
-            See beyond the numbers. Clean separation between Frontend React Client, Express REST API Backend, and Supabase PostgreSQL Cloud Database.
+            Smart Finance, Smarter Business. Clean separation between Frontend React Client, Express REST API Backend, and Supabase PostgreSQL Cloud Database.
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export default function ArchitectureSection() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
               <Zap size={18} color="#A88660" />
-              <span style={{ color: '#1E1B18', fontSize: 16, fontWeight: 800 }}>FinSight AI Core Express REST API Services</span>
+              <span style={{ color: '#1E1B18', fontSize: 16, fontWeight: 800 }}>Finora Core Express REST API Services</span>
             </div>
             <p style={{ color: '#4A443E', fontSize: 12, margin: 0 }}>
               Express.js Router • CORS Security • JWT Session Auth • Supabase Client Bridge

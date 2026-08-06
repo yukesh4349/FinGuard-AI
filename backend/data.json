@@ -101,6 +101,266 @@
   ],
   "invoices": [
     {
+      "id": "ocr-1786000722842",
+      "invoice_number": "INV-2026-0794",
+      "supplier_name": "Apex Wholesale Distributors",
+      "invoice_date": "02-Aug-2026",
+      "subtotal": 13915,
+      "tax_gst": 696,
+      "grand_total": 14611,
+      "status": "Verified",
+      "riskScore": "0.02 (Safe Verified)",
+      "duplicateReason": null,
+      "items": [
+        {
+          "id": "item-1",
+          "name": "Bath Soap Multi-Pack",
+          "qty": "20 Boxes",
+          "rate": "₹ 210",
+          "sellingPrice": "₹ 256",
+          "gst": "31%",
+          "total": "₹ 4,200"
+        },
+        {
+          "id": "item-2",
+          "name": "Dishwash Gel 500ml",
+          "qty": "35 Bottles",
+          "rate": "₹ 95",
+          "sellingPrice": "₹ 116",
+          "gst": "18%",
+          "total": "₹ 3,325"
+        },
+        {
+          "id": "item-3",
+          "name": "Shampoo 180ml",
+          "qty": "24 Bottles",
+          "rate": "₹ 160",
+          "sellingPrice": "₹ 195",
+          "gst": "18%",
+          "total": "₹ 3,840"
+        },
+        {
+          "id": "item-4",
+          "name": "Toothpaste 150g",
+          "qty": "30 Packs",
+          "rate": "₹ 85",
+          "sellingPrice": "₹ 104",
+          "gst": "18%",
+          "total": "₹ 2,550"
+        }
+      ],
+      "raw_text": "Apex Wholesale Distributors\nGSTIN: 29ABCDE1234F1Z5\nInvoice No: INV-2026-0794\nInvoice Date: 02-Aug-2026\n\nBill To:\nStore Inventory Manager\n\nItems Extracted:\nBath Soap Multi-Pack      Qty: 20 Boxes   Rate: ₹ 210      Total: ₹ 4,200\nDishwash Gel 500ml        Qty: 35 Bottles Rate: ₹ 95       Total: ₹ 3,325\nShampoo 180ml             Qty: 24 Bottles Rate: ₹ 160      Total: ₹ 3,840\nToothpaste 150g           Qty: 30 Packs   Rate: ₹ 85       Total: ₹ 2,550\n\nSubtotal: ₹ 13,915\nGST Tax: ₹ 696\nGrand Total: ₹ 14,611",
+      "created_at": "2026-08-06T07:18:42.842Z"
+    },
+    {
+      "id": "ocr-1785999962725",
+      "invoice_number": "INV-2026-001",
+      "supplier_name": "ABC Wholesale Traders",
+      "invoice_date": "03-Aug-2026",
+      "subtotal": 31640,
+      "tax_gst": 1582,
+      "grand_total": 33222,
+      "status": "Flagged High Risk",
+      "riskScore": "0.96 (Duplicate Bill Detected)",
+      "duplicateReason": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "items": [
+        {
+          "id": "item-1",
+          "name": "Basmati Rice 25kg",
+          "qty": "10 Bags",
+          "rate": "₹ 1,850",
+          "sellingPrice": "₹ 2,200",
+          "gst": "5%",
+          "total": "₹ 18,500"
+        },
+        {
+          "id": "item-2",
+          "name": "Sunflower Oil 5L",
+          "qty": "12 Packs",
+          "rate": "₹ 720",
+          "sellingPrice": "₹ 860",
+          "gst": "5%",
+          "total": "₹ 8,640"
+        },
+        {
+          "id": "item-3",
+          "name": "Sugar 1kg",
+          "qty": "50 Packs",
+          "rate": "₹ 46",
+          "sellingPrice": "₹ 55",
+          "gst": "5%",
+          "total": "₹ 2,300"
+        },
+        {
+          "id": "item-4",
+          "name": "Detergent Powder 1kg",
+          "qty": "20 Packs",
+          "rate": "₹ 110",
+          "sellingPrice": "₹ 140",
+          "gst": "18%",
+          "total": "₹ 2,200"
+        }
+      ],
+      "raw_text": "ABC Wholesale Traders\nGSTIN: 29ABCDE1234F1Z5\nInvoice No: INV-2026-001\nInvoice Date: 03-Aug-2026\n\nBill To:\nGreen Mart Stores\nGSTIN: 33AAACG1234A1Z9\n\nItem                     Qty    Rate    GST    Amount\n-----------------------------------------------------\nBasmati Rice 25kg        10     1850    5%     18500\nSunflower Oil 5L         12     720     5%     8640\nSugar 1kg                50     46      5%     2300\nDetergent Powder 1kg     20     110     18%    2200\n-----------------------------------------------------\nSubtotal: 31640\nGST Tax Amount (5%): 1582\nGrand Total Payable: 33222",
+      "created_at": "2026-08-06T07:06:02.725Z"
+    },
+    {
+      "id": "ocr-1785989196477",
+      "invoice_number": "INV-2026-001",
+      "supplier_name": "ABC Wholesale Traders",
+      "invoice_date": "03-Aug-2026",
+      "subtotal": 31640,
+      "tax_gst": 1582,
+      "grand_total": 33222,
+      "status": "Flagged High Risk",
+      "riskScore": "0.96 (Duplicate Bill Detected)",
+      "duplicateReason": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "items": [
+        {
+          "id": "item-1",
+          "name": "Basmati Rice 25kg",
+          "qty": "10 Bags",
+          "rate": "₹ 1,850",
+          "sellingPrice": "₹ 2,200",
+          "gst": "5%",
+          "total": "₹ 18,500"
+        },
+        {
+          "id": "item-2",
+          "name": "Sunflower Oil 5L",
+          "qty": "12 Packs",
+          "rate": "₹ 720",
+          "sellingPrice": "₹ 860",
+          "gst": "5%",
+          "total": "₹ 8,640"
+        },
+        {
+          "id": "item-3",
+          "name": "Sugar 1kg",
+          "qty": "50 Packs",
+          "rate": "₹ 46",
+          "sellingPrice": "₹ 55",
+          "gst": "5%",
+          "total": "₹ 2,300"
+        },
+        {
+          "id": "item-4",
+          "name": "Detergent Powder 1kg",
+          "qty": "20 Packs",
+          "rate": "₹ 110",
+          "sellingPrice": "₹ 140",
+          "gst": "18%",
+          "total": "₹ 2,200"
+        }
+      ],
+      "raw_text": "ABC Wholesale Traders\nGSTIN: 29ABCDE1234F1Z5\nInvoice No: INV-2026-001\nInvoice Date: 03-Aug-2026\n\nBill To:\nGreen Mart Stores\nGSTIN: 33AAACG1234A1Z9\n\nItem                     Qty    Rate    GST    Amount\n-----------------------------------------------------\nBasmati Rice 25kg        10     1850    5%     18500\nSunflower Oil 5L         12     720     5%     8640\nSugar 1kg                50     46      5%     2300\nDetergent Powder 1kg     20     110     18%    2200\n-----------------------------------------------------\nSubtotal: 31640\nGST Tax Amount (5%): 1582\nGrand Total Payable: 33222",
+      "created_at": "2026-08-06T04:06:36.478Z"
+    },
+    {
+      "id": "ocr-1785988510605",
+      "invoice_number": "INV-2026-001",
+      "supplier_name": "ABC Wholesale Traders",
+      "invoice_date": "03-Aug-2026",
+      "subtotal": 31640,
+      "tax_gst": 1582,
+      "grand_total": 33222,
+      "status": "Flagged High Risk",
+      "riskScore": "0.96 (Duplicate Bill Detected)",
+      "duplicateReason": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "items": [
+        {
+          "id": "item-1",
+          "name": "Basmati Rice 25kg",
+          "qty": "10 Bags",
+          "rate": "₹ 1,850",
+          "sellingPrice": "₹ 2,200",
+          "gst": "5%",
+          "total": "₹ 18,500"
+        },
+        {
+          "id": "item-2",
+          "name": "Sunflower Oil 5L",
+          "qty": "12 Packs",
+          "rate": "₹ 720",
+          "sellingPrice": "₹ 860",
+          "gst": "5%",
+          "total": "₹ 8,640"
+        },
+        {
+          "id": "item-3",
+          "name": "Sugar 1kg",
+          "qty": "50 Packs",
+          "rate": "₹ 46",
+          "sellingPrice": "₹ 55",
+          "gst": "5%",
+          "total": "₹ 2,300"
+        },
+        {
+          "id": "item-4",
+          "name": "Detergent Powder 1kg",
+          "qty": "20 Packs",
+          "rate": "₹ 110",
+          "sellingPrice": "₹ 140",
+          "gst": "18%",
+          "total": "₹ 2,200"
+        }
+      ],
+      "raw_text": "ABC Wholesale Traders\nGSTIN: 29ABCDE1234F1Z5\nInvoice No: INV-2026-001\nInvoice Date: 03-Aug-2026\n\nBill To:\nGreen Mart Stores\nGSTIN: 33AAACG1234A1Z9\n\nItem                     Qty    Rate    GST    Amount\n-----------------------------------------------------\nBasmati Rice 25kg        10     1850    5%     18500\nSunflower Oil 5L         12     720     5%     8640\nSugar 1kg                50     46      5%     2300\nDetergent Powder 1kg     20     110     18%    2200\n-----------------------------------------------------\nSubtotal: 31640\nGST Tax Amount (5%): 1582\nGrand Total Payable: 33222",
+      "created_at": "2026-08-06T03:55:10.605Z"
+    },
+    {
+      "id": "ocr-1785987899617",
+      "invoice_number": "INV-2026-001",
+      "supplier_name": "ABC Wholesale Traders",
+      "invoice_date": "03-Aug-2026",
+      "subtotal": 31640,
+      "tax_gst": 1582,
+      "grand_total": 33222,
+      "status": "Flagged High Risk",
+      "riskScore": "0.96 (Duplicate Bill Detected)",
+      "duplicateReason": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "items": [
+        {
+          "id": "item-1",
+          "name": "Basmati Rice 25kg",
+          "qty": "10 Bags",
+          "rate": "₹ 1,850",
+          "sellingPrice": "₹ 2,200",
+          "gst": "5%",
+          "total": "₹ 18,500"
+        },
+        {
+          "id": "item-2",
+          "name": "Sunflower Oil 5L",
+          "qty": "12 Packs",
+          "rate": "₹ 720",
+          "sellingPrice": "₹ 860",
+          "gst": "5%",
+          "total": "₹ 8,640"
+        },
+        {
+          "id": "item-3",
+          "name": "Sugar 1kg",
+          "qty": "50 Packs",
+          "rate": "₹ 46",
+          "sellingPrice": "₹ 55",
+          "gst": "5%",
+          "total": "₹ 2,300"
+        },
+        {
+          "id": "item-4",
+          "name": "Detergent Powder 1kg",
+          "qty": "20 Packs",
+          "rate": "₹ 110",
+          "sellingPrice": "₹ 140",
+          "gst": "18%",
+          "total": "₹ 2,200"
+        }
+      ],
+      "raw_text": "ABC Wholesale Traders\nGSTIN: 29ABCDE1234F1Z5\nInvoice No: INV-2026-001\nInvoice Date: 03-Aug-2026\n\nBill To:\nGreen Mart Stores\nGSTIN: 33AAACG1234A1Z9\n\nItem                     Qty    Rate    GST    Amount\n-----------------------------------------------------\nBasmati Rice 25kg        10     1850    5%     18500\nSunflower Oil 5L         12     720     5%     8640\nSugar 1kg                50     46      5%     2300\nDetergent Powder 1kg     20     110     18%    2200\n-----------------------------------------------------\nSubtotal: 31640\nGST Tax Amount (5%): 1582\nGrand Total Payable: 33222",
+      "created_at": "2026-08-06T03:44:59.617Z"
+    },
+    {
       "id": "ocr-1785949806906",
       "invoice_number": "INV-2026-001",
       "supplier_name": "ABC Wholesale Traders",
@@ -700,6 +960,38 @@
   ],
   "fraud_alerts": [
     {
+      "id": "ALT-1785999962727",
+      "type": "Duplicate Invoice Warning",
+      "message": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "severity": "HIGH",
+      "timestamp": "2026-08-06T07:06:02.728Z",
+      "resolved": false
+    },
+    {
+      "id": "ALT-1785989196489",
+      "type": "Duplicate Invoice Warning",
+      "message": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "severity": "HIGH",
+      "timestamp": "2026-08-06T04:06:36.489Z",
+      "resolved": false
+    },
+    {
+      "id": "ALT-1785988510613",
+      "type": "Duplicate Invoice Warning",
+      "message": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "severity": "HIGH",
+      "timestamp": "2026-08-06T03:55:10.613Z",
+      "resolved": false
+    },
+    {
+      "id": "ALT-1785987899618",
+      "type": "Duplicate Invoice Warning",
+      "message": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
+      "severity": "HIGH",
+      "timestamp": "2026-08-06T03:44:59.618Z",
+      "resolved": false
+    },
+    {
       "id": "ALT-1785949806923",
       "type": "Duplicate Invoice Warning",
       "message": "Invoice number #INV-2026-001 matches a previous bill recorded from ABC Wholesale Traders.",
@@ -765,6 +1057,392 @@
     }
   ],
   "webhooks": [
+    {
+      "id": "WH-EVT-54656",
+      "webhookTarget": "https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea",
+      "eventType": "STOCK_IN_LOADED",
+      "flowType": "STOCK_IN (Vendor Purchase)",
+      "source": "Vendor Purchase Invoice Uploaded",
+      "referenceId": "INV-2026-0794",
+      "customerName": null,
+      "supplierName": "Apex Wholesale Distributors",
+      "grandTotal": null,
+      "items": [
+        {
+          "name": "Bath Soap Multi-Pack",
+          "quantity": "20 Units",
+          "stock_qty": 20,
+          "cost_price": "₹ 210",
+          "rate": "₹ 210",
+          "selling_price": "₹ 256",
+          "gst_rate": "31%",
+          "total_amount": "₹ 4,200",
+          "supplier_name": "Apex Wholesale Distributors",
+          "invoice_number": "INV-2026-0794",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T07:18:42.830Z"
+        },
+        {
+          "name": "Dishwash Gel 500ml",
+          "quantity": "35 Units",
+          "stock_qty": 35,
+          "cost_price": "₹ 95",
+          "rate": "₹ 95",
+          "selling_price": "₹ 116",
+          "gst_rate": "18%",
+          "total_amount": "₹ 3,325",
+          "supplier_name": "Apex Wholesale Distributors",
+          "invoice_number": "INV-2026-0794",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T07:18:42.830Z"
+        },
+        {
+          "name": "Shampoo 180ml",
+          "quantity": "24 Units",
+          "stock_qty": 24,
+          "cost_price": "₹ 160",
+          "rate": "₹ 160",
+          "selling_price": "₹ 195",
+          "gst_rate": "18%",
+          "total_amount": "₹ 3,840",
+          "supplier_name": "Apex Wholesale Distributors",
+          "invoice_number": "INV-2026-0794",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T07:18:42.830Z"
+        },
+        {
+          "name": "Toothpaste 150g",
+          "quantity": "30 Units",
+          "stock_qty": 30,
+          "cost_price": "₹ 85",
+          "rate": "₹ 85",
+          "selling_price": "₹ 104",
+          "gst_rate": "18%",
+          "total_amount": "₹ 2,550",
+          "supplier_name": "Apex Wholesale Distributors",
+          "invoice_number": "INV-2026-0794",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T07:18:42.830Z"
+        }
+      ],
+      "timestamp": "2026-08-06T07:18:42.837Z",
+      "status": "DELIVERED_SUCCESS"
+    },
+    {
+      "id": "WH-EVT-89307",
+      "webhookTarget": "https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea",
+      "eventType": "STOCK_IN_LOADED",
+      "flowType": "STOCK_IN (Vendor Purchase)",
+      "source": "Vendor Purchase Invoice Uploaded",
+      "referenceId": "INV-2026-001",
+      "customerName": null,
+      "supplierName": "ABC Wholesale Traders",
+      "grandTotal": null,
+      "items": [
+        {
+          "name": "Basmati Rice 25kg",
+          "quantity": "10 Units",
+          "stock_qty": 10,
+          "cost_price": "₹ 1,850",
+          "rate": "₹ 1,850",
+          "selling_price": "₹ 2,200",
+          "gst_rate": "5%",
+          "total_amount": "₹ 18,500",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T07:06:02.655Z"
+        },
+        {
+          "name": "Sunflower Oil 5L",
+          "quantity": "12 Units",
+          "stock_qty": 12,
+          "cost_price": "₹ 720",
+          "rate": "₹ 720",
+          "selling_price": "₹ 860",
+          "gst_rate": "5%",
+          "total_amount": "₹ 8,640",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T07:06:02.655Z"
+        },
+        {
+          "name": "Sugar 1kg",
+          "quantity": "50 Units",
+          "stock_qty": 50,
+          "cost_price": "₹ 46",
+          "rate": "₹ 46",
+          "selling_price": "₹ 55",
+          "gst_rate": "5%",
+          "total_amount": "₹ 2,300",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T07:06:02.655Z"
+        },
+        {
+          "name": "Detergent Powder 1kg",
+          "quantity": "20 Units",
+          "stock_qty": 20,
+          "cost_price": "₹ 110",
+          "rate": "₹ 110",
+          "selling_price": "₹ 140",
+          "gst_rate": "18%",
+          "total_amount": "₹ 2,200",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T07:06:02.655Z"
+        }
+      ],
+      "timestamp": "2026-08-06T07:06:02.664Z",
+      "status": "DELIVERED_SUCCESS"
+    },
+    {
+      "id": "WH-EVT-81527",
+      "webhookTarget": "https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea",
+      "eventType": "STOCK_CUSTOMER_BOUGHT",
+      "flowType": "STOCK_OUT (Customer POS Sale)",
+      "source": "Customer POS Bill Created",
+      "referenceId": "BILL-5582",
+      "customerName": "baby",
+      "supplierName": null,
+      "grandTotal": null,
+      "items": [
+        {
+          "productId": "prod-0",
+          "description": "Basmati Rice 25kg",
+          "qty": 23,
+          "costPrice": 1850,
+          "price": 2200,
+          "gstRate": 5
+        },
+        {
+          "productId": "prod-4",
+          "description": "Basmati Rice 25kg",
+          "qty": 1,
+          "costPrice": 1850,
+          "price": 2200,
+          "gstRate": 5
+        }
+      ],
+      "timestamp": "2026-08-06T04:10:47.221Z",
+      "status": "DELIVERED_SUCCESS"
+    },
+    {
+      "id": "WH-EVT-71406",
+      "webhookTarget": "https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea",
+      "eventType": "STOCK_IN_LOADED",
+      "flowType": "STOCK_IN (Vendor Purchase)",
+      "source": "Vendor Purchase Invoice Uploaded",
+      "referenceId": "INV-2026-001",
+      "customerName": null,
+      "supplierName": "ABC Wholesale Traders",
+      "grandTotal": null,
+      "items": [
+        {
+          "name": "Basmati Rice 25kg",
+          "quantity": "10 Units",
+          "stock_qty": 10,
+          "cost_price": "₹ 1,850",
+          "rate": "₹ 1,850",
+          "selling_price": "₹ 2,200",
+          "gst_rate": "5%",
+          "total_amount": "₹ 18,500",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T04:06:36.456Z"
+        },
+        {
+          "name": "Sunflower Oil 5L",
+          "quantity": "12 Units",
+          "stock_qty": 12,
+          "cost_price": "₹ 720",
+          "rate": "₹ 720",
+          "selling_price": "₹ 860",
+          "gst_rate": "5%",
+          "total_amount": "₹ 8,640",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T04:06:36.456Z"
+        },
+        {
+          "name": "Sugar 1kg",
+          "quantity": "50 Units",
+          "stock_qty": 50,
+          "cost_price": "₹ 46",
+          "rate": "₹ 46",
+          "selling_price": "₹ 55",
+          "gst_rate": "5%",
+          "total_amount": "₹ 2,300",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T04:06:36.456Z"
+        },
+        {
+          "name": "Detergent Powder 1kg",
+          "quantity": "20 Units",
+          "stock_qty": 20,
+          "cost_price": "₹ 110",
+          "rate": "₹ 110",
+          "selling_price": "₹ 140",
+          "gst_rate": "18%",
+          "total_amount": "₹ 2,200",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T04:06:36.456Z"
+        }
+      ],
+      "timestamp": "2026-08-06T04:06:36.471Z",
+      "status": "DELIVERED_SUCCESS"
+    },
+    {
+      "id": "WH-EVT-93270",
+      "webhookTarget": "https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea",
+      "eventType": "STOCK_IN_LOADED",
+      "flowType": "STOCK_IN (Vendor Purchase)",
+      "source": "Vendor Purchase Invoice Uploaded",
+      "referenceId": "INV-2026-001",
+      "customerName": null,
+      "supplierName": "ABC Wholesale Traders",
+      "grandTotal": null,
+      "items": [
+        {
+          "name": "Basmati Rice 25kg",
+          "quantity": "10 Units",
+          "stock_qty": 10,
+          "cost_price": "₹ 1,850",
+          "rate": "₹ 1,850",
+          "selling_price": "₹ 2,200",
+          "gst_rate": "5%",
+          "total_amount": "₹ 18,500",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T03:55:10.590Z"
+        },
+        {
+          "name": "Sunflower Oil 5L",
+          "quantity": "12 Units",
+          "stock_qty": 12,
+          "cost_price": "₹ 720",
+          "rate": "₹ 720",
+          "selling_price": "₹ 860",
+          "gst_rate": "5%",
+          "total_amount": "₹ 8,640",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T03:55:10.591Z"
+        },
+        {
+          "name": "Sugar 1kg",
+          "quantity": "50 Units",
+          "stock_qty": 50,
+          "cost_price": "₹ 46",
+          "rate": "₹ 46",
+          "selling_price": "₹ 55",
+          "gst_rate": "5%",
+          "total_amount": "₹ 2,300",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T03:55:10.591Z"
+        },
+        {
+          "name": "Detergent Powder 1kg",
+          "quantity": "20 Units",
+          "stock_qty": 20,
+          "cost_price": "₹ 110",
+          "rate": "₹ 110",
+          "selling_price": "₹ 140",
+          "gst_rate": "18%",
+          "total_amount": "₹ 2,200",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T03:55:10.591Z"
+        }
+      ],
+      "timestamp": "2026-08-06T03:55:10.600Z",
+      "status": "DELIVERED_SUCCESS"
+    },
+    {
+      "id": "WH-EVT-37288",
+      "webhookTarget": "https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea",
+      "eventType": "STOCK_IN_LOADED",
+      "flowType": "STOCK_IN (Vendor Purchase)",
+      "source": "Vendor Purchase Invoice Uploaded",
+      "referenceId": "INV-2026-001",
+      "customerName": null,
+      "supplierName": "ABC Wholesale Traders",
+      "grandTotal": null,
+      "items": [
+        {
+          "name": "Basmati Rice 25kg",
+          "quantity": "10 Units",
+          "stock_qty": 10,
+          "cost_price": "₹ 1,850",
+          "rate": "₹ 1,850",
+          "selling_price": "₹ 2,200",
+          "gst_rate": "5%",
+          "total_amount": "₹ 18,500",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T03:44:59.556Z"
+        },
+        {
+          "name": "Sunflower Oil 5L",
+          "quantity": "12 Units",
+          "stock_qty": 12,
+          "cost_price": "₹ 720",
+          "rate": "₹ 720",
+          "selling_price": "₹ 860",
+          "gst_rate": "5%",
+          "total_amount": "₹ 8,640",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T03:44:59.556Z"
+        },
+        {
+          "name": "Sugar 1kg",
+          "quantity": "50 Units",
+          "stock_qty": 50,
+          "cost_price": "₹ 46",
+          "rate": "₹ 46",
+          "selling_price": "₹ 55",
+          "gst_rate": "5%",
+          "total_amount": "₹ 2,300",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T03:44:59.556Z"
+        },
+        {
+          "name": "Detergent Powder 1kg",
+          "quantity": "20 Units",
+          "stock_qty": 20,
+          "cost_price": "₹ 110",
+          "rate": "₹ 110",
+          "selling_price": "₹ 140",
+          "gst_rate": "18%",
+          "total_amount": "₹ 2,200",
+          "supplier_name": "ABC Wholesale Traders",
+          "invoice_number": "INV-2026-001",
+          "source": "ocr_vendor_bill",
+          "updated_at": "2026-08-06T03:44:59.556Z"
+        }
+      ],
+      "timestamp": "2026-08-06T03:44:59.561Z",
+      "status": "DELIVERED_SUCCESS"
+    },
     {
       "id": "WH-EVT-79123",
       "webhookTarget": "https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea",

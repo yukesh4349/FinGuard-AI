@@ -48,13 +48,13 @@ export default function Navbar({ onOpenModal }) {
         {/* Logo */}
         <button onClick={() => { navigate('/'); scrollTo('hero'); }}
           style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          <img src="/favcon_logo.png" alt="FinSight Logo" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
+          <img src="/favcon_logo.png" alt="Finora Logo" style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 8 }} />
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: '#0F172A', lineHeight: 1.1, letterSpacing: '-0.4px' }}>
-              FinSight <span style={{ color: '#B4781C' }}>AI</span>
+              Finora
             </div>
-            <div style={{ fontSize: 9, color: '#B4781C', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 800 }}>
-              See beyond the numbers.
+            <div style={{ fontSize: 9, color: '#B4781C', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 800 }}>
+              Smart Finance, Smarter Business
             </div>
           </div>
         </button>

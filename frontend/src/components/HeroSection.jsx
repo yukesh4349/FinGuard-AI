@@ -55,7 +55,7 @@ export default function HeroSection({ onOpenModal }) {
           {/* Mono pill badge */}
           <div className="reveal mono-badge" style={{ marginBottom: 22, display: 'inline-flex' }}>
             <Sparkles size={13} color="#9A620E" />
-            FINSIGHT AI // SEE BEYOND THE NUMBERS
+            FINORA // SMART FINANCE, SMARTER BUSINESS
           </div>
 
           {/* Headline */}
@@ -87,7 +87,7 @@ export default function HeroSection({ onOpenModal }) {
               maxWidth: 540,
             }}
           >
-            See beyond the numbers. All-in-one shop money app featuring instant bill photo scanning,
+            Smart Finance, Smarter Business. All-in-one shop money app featuring instant bill photo scanning,
             simple GST tax reports, duplicate bill alerts, and 24/7 AI chat assistance.
           </p>
 

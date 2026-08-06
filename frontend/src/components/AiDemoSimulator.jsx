@@ -80,10 +80,10 @@ export default function AiDemoSimulator() {
             color: '#0F172A', fontSize: 'clamp(28px, 4vw, 40px)',
             fontWeight: 800, letterSpacing: '-0.8px', marginBottom: 12,
           }}>
-            Ask FinSight AI Chatbot Anything
+            Ask Finora AI Chatbot Anything
           </h2>
           <p style={{ color: '#334155', fontSize: 16, lineHeight: 1.65, maxWidth: 580, margin: '0 auto', fontWeight: 500 }}>
-            See beyond the numbers. Click sample questions below to test how FinSight AI answers questions in plain English.
+            Smart Finance, Smarter Business. Click sample questions below to test how Finora answers questions in plain English.
           </p>
         </div>
 
@@ -141,7 +141,7 @@ export default function AiDemoSimulator() {
               {/* AI Response Output */}
               <div style={{ padding: 20, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <span style={{ fontSize: 11, color: '#F3CD97', fontWeight: 800, fontFamily: 'monospace' }}>FINSIGHT AI ANALYSIS</span>
+                  <span style={{ fontSize: 11, color: '#F3CD97', fontWeight: 800, fontFamily: 'monospace' }}>FINORA ANALYSIS</span>
                   <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, backgroundColor: 'rgba(74,222,128,0.2)', color: '#4ade80', fontWeight: 700 }}>
                     ✓ {selectedPrompt.response.status}
                   </span>
@@ -160,7 +160,7 @@ export default function AiDemoSimulator() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: 12, color: '#94A3B8' }}>
               <Cpu size={14} color="#F3CD97" />
-              <span>FinSight AI • Real-time Store Database Analytics Engine</span>
+              <span>Finora • Real-time Store Database Analytics Engine</span>
             </div>
           </div>
 

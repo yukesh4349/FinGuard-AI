@@ -7,7 +7,7 @@ const testimonials = [
     id: 1,
     name: 'Rajesh Patel',
     role: 'Owner, Metro Superstore (3 Locations)',
-    text: "FinSight AI's bill photo scanner saved our store 18 hours every week. See beyond the numbers! The vendor price matcher automatically flagged a 14% cheaper bulk supplier for our top-selling items.",
+    text: "Finora's bill photo scanner saved our store 18 hours every week. Smart Finance, Smarter Business! The vendor price matcher automatically flagged a 14% cheaper bulk supplier for our top-selling items.",
     stars: 5,
     tag: 'Retail & Grocery',
   },
@@ -15,7 +15,7 @@ const testimonials = [
     id: 2,
     name: 'Sarah Jenkins',
     role: 'Finance Manager, Apex Hardware Supplies',
-    text: "The AI Duplicate Bill Check caught a ₹ 14,200 duplicate supplier invoice on our second day! It's like having a 24/7 helper watching over our shop bills.",
+    text: "Finora's Duplicate Bill Check caught a ₹ 14,200 duplicate supplier invoice on our second day! It's like having a 24/7 helper watching over our shop bills.",
     stars: 5,
     tag: 'Hardware & Wholesale',
   },
@@ -23,7 +23,7 @@ const testimonials = [
     id: 3,
     name: 'Vikram Sharma',
     role: 'Chartered Accountant & Business Advisor',
-    text: 'FinSight AI makes GST compliance and audit reports completely effortless for small business clients. The AI helper gives simple, clear cash flow guidance.',
+    text: 'Finora makes GST compliance and audit reports completely effortless for small business clients. The AI helper gives simple, clear cash flow guidance.',
     stars: 5,
     tag: 'Tax & Audit',
   },
@@ -61,7 +61,7 @@ export default function TestimonialsSection() {
             Real Results for Small Business
           </h2>
           <p style={{ color: '#94A3B8', fontSize: 16, lineHeight: 1.6, maxWidth: 640, margin: '0 auto' }}>
-            Discover how owners, accountants, and inventory managers see beyond the numbers with FinSight AI.
+            Discover how owners, accountants, and inventory managers get Smart Finance, Smarter Business with Finora.
           </p>
         </div>
 

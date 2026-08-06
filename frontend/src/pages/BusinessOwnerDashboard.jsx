@@ -10,7 +10,7 @@ import {
   Activity, Zap
 } from 'lucide-react';
 import { getStoredEmployees, saveEmployeeToDb, getStoredUsers, getOfficialGstRatesFromPostgres, addOfficialGstRateToPostgres, getStoredFraudAlerts } from '../services/postgresDb';
-import { saveStockToSupabase, getStaffFromSupabase, addStaffToSupabase, getInventoryFromSupabase } from '../services/supabaseClient';
+import { saveStockToSupabase, getStaffFromSupabase, addStaffToSupabase, getInventoryFromSupabase, deleteStockFromSupabase, updateStockMrpInSupabase, addActivityLog, getActivityLogsFromSupabase } from '../services/supabaseClient';
 import {
   apiGetDashboardStats,
   apiGetInvoices,
@@ -30,7 +30,6 @@ const modulesList = [
 
   // 2. Sales & Billing
   { id: 'invoices', title: 'Bills & Invoices', icon: FileText, category: 'Sales & Billing' },
-  { id: 'payments', title: 'Payments & Receipts', icon: CreditCard, category: 'Sales & Billing' },
 
   // 3. Finance
   { id: 'expenses', title: 'Daily Shop Expenses', icon: Receipt, category: 'Finance' },
@@ -44,6 +43,9 @@ const modulesList = [
   // 5. Employee Management
   { id: 'add_employee', title: 'Add New Employee', icon: Plus, category: 'Employee Management' },
   { id: 'employees', title: 'Employee List & Details', icon: UserCheck, category: 'Employee Management' },
+
+  // 6. System Audit & Activity Logs
+  { id: 'audit_logs', title: 'System Audit Logs', icon: Clock, category: 'System Audit' },
 ];
 
 export default function BusinessOwnerDashboard({
@@ -60,7 +62,7 @@ export default function BusinessOwnerDashboard({
   const [moduleSearch, setModuleSearch] = useState('');
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [aiMessages, setAiMessages] = useState([
-    { sender: 'ai', text: `Hello ${ownerName}! I am your FinSight AI Assistant for ${companyName}. See beyond the numbers! Ask me anything about your profits, sales, GST taxes, or duplicate bill alerts!` }
+    { sender: 'ai', text: `Hello ${ownerName}! I am your Finora Smart Assistant for ${companyName}. Smart Finance, Smarter Business! Ask me anything about your profits, sales, GST taxes, or duplicate bill alerts!` }
   ]);
   const [inputQuery, setInputQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(3);
@@ -181,10 +183,10 @@ export default function BusinessOwnerDashboard({
           padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src="/favcon_logo.png" alt="FinSight Logo" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
+            <img src="/favcon_logo.png" alt="Finora Logo" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
             <div>
-              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--fg-text-primary)', letterSpacing: '-0.01em' }}>FinSight AI</div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--fg-accent)', fontFamily: "'Inter', monospace", letterSpacing: '0.1em' }}>STORE DASHBOARD</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)', letterSpacing: '-0.01em' }}>Finora</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--fg-accent)', letterSpacing: '0.04em' }}>SMART FINANCE & BUSINESS</div>
             </div>
           </div>
         </div>
@@ -426,6 +428,7 @@ export default function BusinessOwnerDashboard({
           {activeModule === 'payments' && <PaymentManagementModule />}
           {activeModule === 'expenses' && <ExpenseManagementModule />}
           {activeModule === 'transactions' && <TransactionsModule />}
+          {activeModule === 'audit_logs' && <AuditLogsModule />}
           {activeModule === 'compliance' && <ComplianceModule />}
           {activeModule === 'inventory' && <InventoryManagementModule />}
           {activeModule === 'vendors' && <VendorManagementModule />}
@@ -472,7 +475,7 @@ export default function BusinessOwnerDashboard({
                   <Bot size={16} color="#050708" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg-text-primary)' }}>FinSight AI Assistant</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg-text-primary)' }}>Finora AI Assistant</div>
                   <div style={{ fontSize: 10, color: 'var(--fg-accent)', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <span className="fg-status-pulse" style={{ width: 5, height: 5 }} />
                     Active for {companyName}
@@ -546,7 +549,7 @@ export default function BusinessOwnerDashboard({
           }}
         >
           <Bot size={20} color="var(--fg-accent)" />
-          <span style={{ color: 'var(--fg-text-primary)' }}>FinSight AI</span>
+          <span style={{ color: 'var(--fg-text-primary)' }}>Finora AI</span>
           <span className="fg-status-pulse" />
         </button>
       </div>
@@ -915,8 +918,9 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
       setLiveTransactions(storedTx);
 
       // 2. Read live stock inventory for current user from Supabase DB
-      getInventoryFromSupabase(activeUserId).then(dbStock => {
-        const stockItems = dbStock && dbStock.length > 0 ? dbStock : storedStock;
+      const currentUserId = activeUser.user_id || activeUser.email || companyName || 'user';
+      getInventoryFromSupabase(currentUserId).then(dbStock => {
+        const stockItems = (dbStock && dbStock.length > 0) ? dbStock : storedStock;
         if (stockItems && stockItems.length > 0) {
           const map = new Map();
           stockItems.forEach(st => {
@@ -930,15 +934,17 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
             }
           });
 
-          const cards = Array.from(map.values()).slice(0, 3).map(item => ({
+          // Sort by lowest quantity first to show the 3 lowest stock products
+          const sortedByLowest = Array.from(map.values()).sort((a, b) => a.qty - b.qty);
+          const cards = sortedByLowest.slice(0, 3).map(item => ({
             name: item.name,
             qty: `${item.qty} Units Left`,
-            pct: Math.min(100, Math.round((item.qty / 50) * 100)),
-            color: item.qty <= 15 ? 'var(--fg-danger)' : 'var(--fg-success)',
+            pct: Math.min(100, Math.round((item.qty / 500) * 100)),
+            color: item.qty <= 20 ? 'var(--fg-danger)' : (item.qty <= 120 ? 'var(--fg-warning)' : 'var(--fg-success)'),
           }));
 
           setLiveStockCards(cards);
-          setLowStockCount(Array.from(map.values()).filter(i => i.qty <= 15).length);
+          setLowStockCount(Array.from(map.values()).filter(i => i.qty <= 20).length);
         } else {
           setLiveStockCards([]);
           setLowStockCount(0);
@@ -1202,7 +1208,7 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
                   <span style={{ fontSize: 10, color: 'var(--fg-text-muted)' }}>{al.time}</span>
                 </div>
                 <p style={{ fontSize: 12, color: 'var(--fg-text-secondary)', lineHeight: 1.5 }}>
-                  <strong style={{ color: 'var(--fg-text-primary)' }}>FinSight Security Bot:</strong> {al.message}
+                  <strong style={{ color: 'var(--fg-text-primary)' }}>Finora Security Bot:</strong> {al.message}
                 </p>
               </div>
             ))}
@@ -1469,17 +1475,23 @@ function InventoryManagementModule() {
       const qty = parseInt(String(st.stock_qty !== undefined ? st.stock_qty : (st.stockQty !== undefined ? st.stockQty : st.quantity || '0')).replace(/[^0-9]/g, ''));
       const cost = st.cost_price || st.unitPrice || st.rate || '₹ 100';
       const selling = st.selling_price || st.sellingPrice || '';
-      const supplier = st.supplier_name || st.supplier || 'ABC Wholesale Traders';
+      const supplierStr = st.supplier_name || st.supplier || 'ABC Wholesale Traders';
       const category = st.category || 'General Store';
 
       if (map.has(key)) {
         const existing = map.get(key);
-        existing.stockQty = isNaN(qty) ? existing.stockQty : qty;
-        if (!existing.sellingPrice && selling) existing.sellingPrice = selling;
-        if (supplier && !existing.supplier.includes(supplier)) {
-          existing.supplier += `, ${supplier}`;
-        }
+        const addQty = isNaN(qty) ? 0 : qty;
+        existing.stockQty = (st.id && st.id === existing.id) ? (isNaN(qty) ? existing.stockQty : qty) : (existing.stockQty + addQty);
+        if (selling) existing.sellingPrice = selling;
+
+        const currentSups = (existing.supplier || '').split(',').map(s => s.trim()).filter(Boolean);
+        const newSups = (supplierStr || '').split(',').map(s => s.trim()).filter(Boolean);
+        newSups.forEach(s => {
+          if (s && !currentSups.includes(s)) currentSups.push(s);
+        });
+        existing.supplier = currentSups.join(', ') || 'ABC Wholesale Traders';
       } else {
+        const cleanSups = Array.from(new Set((supplierStr || '').split(',').map(s => s.trim()).filter(Boolean))).join(', ');
         map.set(key, {
           id: st.id || `SKU-${1000 + map.size}`,
           name: rawName,
@@ -1487,7 +1499,7 @@ function InventoryManagementModule() {
           stockQty: isNaN(qty) ? 0 : qty,
           unitPrice: cost,
           sellingPrice: selling,
-          supplier: supplier,
+          supplier: cleanSups || 'ABC Wholesale Traders',
         });
       }
     });
@@ -1596,7 +1608,31 @@ function InventoryManagementModule() {
     } catch (e) {}
 
     setShowEditPriceModal(false);
+    updateStockMrpInSupabase(activeUserId, selectedStockItem.name, newMRP).catch(() => {});
     alert(`Success: Retail Selling MRP for '${updated[editingItemIndex].name}' updated to ${newMRP || 'Not Set (Cost Price Default)'}!`);
+  };
+
+  const handleDeleteStock = (item) => {
+    if (!item) return;
+    if (window.confirm(`Are you sure you want to delete '${item.name}' from store stock inventory?`)) {
+      const filtered = stockList.filter(st => st.name.toLowerCase() !== item.name.toLowerCase());
+      setStockList(filtered);
+      try {
+        localStorage.setItem(stockStorageKey, JSON.stringify(filtered.map(st => ({
+          id: st.id,
+          name: st.name,
+          category: st.category,
+          stock_qty: st.stockQty,
+          quantity: `${st.stockQty} Units`,
+          cost_price: st.unitPrice,
+          rate: st.unitPrice,
+          selling_price: st.sellingPrice,
+          supplier_name: st.supplier,
+        }))));
+      } catch (e) {}
+
+      deleteStockFromSupabase(activeUserId, item.name).catch(() => {});
+    }
   };
 
   const handleOpenReturnModal = (item) => {
@@ -1624,7 +1660,7 @@ function InventoryManagementModule() {
 
     setStockList(updated);
     try {
-      localStorage.setItem('finsight_stock_inventory', JSON.stringify(updated.map(st => ({
+      localStorage.setItem(stockStorageKey, JSON.stringify(updated.map(st => ({
         name: st.name,
         category: st.category,
         stock_qty: st.stockQty,
@@ -1693,6 +1729,13 @@ function InventoryManagementModule() {
               style={{ padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: 'var(--fg-warning-soft)', border: '1px solid var(--fg-warning-border)', color: 'var(--fg-warning)', cursor: 'pointer' }}
             >
               ↩️ Return Vendor
+            </button>
+            <button
+              onClick={() => handleDeleteStock(item)}
+              title="Delete Product Stock Entry"
+              style={{ padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, background: 'var(--fg-danger-soft)', border: '1px solid var(--fg-danger-border)', color: 'var(--fg-danger)', cursor: 'pointer' }}
+            >
+              🗑️ Delete
             </button>
           </div>
         ])}
@@ -2260,27 +2303,138 @@ function PurchaseManagementModule() {
 }
 
 function TransactionsModule() {
+  const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserId = activeUserSession.user_id || activeUserSession.email || 'user';
+  const activeUserKey = String(activeUserId).toLowerCase().replace(/[^a-z0-9]/g, '');
+
   const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    apiGetTransactions().then(res => {
-      if (res && res.transactions) setTransactions(res.transactions);
-    }).catch(err => console.error(err));
-  }, []);
+    try {
+      const storedTx = JSON.parse(localStorage.getItem(`finsight_transactions_${activeUserKey}`) || localStorage.getItem('finsight_transactions') || '[]');
+      if (storedTx && storedTx.length > 0) {
+        setTransactions(storedTx);
+      } else {
+        apiGetTransactions().then(res => {
+          if (res && res.transactions) setTransactions(res.transactions);
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }, [activeUserKey]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)' }}>💳 Money &amp; Cashflow Transactions</h3>
+          <p style={{ fontSize: 11, color: 'var(--fg-text-muted)', marginTop: 2 }}>Real-time money inflows (Customer POS Sales) &amp; outflows (Vendor Purchases &amp; Expenses)</p>
+        </div>
+        <span style={{ fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'var(--fg-accent-soft)', color: 'var(--fg-accent)' }}>
+          {transactions.length} Total Cashflow Records
+        </span>
+      </div>
+
       <TableCard
-        headers={['Transaction ID', 'Timestamp', 'Type', 'Description', 'Amount', 'Status']}
+        headers={['Transaction ID', 'Date', 'Type (IN / OUT)', 'Description / Payee', 'Amount', 'Status']}
         rows={transactions.map(t => [
-          t.id,
-          t.timestamp,
-          t.type,
-          t.description,
-          t.amount,
-          t.status,
+          t.id || `TX-${Math.floor(1000 + Math.random() * 9000)}`,
+          t.date || t.timestamp || new Date().toISOString().split('T')[0],
+          <span style={{
+            fontWeight: 800,
+            padding: '3px 8px',
+            borderRadius: 6,
+            background: (t.type === 'IN' || t.type === 'CREDIT') ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+            color: (t.type === 'IN' || t.type === 'CREDIT') ? 'var(--fg-success)' : 'var(--fg-danger)',
+          }}>
+            {(t.type === 'IN' || t.type === 'CREDIT') ? '📥 INFLOW (IN)' : '📤 OUTFLOW (OUT)'}
+          </span>,
+          t.description || t.payee || 'Store Transaction',
+          <strong style={{ color: (t.type === 'IN' || t.type === 'CREDIT') ? 'var(--fg-success)' : 'var(--fg-text-primary)' }}>
+            {t.amount ? (t.amount.startsWith('₹') ? t.amount : `₹ ${parseFloat(String(t.amount).replace(/[^0-9.]/g, '')).toLocaleString('en-IN')}`) : '₹ 0'}
+          </strong>,
+          <span style={{ color: 'var(--fg-success)', fontWeight: 800 }}>Completed</span>,
         ])}
       />
+    </div>
+  );
+}
+
+function AuditLogsModule() {
+  const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserId = activeUserSession.user_id || activeUserSession.email || 'user';
+
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [filterCategory, setFilterCategory] = useState('ALL');
+
+  useEffect(() => {
+    getActivityLogsFromSupabase(activeUserId).then(logs => {
+      if (logs) setActivityLogs(logs);
+    });
+  }, [activeUserId]);
+
+  const filteredLogs = filterCategory === 'ALL'
+    ? activityLogs
+    : activityLogs.filter(l => (l.category || '').toLowerCase().includes(filterCategory.toLowerCase()));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            ⏱️ System Audit Logs
+          </h3>
+          <p style={{ fontSize: 11, color: 'var(--fg-text-muted)', marginTop: 2 }}>Complete activity trail of stock additions, deletions, MRP price updates, customer POS sales, and vendor bill uploads saved in Supabase</p>
+        </div>
+        
+        <div style={{ display: 'flex', gap: 8 }}>
+          {['ALL', 'Inventory', 'Price Management', 'POS Sales', 'Vendor Billing'].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setFilterCategory(cat)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 8,
+                fontSize: 11,
+                fontWeight: filterCategory === cat ? 800 : 500,
+                background: filterCategory === cat ? 'var(--fg-accent)' : 'var(--fg-bg-card)',
+                color: filterCategory === cat ? '#000' : 'var(--fg-text-secondary)',
+                border: '1px solid var(--fg-border)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filteredLogs.length === 0 ? (
+        <div style={{ padding: 32, textCenter: 'center', background: 'var(--fg-bg-card)', borderRadius: 12, border: '1px solid var(--fg-border)', textAlign: 'center' }}>
+          <p style={{ fontSize: 13, color: 'var(--fg-text-muted)' }}>⏱️ No activity logs recorded yet. Any action like adding/deleting stock, updating MRP prices, generating POS bills, or uploading vendor invoices will record an audit log entry here!</p>
+        </div>
+      ) : (
+        <TableCard
+          headers={['Log ID', 'Timestamp / Date', 'Action Event', 'Details & Notes', 'Category']}
+          rows={filteredLogs.map(l => [
+            l.id || `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
+            l.formattedTime || (l.created_at ? new Date(l.created_at).toLocaleString('en-IN') : 'Just now'),
+            <strong style={{ color: 'var(--fg-text-primary)' }}>{l.action}</strong>,
+            l.details,
+            <span style={{
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '3px 8px',
+              borderRadius: 6,
+              background: 'var(--fg-bg-primary)',
+              border: '1px solid var(--fg-border)',
+              color: 'var(--fg-accent)',
+            }}>
+              {l.category || 'System Log'}
+            </span>,
+          ])}
+        />
+      )}
     </div>
   );
 }
@@ -2292,7 +2446,7 @@ function FraudDetectionModule() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div className="fg-alert-danger" style={{ padding: 18, borderRadius: 14 }}>
         <h4 style={{ fontSize: 15, fontWeight: 800, color: 'var(--fg-danger)' }}>🛡️ AI Fraud Interceptor Active</h4>
-        <p style={{ fontSize: 12, marginTop: 6, color: 'var(--fg-text-secondary)' }}>FinSight AI monitors your uploaded invoices, supplier bills, and transactions 24/7 to block duplicate bills and price gouging.</p>
+        <p style={{ fontSize: 12, marginTop: 6, color: 'var(--fg-text-secondary)' }}>Finora monitors your uploaded invoices, supplier bills, and transactions 24/7 to block duplicate bills and price gouging.</p>
       </div>
       <TableCard
         headers={['Alert ID', 'Date & Time', 'Risk Type', 'Source / Vendor', 'Amount Involved', 'Action Taken']}
@@ -2426,7 +2580,7 @@ function AiAdvisorModule({ aiMessages, onSend, inputQuery, setInputQuery }) {
       <div style={{ padding: 16, background: 'var(--fg-bg-primary)', borderBottom: '1px solid var(--fg-border)', display: 'flex', alignItems: 'center', gap: 10 }}>
         <Bot size={22} color="var(--fg-accent)" />
         <div>
-          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--fg-text-primary)' }}>24/7 FinSight AI Business Helper</div>
+          <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--fg-text-primary)' }}>24/7 Finora AI Business Helper</div>
           <div style={{ fontSize: 11, color: 'var(--fg-accent)' }}>Ask questions in simple English about your store finance</div>
         </div>
       </div>
@@ -2712,19 +2866,7 @@ function UserRolesModule({ dbUsersList = [] }) {
   );
 }
 
-function AuditLogsModule() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <TableCard
-        headers={['Log ID', 'Timestamp', 'User', 'Action Executed', 'IP Address']}
-        rows={[
-          ['LOG-8891', '03 Aug 2026, 10:24 AM', 'AI Interceptor', 'Blocked Duplicate Invoice #INV-9021', 'Internal AI'],
-          ['LOG-8890', '03 Aug 2026, 09:15 AM', 'Business Owner', 'Logged in successfully with PostgreSQL DB', '192.168.1.1'],
-        ]}
-      />
-    </div>
-  );
-}
+
 
 function DocumentsModule() {
   return (
@@ -2843,7 +2985,7 @@ function ProfileModule({ ownerName, companyName, dbUsersList = [] }) {
       <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--fg-text-primary)' }}>👑 {ownerName}</h3>
       <div style={{ fontSize: 13, color: 'var(--fg-text-secondary)' }}>Company: <strong style={{ color: 'var(--fg-text-primary)' }}>{companyName}</strong></div>
       <div style={{ fontSize: 13, color: 'var(--fg-text-secondary)' }}>Role: Business Owner</div>
-      <div style={{ fontSize: 13, color: 'var(--fg-accent)', fontWeight: 700, marginTop: 8 }}>✓ FinSight AI Workspace Verified</div>
+      <div style={{ fontSize: 13, color: 'var(--fg-accent)', fontWeight: 700, marginTop: 8 }}>✓ Finora Workspace Verified</div>
     </div>
   );
 }

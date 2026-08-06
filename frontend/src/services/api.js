@@ -60,6 +60,21 @@ export const apiUploadOcrInvoice = (ocrData) =>
     body: JSON.stringify(ocrData),
   });
 
+export const apiScanOcrFile = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_BASE_URL}/invoices/scan-file`, {
+      method: 'POST',
+      body: formData,
+    });
+    return await response.json();
+  } catch (err) {
+    console.warn('[API Scan File Warning]:', err.message);
+    return { success: false, error: err.message };
+  }
+};
+
 // Payments API
 export const apiGetPayments = () => request('/payments');
 export const apiCreatePayment = (paymentData) =>

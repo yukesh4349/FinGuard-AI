@@ -14,7 +14,7 @@ const rolesData = [
       'Real-Time Money & Cash Flow View',
       'Low Stock Warning & Auto Order Tips',
       'Easy Expense Approvals',
-      'FinSight AI Store Business Advisor',
+      'Finora Store Business Advisor',
     ],
   },
   {
@@ -82,7 +82,7 @@ export default function RoleShowcase({ onOpenModal }) {
             Tailored Screens for Every Store Member
           </h2>
           <p style={{ color: '#334155', fontSize: 16, lineHeight: 1.55, maxWidth: 680, margin: '0 auto', fontWeight: 500 }}>
-            FinSight AI gives simple, clear tools for Business Owners, Accountants, Cashiers, and Store Stock Managers.
+            Finora gives simple, clear tools for Business Owners, Accountants, Cashiers, and Store Stock Managers.
           </p>
         </div>
 
@@ -216,7 +216,7 @@ export default function RoleShowcase({ onOpenModal }) {
                   </div>
                 </div>
 
-                <div style={{ fontSize: 11, color: '#CBD5E1', textAlign: 'center', fontWeight: 600 }}>FinSight AI Security Standard</div>
+                <div style={{ fontSize: 11, color: '#CBD5E1', textAlign: 'center', fontWeight: 600 }}>Finora Security Standard</div>
               </div>
             </div>
           </div>

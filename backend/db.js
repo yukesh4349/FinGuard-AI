@@ -296,6 +296,7 @@ const initialDatabase = {
       resolved: false,
     },
   ],
+  activity_logs: [],
 };
 
 class Database {
