@@ -26,7 +26,7 @@
 
 ### ⚡ 1. Neural OCR & Invoice Photo Scanner
 * **Instant Document Breakdown**: Upload vendor bills, receipts, or photos (`PNG`, `JPG`, `PDF`) to extract vendor details, invoice dates, bill numbers, line item descriptions, quantities, unit cost rates, retail MRPs, GST %, and grand totals.
-* **Multipart Server-Side Scanning**: Express REST API endpoint (`POST /api/invoices/scan-file`) processes bill images with high-precision Tesseract OCR layout analysis.
+* **NVIDIA Nemotron Vision AI Engine**: Server-side Express REST API endpoint (`POST /api/invoices/scan-file`) processes bill images with high-precision NVIDIA Nemotron Vision AI (`meta/llama-3.2-11b-vision-instruct`) for end-to-end optical character recognition (OCR) and structured JSON parsing.
 
 ### 🛡️ 2. AI Fraud & Duplicate Bill Interceptor
 * **Instant Fraud Screening**: Detects duplicate invoice numbers, matching supplier billing totals, and unverified vendor entries before payments are issued.
