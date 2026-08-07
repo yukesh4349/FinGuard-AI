@@ -19,7 +19,7 @@ const ROLE_ALIASES = {
 };
 
 export function normalizeRole(role) {
-  if (!role) return 'owner'; // Default to owner in development/fallback
+  if (!role) return null;
   const clean = String(role).toLowerCase().trim().replace(/_/g, ' ');
   const directKey = String(role).toLowerCase().trim();
   if (ROLE_ALIASES[directKey]) return ROLE_ALIASES[directKey];
@@ -37,8 +37,21 @@ export function normalizeRole(role) {
  */
 export function requireRoles(allowedRoles = []) {
   return (req, res, next) => {
-    const headerRole = req.headers['x-user-role'] || req.query.role || (req.body && req.body.userRole);
+    const headerRole = (req.headers && req.headers['x-user-role']) || (req.query && req.query.role) || (req.body && req.body.userRole);
+    if (!headerRole) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized: Missing role authorization headers.',
+      });
+    }
+
     const userRole = normalizeRole(headerRole);
+    if (!userRole) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized: Unrecognized or invalid user role.',
+      });
+    }
 
     // Normalize allowed roles list
     const normalizedAllowed = allowedRoles.map(normalizeRole);
@@ -101,9 +114,9 @@ export const PERMISSIONS = {
  */
 export function validateShopIsolation() {
   return async (req, res, next) => {
-    const headerRole = req.headers['x-user-role'] || req.query.role || (req.body && req.body.userRole);
-    const userId = req.headers['x-user-id'] || req.query.userId || (req.body && req.body.userId);
-    const shopId = req.headers['x-shop-id'] || req.query.shopId || (req.body && req.body.shopId) || userId;
+    const headerRole = (req.headers && req.headers['x-user-role']) || (req.query && req.query.role) || (req.body && req.body.userRole);
+    const userId = (req.headers && req.headers['x-user-id']) || (req.query && req.query.userId) || (req.body && req.body.userId);
+    const shopId = (req.headers && req.headers['x-shop-id']) || (req.query && req.query.shopId) || (req.body && req.body.shopId) || userId;
 
     if (!userId) {
       return res.status(401).json({ success: false, error: 'Unauthorized: Missing User ID headers.' });

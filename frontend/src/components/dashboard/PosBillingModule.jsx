@@ -192,22 +192,7 @@ export default function PosBillingModule({ companyName = 'Metro Superstore Ltd',
     };
 
     try {
-      // 1. Save bill in Supabase
-      await saveCustomerBillToSupabase({
-        userId: activeUserId,
-        billNo: invoiceNumber,
-        customerName: billData.customer_name,
-        customerPhone: billData.customer_phone,
-        items: billData.items,
-        subtotal,
-        gstTax: Math.round(gstAmount),
-        grandTotal,
-        profitEarned: Math.round(grandTotal * 0.20),
-        status: status,
-        dueDate: dueDate
-      });
-
-      // 2. Save bill to Express backend
+      // Save bill to Express backend (handles database insert, transactions, and audit logging)
       await apiCreateCustomerBill({
         bill_number: invoiceNumber,
         customer_name: billData.customer_name,

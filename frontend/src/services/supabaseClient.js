@@ -139,7 +139,7 @@ export async function getStaffFromSupabase(userId) {
   if (isSupabaseConfigured()) {
     try {
       const { data, error } = await supabase
-        .from('staff')
+        .from('employees')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -159,7 +159,7 @@ export async function addStaffToSupabase(staffObj) {
 
   if (isSupabaseConfigured()) {
     try {
-      await supabase.from('staff').insert([staffObj]);
+      await supabase.from('employees').insert([staffObj]);
     } catch (e) {}
   }
   return local;

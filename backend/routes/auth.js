@@ -1,12 +1,27 @@
 import { Router } from 'express';
+import crypto from 'crypto';
 import { db, createAuditLog } from '../db.js';
+import { validateShopIsolation } from '../middleware/rbac.js';
 
 const router = Router();
 
-// GET /api/auth/users
-router.get('/users', async (req, res) => {
+export function hashPassword(plainText) {
+  if (!plainText) return '';
+  return crypto.createHash('sha256').update(String(plainText).trim()).digest('hex');
+}
+
+export function verifyPassword(plainText, storedHash) {
+  if (!plainText || !storedHash) return false;
+  const cleanInput = String(plainText).trim();
+  const cleanStored = String(storedHash).trim();
+  if (cleanStored === cleanInput) return true;
+  return hashPassword(cleanInput) === cleanStored;
+}
+
+// GET /api/auth/users (Protected to shop isolation)
+router.get('/users', validateShopIsolation(), async (req, res) => {
   try {
-    const users = await db.fetchTable('users');
+    const users = await db.fetchScoped('users', req.shopId);
     const sanitized = users.map(u => ({
       id: u.id,
       user_id: u.user_id,
@@ -44,8 +59,7 @@ router.post('/login', async (req, res) => {
       const uEmail = String(u.email || '').trim().toLowerCase();
       const uMobile = String(u.mobile_number || '').trim();
       const matchIdentity = (uId === cleanId || uEmail === cleanId || uMobile === cleanId);
-      const passMatch = String(u.password_hash || '').trim() === cleanPass;
-      // Mobile number check: if provided, it must match; if not provided, skip the check
+      const passMatch = verifyPassword(cleanPass, u.password_hash);
       const mobileMatch = !cleanMobile || uMobile === cleanMobile;
       return matchIdentity && passMatch && mobileMatch;
     });
@@ -113,7 +127,7 @@ router.post('/signup', async (req, res) => {
       employee_count: String(employeeCount || '5'),
       mobile_number: String(mobileNumber).trim(),
       email: email ? String(email).trim().toLowerCase() : `${mobileNumber}@finguard.ai`,
-      password_hash: String(password).trim(),
+      password_hash: hashPassword(password),
       role: role || 'owner',
       owner_id: ownerId || (isOwner ? newId : null),
     };

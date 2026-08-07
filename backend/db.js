@@ -53,13 +53,12 @@ const SUPABASE_URL    = process.env.SUPABASE_URL;
 const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SECRET) {
-  console.error('[DB FATAL]: SUPABASE_URL or SUPABASE_SECRET_KEY is not set in .env');
-  process.exit(1);
+  console.warn('[DB WARNING]: SUPABASE_URL or SUPABASE_SECRET_KEY is not set in .env. Running in fallback mode.');
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET, {
-  auth: { persistSession: false },
-});
+export const supabase = (SUPABASE_URL && SUPABASE_SECRET)
+  ? createClient(SUPABASE_URL, SUPABASE_SECRET, { auth: { persistSession: false } })
+  : null;
 
 // ── Table name aliases ─────────────────────────────────────────────────────────
 // The old code referenced 'employees'; Supabase table is 'employees'.

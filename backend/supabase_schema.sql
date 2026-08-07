@@ -5,6 +5,7 @@
 -- =====================================================================
 
 -- ── CLEAN UP PREVIOUS TABLES ──────────────────────────────────────────
+DROP TABLE IF EXISTS public.salary_payments CASCADE;
 DROP TABLE IF EXISTS public.activity_logs CASCADE;
 DROP TABLE IF EXISTS public.fraud_alerts CASCADE;
 DROP TABLE IF EXISTS public.expenses CASCADE;
@@ -178,21 +179,25 @@ CREATE POLICY customer_bills_policy ON public.customer_bills FOR ALL USING (true
 
 -- ── 8. TRANSACTIONS TABLE (Cash Book Ledger) ──────────────────────────
 CREATE TABLE public.transactions (
-    id          VARCHAR(100) PRIMARY KEY,
-    user_id     VARCHAR(100) NOT NULL,
-    date        VARCHAR(100) NOT NULL,
-    type        VARCHAR(10)  CHECK (type IN ('IN', 'OUT')),
-    description TEXT         NOT NULL,
-    category    VARCHAR(100) NOT NULL,
-    amount      VARCHAR(50)  NOT NULL,
-    balance     VARCHAR(50),
-    created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    id               VARCHAR(100) PRIMARY KEY,
+    user_id          VARCHAR(100) NOT NULL,
+    owner_id         VARCHAR(100),
+    date             VARCHAR(100) NOT NULL,
+    type             VARCHAR(10)  CHECK (type IN ('IN', 'OUT')),
+    transaction_type VARCHAR(100) DEFAULT 'general',
+    reference_id     VARCHAR(100),
+    description      TEXT         NOT NULL,
+    category         VARCHAR(100) NOT NULL,
+    amount           VARCHAR(50)  NOT NULL,
+    balance          VARCHAR(50),
+    created_at       TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_transactions_user_id ON public.transactions(user_id);
+CREATE INDEX idx_transactions_owner_id ON public.transactions(owner_id);
 
 ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY transactions_policy ON public.transactions FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY transactions_policy ON public.transactions FOR ALL USING (user_id = auth.uid()::text OR owner_id = auth.uid()::text OR true) WITH CHECK (true);
 
 -- ── 9. EXPENSES TABLE ─────────────────────────────────────────────────
 CREATE TABLE public.expenses (
@@ -209,7 +214,7 @@ CREATE TABLE public.expenses (
 CREATE INDEX idx_expenses_user_id ON public.expenses(user_id);
 
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
-CREATE POLICY expenses_policy ON public.expenses FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY expenses_policy ON public.expenses FOR ALL USING (user_id = auth.uid()::text OR true) WITH CHECK (true);
 
 -- ── 10. FRAUD ALERTS TABLE ────────────────────────────────────────────
 CREATE TABLE public.fraud_alerts (
@@ -225,22 +230,33 @@ CREATE TABLE public.fraud_alerts (
 CREATE INDEX idx_fraud_alerts_user_id ON public.fraud_alerts(user_id);
 
 ALTER TABLE public.fraud_alerts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY fraud_alerts_policy ON public.fraud_alerts FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY fraud_alerts_policy ON public.fraud_alerts FOR ALL USING (user_id = auth.uid()::text OR true) WITH CHECK (true);
 
 -- ── 11. ACTIVITY LOGS TABLE ───────────────────────────────────────────
 CREATE TABLE public.activity_logs (
-    id         VARCHAR(100) PRIMARY KEY,
-    user_id    VARCHAR(100) NOT NULL,
-    action     VARCHAR(255) NOT NULL,
-    details    TEXT         NOT NULL,
-    category   VARCHAR(100) DEFAULT 'System Log',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    id          VARCHAR(100) PRIMARY KEY,
+    user_id     VARCHAR(100) NOT NULL,
+    shop_id     VARCHAR(100),
+    owner_id    VARCHAR(100),
+    employee_id VARCHAR(100),
+    user_name   VARCHAR(255),
+    user_role   VARCHAR(50),
+    action      VARCHAR(255) NOT NULL,
+    details     TEXT         NOT NULL,
+    description TEXT,
+    category    VARCHAR(100) DEFAULT 'System Log',
+    entity_type VARCHAR(100),
+    entity_id   VARCHAR(100),
+    old_value   TEXT,
+    new_value   TEXT,
+    created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_activity_logs_user_id ON public.activity_logs(user_id);
+CREATE INDEX idx_activity_logs_shop_id ON public.activity_logs(shop_id);
 
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY activity_logs_policy ON public.activity_logs FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY activity_logs_policy ON public.activity_logs FOR ALL USING (user_id = auth.uid()::text OR shop_id = auth.uid()::text OR true) WITH CHECK (true);
 
 -- ── 12. SETTINGS TABLE ───────────────────────────────────────────────
 CREATE TABLE public.settings (
