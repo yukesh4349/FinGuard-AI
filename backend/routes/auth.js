@@ -51,13 +51,14 @@ router.post('/login', (req, res) => {
       mobile_number: user.mobile_number,
       email: user.email,
       role: user.role,
+      owner_id: user.owner_id || user.user_id,
     },
   });
 });
 
 // POST /api/auth/signup
 router.post('/signup', (req, res) => {
-  const { companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role } = req.body;
+  const { companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role, ownerId } = req.body;
   if (!companyName || !mobileNumber || !password) {
     return res.status(400).json({ success: false, error: 'Company Name, Mobile Number, and Password are required.' });
   }
@@ -68,7 +69,8 @@ router.post('/signup', (req, res) => {
     return res.status(409).json({ success: false, error: 'Account with this mobile number or email already exists.' });
   }
 
-  const newId = `OWNER-${Math.floor(1000 + Math.random() * 9000)}`;
+  const isOwner = role === 'owner' || !role;
+  const newId = isOwner ? `OWNER-${Math.floor(1000 + Math.random() * 9000)}` : `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
   const newUser = {
     id: users.length + 1,
     user_id: newId,
@@ -80,6 +82,7 @@ router.post('/signup', (req, res) => {
     email: email || `${mobileNumber}@finguard.ai`,
     password_hash: password,
     role: role || 'owner',
+    owner_id: ownerId || (isOwner ? newId : null),
     created_at: new Date().toISOString(),
   };
 
@@ -98,6 +101,7 @@ router.post('/signup', (req, res) => {
       mobile_number: newUser.mobile_number,
       email: newUser.email,
       role: newUser.role,
+      owner_id: newUser.owner_id || newUser.user_id,
     },
   });
 });

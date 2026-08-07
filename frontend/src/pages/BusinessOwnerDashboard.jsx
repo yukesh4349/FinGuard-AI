@@ -6,10 +6,10 @@ import {
   BarChart3, Bell, UserCheck, Shield, Clock, Folder, Cpu,
   Settings, User, Search, Filter, Plus, Download, Upload, CheckCircle2,
   AlertTriangle, ArrowUpRight, ArrowDownRight, RefreshCw, ChevronRight,
-  Send, Sparkles, LogOut, Copy, Check, Eye, Trash2, Edit3, Lock, MessageSquare, X, Database, Phone,
-  Activity, Zap
+  Send, Sparkles, LogOut, Copy, Check, Eye, Trash2, Edit3, Lock, MessageSquare, X, Database, Phone, Mail,
+  Activity, Zap, Maximize2, Minimize2, UserPlus, ShoppingCart
 } from 'lucide-react';
-import { getStoredEmployees, saveEmployeeToDb, getStoredUsers, getOfficialGstRatesFromPostgres, addOfficialGstRateToPostgres, getStoredFraudAlerts } from '../services/postgresDb';
+import { getStoredEmployees, saveEmployeeToDb, getStoredUsers, getOfficialGstRatesFromPostgres, addOfficialGstRateToPostgres, getStoredFraudAlerts, registerUserInPostgres, fetchInventoryFromBackend } from '../services/postgresDb';
 import { saveStockToSupabase, getStaffFromSupabase, addStaffToSupabase, getInventoryFromSupabase, deleteStockFromSupabase, updateStockMrpInSupabase, addActivityLog, getActivityLogsFromSupabase } from '../services/supabaseClient';
 import {
   apiGetDashboardStats,
@@ -20,33 +20,60 @@ import {
   apiGetInventory,
   apiGetVendors,
   apiGetEmployees,
-  apiQueryAiChat
+  apiQueryAiChat,
+  apiCreateInventoryItem,
+  apiGetCustomerBills,
+  apiPayCustomerBill,
+  apiPayEmployeeSalary
 } from '../services/api';
+import AiAssistantModule from '../components/dashboard/AiAssistantModule';
+import SettingsModule from '../components/dashboard/SettingsModule';
+import PosBillingModule from '../components/dashboard/PosBillingModule';
+import InventoryReadOnlyModule from '../components/dashboard/InventoryReadOnlyModule';
 
-// Business Owner Dashboard Sidebar Navigation Modules (Strictly 5 Sections)
+// Complete System Modules Matrix
 const modulesList = [
   // 1. Dashboard Overview
   { id: 'overview', title: 'Dashboard Overview', icon: LayoutDashboard, category: 'Main' },
 
-  // 2. Sales & Billing
-  { id: 'invoices', title: 'Bills & Invoices', icon: FileText, category: 'Sales & Billing' },
+  // 2. AI Intelligence
+  { id: 'ai_assistant', title: 'AI Assistant', icon: Sparkles, category: 'AI Assistant' },
 
-  // 3. Finance
+  // 3. Sales & Billing
+  { id: 'invoices', title: 'Bills & Invoices', icon: FileText, category: 'Sales & Billing' },
+  { id: 'pos_billing', title: 'POS Customer Billing', icon: ShoppingCart, category: 'Sales & Billing' },
+  { id: 'pending_bills', title: 'Pending Credit Bills', icon: Clock, category: 'Sales & Billing' },
+
+  // 4. Finance
   { id: 'expenses', title: 'Daily Shop Expenses', icon: Receipt, category: 'Finance' },
   { id: 'transactions', title: 'Money Transactions', icon: ArrowLeftRight, category: 'Finance' },
-  { id: 'compliance', title: 'GST & Tax Compliance', icon: FileCheck, category: 'Finance' },
+  { id: 'compliance', title: 'GST Compliance', icon: FileCheck, category: 'Finance' },
 
-  // 4. Inventory
-  { id: 'inventory', title: 'Remaining Stock', icon: Package, category: 'Inventory' },
+  // 5. Inventory
+  { id: 'inventory', title: 'Stock Inventory', icon: Folder, category: 'Inventory' },
+  { id: 'inventory_readonly', title: 'Stock Lookup (Read-Only)', icon: Package, category: 'Inventory' },
   { id: 'vendors', title: 'Vendor Details', icon: Users, category: 'Inventory' },
 
-  // 5. Employee Management
+  // 6. Employee Management
   { id: 'add_employee', title: 'Add New Employee', icon: Plus, category: 'Employee Management' },
   { id: 'employees', title: 'Employee List & Details', icon: UserCheck, category: 'Employee Management' },
 
-  // 6. System Audit & Activity Logs
+  // 7. System Audit & Activity Logs
   { id: 'audit_logs', title: 'System Audit Logs', icon: Clock, category: 'System Audit' },
+
+  // 8. Settings
+  { id: 'settings', title: 'Settings', icon: Settings, category: 'Settings' },
 ];
+
+const ROLE_ALLOWED_MODULES = {
+  owner: ['overview', 'ai_assistant', 'invoices', 'pos_billing', 'pending_bills', 'expenses', 'transactions', 'compliance', 'inventory', 'vendors', 'add_employee', 'employees', 'audit_logs', 'settings'],
+  financier: ['transactions', 'expenses', 'compliance', 'audit_logs'],
+  accountant: ['transactions', 'expenses', 'compliance', 'audit_logs'],
+  cashier: ['pos_billing', 'pending_bills', 'inventory_readonly'],
+  billing: ['pos_billing', 'pending_bills', 'inventory_readonly'],
+  store_manager: ['inventory', 'vendors', 'audit_logs'],
+  stock_manager: ['inventory', 'vendors', 'audit_logs'],
+};
 
 export default function BusinessOwnerDashboard({
   companyName = 'Metro Superstore Ltd',
@@ -92,10 +119,26 @@ export default function BusinessOwnerDashboard({
   // Form states for modals
   const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
   const activeUserId = activeUserSession.user_id || ownerName || 'user';
+  
+  // Normalize user role
+  const rawRole = (activeUserSession.role || 'owner').toLowerCase().trim();
+  const activeRole = 
+    (rawRole.includes('financ') || rawRole.includes('account')) ? 'financier' :
+    (rawRole.includes('cashier') || rawRole.includes('bill')) ? 'cashier' :
+    (rawRole.includes('stock') || rawRole.includes('store') || rawRole.includes('manag')) ? 'store_manager' :
+    'owner';
+
+  const allowedModuleIds = ROLE_ALLOWED_MODULES[activeRole] || ROLE_ALLOWED_MODULES.owner;
+  const defaultModuleForRole = 
+    activeRole === 'cashier' ? 'pos_billing' :
+    activeRole === 'store_manager' ? 'inventory' :
+    activeRole === 'financier' ? 'transactions' :
+    'overview';
 
   const [empName, setEmpName] = useState('');
-  const [empRole, setEmpRole] = useState('Store Executive');
+  const [empRole, setEmpRole] = useState('Store Management');
   const [empPhone, setEmpPhone] = useState('');
+  const [empEmail, setEmpEmail] = useState('');
   const [empSalary, setEmpSalary] = useState('');
   const [empList, setEmpList] = useState([]);
   const [dbUsersList, setDbUsersList] = useState([]);
@@ -108,20 +151,36 @@ export default function BusinessOwnerDashboard({
   }, [activeUserId]);
 
   useEffect(() => {
-    if (moduleId && modulesList.some(m => m.id === moduleId)) {
+    if (moduleId && allowedModuleIds.includes(moduleId)) {
       setActiveModule(moduleId);
+    } else if (!allowedModuleIds.includes(activeModule)) {
+      setActiveModule(defaultModuleForRole);
     }
-  }, [moduleId]);
+  }, [moduleId, activeRole]);
 
   const handleModuleClick = (id) => {
+    if (!allowedModuleIds.includes(id)) {
+      alert(`Access Restricted: Your role (${activeRole}) does not have permission to view ${id}.`);
+      return;
+    }
     setActiveModule(id);
     navigate(`/dashboard/${id}`);
   };
 
   const filteredModules = modulesList.filter(m =>
-    m.title.toLowerCase().includes(moduleSearch.toLowerCase()) ||
-    m.category.toLowerCase().includes(moduleSearch.toLowerCase())
+    allowedModuleIds.includes(m.id) &&
+    (m.title.toLowerCase().includes(moduleSearch.toLowerCase()) ||
+     m.category.toLowerCase().includes(moduleSearch.toLowerCase()))
   );
+
+  const roleLabels = {
+    owner: { title: 'Business Owner', icon: '👑', badge: 'FULL ACCESS' },
+    financier: { title: 'Financier / Accountant', icon: '📊', badge: 'FINANCE' },
+    cashier: { title: 'Cashier / POS Billing', icon: '💳', badge: 'POS' },
+    store_manager: { title: 'Store & Stock Manager', icon: '📦', badge: 'INVENTORY' },
+  };
+
+  const currentRoleInfo = roleLabels[activeRole] || roleLabels.owner;
 
   const handleSendAiMessage = async (e) => {
     e.preventDefault();
@@ -146,13 +205,14 @@ export default function BusinessOwnerDashboard({
 
   const handleAddEmployeeSubmit = async (e) => {
     e.preventDefault();
-    if (!empName || !empPhone) return;
+    if (!empName || !empPhone || !empEmail) return;
     const newEmp = {
       id: `EMP-${Math.floor(100 + Math.random() * 900)}`,
       user_id: activeUserId,
       name: empName,
       role: empRole,
       phone: empPhone,
+      email: empEmail,
       salary: `₹ ${empSalary || '30,000'}`,
       status: 'Active',
       joined_date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -161,6 +221,7 @@ export default function BusinessOwnerDashboard({
     setEmpList(updated);
     setEmpName('');
     setEmpPhone('');
+    setEmpEmail('');
     setEmpSalary('');
     setShowAddEmpModal(false);
     alert(`Success: Staff member ${empName} saved to Supabase DB for ${companyName}!`);
@@ -215,7 +276,7 @@ export default function BusinessOwnerDashboard({
 
         {/* Navigation */}
         <nav style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
-          {/* Dashboard Overview — Main */}
+          {/* Dashboard Overview — Main (if allowed) */}
           {filteredModules.filter(m => m.category === 'Main').map(m => {
             const Icon = m.icon;
             const active = activeModule === m.id;
@@ -243,10 +304,13 @@ export default function BusinessOwnerDashboard({
 
           {/* Grouped Sections */}
           {[
+            { cat: 'AI Assistant', label: 'AI INTELLIGENCE' },
             { cat: 'Sales & Billing', label: 'SALES & BILLING' },
-            { cat: 'Finance', label: 'FINANCE' },
-            { cat: 'Inventory', label: 'INVENTORY' },
-            { cat: 'Employee Management', label: 'EMPLOYEE MANAGEMENT' },
+            { cat: 'Finance', label: 'FINANCE & AUDIT' },
+            { cat: 'Inventory', label: 'INVENTORY & VENDORS' },
+            { cat: 'Employee Management', label: 'STAFF & EMPLOYEES' },
+            { cat: 'System Audit', label: 'AUDIT LOGS' },
+            { cat: 'Settings', label: 'SYSTEM SETTINGS' },
           ].map(group => {
             const groupItems = filteredModules.filter(m => m.category === group.cat);
             if (groupItems.length === 0) return null;
@@ -301,16 +365,16 @@ export default function BusinessOwnerDashboard({
               width: 32, height: 32, borderRadius: 8,
               background: 'linear-gradient(135deg, #F3CD97, #E2B36B)',
               color: '#050708', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 800, fontSize: 13, flexShrink: 0,
+              fontWeight: 800, fontSize: 14, flexShrink: 0,
             }}>
-              👑
+              {currentRoleInfo.icon}
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--fg-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {ownerName || 'Business Owner'}
+                {activeUserSession.name || ownerName || 'Active User'}
               </div>
-              <div style={{ fontSize: 10, color: 'var(--fg-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {companyName}
+              <div style={{ fontSize: 10, color: 'var(--fg-accent)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {currentRoleInfo.title}
               </div>
             </div>
           </div>
@@ -345,7 +409,7 @@ export default function BusinessOwnerDashboard({
             )}
             {activeModule === 'overview' && <span style={{ color: 'var(--fg-text-muted)', fontSize: 14 }}>·</span>}
             <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--fg-text-primary)' }}>
-              {modulesList.find(m => m.id === activeModule)?.title}
+              {modulesList.find(m => m.id === activeModule)?.title || 'Module'}
             </h2>
           </div>
 
@@ -366,27 +430,47 @@ export default function BusinessOwnerDashboard({
               {theme === 'dark' ? '🌙 Dark Liquid' : '☀️ White Liquid'}
             </button>
 
-            {/* AI Chat Trigger */}
-            <button
-              onClick={() => setAiPanelOpen(!aiPanelOpen)}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 7,
-                padding: '7px 14px', borderRadius: 99,
-                background: aiPanelOpen ? 'var(--fg-accent-soft)' : 'transparent',
-                border: `1px solid ${aiPanelOpen ? 'var(--fg-border-accent-strong)' : 'var(--fg-border-accent)'}`,
-                color: 'var(--fg-accent)',
-                fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                transition: 'all 0.2s ease',
-                boxShadow: aiPanelOpen ? 'var(--fg-glow-accent)' : 'none',
-              }}
-            >
-              <Sparkles size={14} color="var(--fg-accent)" />
-              <span>✦ AI Chat Assistant</span>
-            </button>
+            {/* AI Chat Trigger (Available if permitted) */}
+            {allowedModuleIds.includes('ai_assistant') && (
+              <button
+                onClick={() => handleModuleClick('ai_assistant')}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                  padding: '7px 14px', borderRadius: 99,
+                  background: activeModule === 'ai_assistant' ? 'var(--fg-accent-soft)' : 'transparent',
+                  border: `1px solid ${activeModule === 'ai_assistant' ? 'var(--fg-border-accent-strong)' : 'var(--fg-border-accent)'}`,
+                  color: 'var(--fg-accent)',
+                  fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 0.2s ease',
+                  boxShadow: activeModule === 'ai_assistant' ? 'var(--fg-glow-accent)' : 'none',
+                }}
+              >
+                <Sparkles size={14} color="var(--fg-accent)" />
+                <span>✦ AI Assistant</span>
+              </button>
+            )}
+
+            {/* Settings Trigger (if allowed) */}
+            {allowedModuleIds.includes('settings') && (
+              <button
+                onClick={() => handleModuleClick('settings')}
+                style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: activeModule === 'settings' ? 'var(--fg-accent-soft)' : 'var(--fg-surface)',
+                  border: `1px solid ${activeModule === 'settings' ? 'var(--fg-border-accent)' : 'var(--fg-border)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: activeModule === 'settings' ? 'var(--fg-accent)' : 'var(--fg-text-secondary)',
+                  transition: 'all 0.2s ease',
+                }}
+                title="Store & App Settings"
+              >
+                <Settings size={16} />
+              </button>
+            )}
 
             {/* Notifications */}
             <button
-              onClick={() => handleModuleClick('notifications')}
+              onClick={() => handleModuleClick('audit_logs')}
               style={{
                 position: 'relative', width: 36, height: 36, borderRadius: 10,
                 background: 'var(--fg-surface)', border: '1px solid var(--fg-border)',
@@ -412,32 +496,83 @@ export default function BusinessOwnerDashboard({
 
         {/* ── BODY VIEW RENDER ─────────────────────────────────────────── */}
         <div style={{ flex: 1, padding: 24 }}>
-          {activeModule === 'overview' && (
-            <OverviewModule
-              companyName={companyName}
-              onNavigate={handleModuleClick}
-              empList={empList}
-              dbUsersList={dbUsersList}
-              onOpenAddEmp={() => setShowAddEmpModal(true)}
-              onOpenUpload={onOpenUploadPage}
-              onOpenCreateInvoice={onOpenBillingPage}
-              onOpenReport={() => setShowReportModal(true)}
-            />
-          )}
-          {(activeModule === 'invoices' || activeModule === 'purchases') && <InvoiceManagementModule onOpenCreateInvoice={onOpenBillingPage} onOpenUpload={onOpenUploadPage} />}
-          {activeModule === 'payments' && <PaymentManagementModule />}
-          {activeModule === 'expenses' && <ExpenseManagementModule />}
-          {activeModule === 'transactions' && <TransactionsModule />}
-          {activeModule === 'audit_logs' && <AuditLogsModule />}
-          {activeModule === 'compliance' && <ComplianceModule />}
-          {activeModule === 'inventory' && <InventoryManagementModule />}
-          {activeModule === 'vendors' && <VendorManagementModule />}
-          {(activeModule === 'employees' || activeModule === 'add_employee') && (
-            <EmployeeManagementModule
-              empList={empList}
-              setEmpList={setEmpList}
-              initialOpenAdd={activeModule === 'add_employee'}
-            />
+          {/* Permission Guard */}
+          {!allowedModuleIds.includes(activeModule) ? (
+            <div style={{
+              background: 'var(--fg-surface)', border: '1px solid var(--fg-danger-border)',
+              borderRadius: 16, padding: 40, textAlign: 'center', maxWidth: 500, margin: '40px auto',
+            }}>
+              <AlertTriangle size={48} color="var(--fg-danger)" style={{ margin: '0 auto 16px' }} />
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--fg-text-primary)', marginBottom: 8 }}>
+                Access Restricted
+              </h2>
+              <p style={{ fontSize: 13, color: 'var(--fg-text-secondary)', marginBottom: 24, lineHeight: 1.6 }}>
+                Your current role (<strong>{currentRoleInfo.title}</strong>) does not have authorization to view this module.
+              </p>
+              <button
+                onClick={() => handleModuleClick(defaultModuleForRole)}
+                className="lc-liquid-btn"
+                style={{ padding: '10px 24px', fontSize: 13, fontWeight: 700 }}
+              >
+                Go to Permitted Home ({defaultModuleForRole})
+              </button>
+            </div>
+          ) : (
+            <>
+              {activeModule === 'overview' && (
+                <OverviewModule
+                  companyName={companyName}
+                  onNavigate={handleModuleClick}
+                  empList={empList}
+                  dbUsersList={dbUsersList}
+                  onOpenAddEmp={() => setShowAddEmpModal(true)}
+                  onOpenUpload={onOpenUploadPage}
+                  onOpenCreateInvoice={onOpenBillingPage}
+                  onOpenReport={() => setShowReportModal(true)}
+                />
+              )}
+              {activeModule === 'ai_assistant' && (
+                <AiAssistantModule companyName={companyName} ownerName={ownerName} />
+              )}
+              {activeModule === 'settings' && (
+                <SettingsModule companyName={companyName} ownerName={ownerName} onLogout={onLogout} />
+              )}
+              {activeModule === 'pos_billing' && (
+                <PosBillingModule companyName={companyName} onBack={() => handleModuleClick(defaultModuleForRole)} />
+              )}
+              {activeModule === 'pending_bills' && (
+                <PendingBillsModule />
+              )}
+              {activeModule === 'inventory_readonly' && (
+                <InventoryReadOnlyModule />
+              )}
+              {(activeModule === 'invoices' || activeModule === 'purchases') && (
+                <InvoiceManagementModule onOpenCreateInvoice={onOpenBillingPage} onOpenUpload={onOpenUploadPage} />
+              )}
+              {activeModule === 'payments' && <PaymentManagementModule />}
+              {activeModule === 'expenses' && <ExpenseManagementModule />}
+              {activeModule === 'transactions' && <TransactionsModule />}
+              {activeModule === 'audit_logs' && <AuditLogsModule />}
+              {activeModule === 'compliance' && <ComplianceModule />}
+              {activeModule === 'inventory' && <InventoryManagementModule />}
+              {activeModule === 'vendors' && <VendorManagementModule />}
+              {activeModule === 'employees' && (
+                <EmployeeManagementModule
+                  empList={empList}
+                  setEmpList={setEmpList}
+                  initialOpenAdd={false}
+                />
+              )}
+              {activeModule === 'add_employee' && (
+                <AddNewEmployeePage
+                  empList={empList}
+                  setEmpList={setEmpList}
+                  companyName={companyName}
+                  activeUserId={activeUserId}
+                  onSuccess={() => handleModuleClick('employees')}
+                />
+              )}
+            </>
           )}
         </div>
       </main>
@@ -571,11 +706,19 @@ export default function BusinessOwnerDashboard({
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role / Job Title *</label>
-                <input type="text" required placeholder="e.g. Billing Executive / Store Manager" value={empRole} onChange={e => setEmpRole(e.target.value)} className="fg-input" />
+                <select required value={empRole} onChange={e => setEmpRole(e.target.value)} className="fg-select" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, background: 'var(--fg-surface)', border: '1px solid var(--fg-border)', color: 'var(--fg-text-primary)' }}>
+                  <option value="Financier">Financier</option>
+                  <option value="Cashier (Billing)">Cashier (Billing)</option>
+                  <option value="Store Management">Store Management</option>
+                </select>
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mobile Number *</label>
                 <input type="tel" required pattern="[0-9]*" maxLength={10} placeholder="e.g. 9876543210" value={empPhone} onChange={e => setEmpPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} className="fg-input" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email ID *</label>
+                <input type="email" required placeholder="e.g. ramesh@example.com" value={empEmail} onChange={e => setEmpEmail(e.target.value)} className="fg-input" />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monthly Salary (₹)</label>
@@ -892,6 +1035,7 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
       const storedVendorInvoices = JSON.parse(localStorage.getItem(`finsight_ocr_invoices_${activeUserKey}`) || '[]');
       const storedTx = JSON.parse(localStorage.getItem(`finsight_transactions_${activeUserKey}`) || '[]');
       const storedStock = JSON.parse(localStorage.getItem(`finsight_stock_inventory_${activeUserKey}`) || '[]');
+      const storedExpenses = JSON.parse(localStorage.getItem(`finsight_expenses_${activeUserKey}`) || localStorage.getItem('finsight_expenses') || '[]');
 
       // Filter and sanitize entries
       const sanitizedSales = storedCustomerSales.filter(b => cleanNum(b.grandTotal || b.grand_total || 0) < 100000000);
@@ -899,6 +1043,9 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
 
       let calcSales = sanitizedSales.reduce((acc, b) => acc + cleanNum(b.grandTotal || b.grand_total || 0), 0);
       let calcExpenses = sanitizedVendor.reduce((acc, b) => acc + cleanNum(b.grand_total || b.grandTotal || 0), 0);
+      const totalRawExpenses = storedExpenses.reduce((acc, exp) => acc + cleanNum(exp.amount || 0), 0);
+      calcExpenses += totalRawExpenses;
+      
       let calcPending = sanitizedVendor.filter(b => b.payment_status === 'Pending' || b.status === 'Pending')
         .reduce((acc, b) => acc + cleanNum(b.grand_total || b.grandTotal || 0), 0);
 
@@ -917,16 +1064,16 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
       // Load live transactions for current user
       setLiveTransactions(storedTx);
 
-      // 2. Read live stock inventory for current user from Supabase DB
+      // 2. Read live stock inventory for current user from Supabase DB or Express/Postgres backend
       const currentUserId = activeUser.user_id || activeUser.email || companyName || 'user';
-      getInventoryFromSupabase(currentUserId).then(dbStock => {
-        const stockItems = (dbStock && dbStock.length > 0) ? dbStock : storedStock;
+      
+      const processStock = (stockItems) => {
         if (stockItems && stockItems.length > 0) {
           const map = new Map();
           stockItems.forEach(st => {
             const rawName = (st.name || st.item_name || 'Store Goods').trim();
             const key = rawName.toLowerCase().replace(/[^a-z0-9]/g, '');
-            const qty = parseInt(String(st.stock_qty !== undefined ? st.stock_qty : st.quantity || '0').replace(/[^0-9]/g, '')) || 0;
+            const qty = parseInt(String(st.stock_qty !== undefined ? st.stock_qty : (st.stockQty !== undefined ? st.stockQty : st.quantity || '0')).replace(/[^0-9]/g, '')) || 0;
             if (map.has(key)) {
               map.get(key).qty += qty;
             } else {
@@ -949,6 +1096,22 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
           setLiveStockCards([]);
           setLowStockCount(0);
         }
+      };
+
+      getInventoryFromSupabase(currentUserId).then(async (dbStock) => {
+        let stockItems = (dbStock && dbStock.length > 0) ? dbStock : [];
+        if (stockItems.length === 0) {
+          try {
+            const pgStock = await fetchInventoryFromBackend();
+            if (pgStock && pgStock.length > 0) {
+              stockItems = pgStock;
+            }
+          } catch (err) {}
+        }
+        if (stockItems.length === 0) {
+          stockItems = storedStock;
+        }
+        processStock(stockItems);
       });
 
       // 3. Compile live AI Intelligence & Security Alerts for user
@@ -992,7 +1155,9 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
 
   const liveTotalRevenue = liveSales;
   const liveNetProfit = liveSales - liveExpenses;
-  const livePendingBills = livePending;
+  // Use backend stats for pending bills (authoritative source — same as PendingBillsModule)
+  const livePendingBillsCount = stats.pendingBillsCount || 0;
+  const livePendingBillsAmount = stats.pendingBillsAmount || 0;
   const liveSalesVsExpenses = liveExpenses;
 
   return (
@@ -1023,13 +1188,25 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
             </div>
           </div>
 
-          {/* Pending Bills */}
-          <div className="lc-glass-card fg-kpi-3" style={{ padding: 18 }}>
+          {/* Pending Bills - Clickable → navigates to pending_bills page */}
+          <div
+            className="lc-glass-card fg-kpi-3"
+            style={{ padding: 18, cursor: 'pointer', transition: 'transform 0.2s, border-color 0.2s' }}
+            onClick={() => onNavigate && onNavigate('pending_bills')}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = 'var(--fg-warning)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = ''; }}
+            title="Click to view all pending bills"
+          >
             <div>
               <div style={{ fontSize: 11, color: 'var(--fg-text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pending Credit Bills</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--fg-warning)', marginTop: 6, fontFamily: "'Inter', sans-serif" }}>₹ {livePendingBills.toLocaleString('en-IN')}</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--fg-warning)', marginTop: 6, fontFamily: "'Inter', sans-serif" }}>
+                {livePendingBillsCount > 0 ? `${livePendingBillsCount} Bill${livePendingBillsCount > 1 ? 's' : ''}` : '₹ 0'}
+              </div>
+              {livePendingBillsCount > 0 && (
+                <div style={{ fontSize: 11, color: 'var(--fg-text-secondary)', marginTop: 2 }}>₹ {livePendingBillsAmount.toLocaleString('en-IN')} outstanding</div>
+              )}
               <div style={{ fontSize: 11, color: 'var(--fg-warning)', fontWeight: 700, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Clock size={12} /> Due Payment Terms
+                <Clock size={12} /> View All Pending Bills →
               </div>
             </div>
           </div>
@@ -1046,7 +1223,6 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
           </div>
         </div>
       </div>
-
 
       <div className="fg-middle-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 18 }}>
 
@@ -1477,7 +1653,10 @@ function InventoryManagementModule() {
     let isMounted = true;
     const loadStock = async () => {
       try {
-        const dbItems = await getInventoryFromSupabase(activeUserId);
+        let dbItems = await getInventoryFromSupabase(activeUserId);
+        if (!dbItems || dbItems.length === 0) {
+          dbItems = await fetchInventoryFromBackend();
+        }
         const localRaw = JSON.parse(localStorage.getItem(stockStorageKey) || '[]');
         const combined = (dbItems && dbItems.length > 0) ? dbItems : localRaw;
         if (isMounted) {
@@ -1536,6 +1715,20 @@ function InventoryManagementModule() {
         sellingPrice: sellNum,
       }]
     });
+
+    // Save to Express API / PostgreSQL backend
+    try {
+      await apiCreateInventoryItem({
+        name: itemName,
+        category: 'General Store',
+        stockQty: parseInt(qty) || 1,
+        minAlertThreshold: 15,
+        unitPrice: `₹ ${costNum.toLocaleString('en-IN')}`,
+        supplier: supplier
+      });
+    } catch (err) {
+      console.warn('Failed to save stock to backend API:', err.message);
+    }
 
     setItemName(''); setQty(''); setCostRate(''); setSellingRate('');
     setShowAddModal(false);
@@ -2624,13 +2817,15 @@ function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false 
   const [editingEmp, setEditingEmp] = useState(null);
 
   const [name, setName] = useState('');
-  const [role, setRole] = useState('Store Operations Manager');
+  const [role, setRole] = useState('Store Management');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [salary, setSalary] = useState('');
 
   const [editName, setEditName] = useState('');
-  const [editRole, setEditRole] = useState('');
+  const [editRole, setEditRole] = useState('Store Management');
   const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [editSalary, setEditSalary] = useState('');
   const [editStatus, setEditStatus] = useState('Active');
 
@@ -2638,20 +2833,33 @@ function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false 
     if (initialOpenAdd) setShowAddModal(true);
   }, [initialOpenAdd]);
 
+  const handlePaySalary = async (empId) => {
+    if (!window.confirm('Are you sure you want to mark salary as paid? This records an outflow transaction and inserts an expense record.')) return;
+    try {
+      const res = await apiPayEmployeeSalary(empId);
+      if (res && res.success) {
+        alert('Salary paid successfully!');
+        if (setEmpList) setEmpList(res.employees);
+      }
+    } catch (err) {
+      alert(`Error paying salary: ${err.message}`);
+    }
+  };
+
   const handleAddSubmit = (e) => {
     e.preventDefault();
-    if (!name || !phone) return;
+    if (!name || !phone || !email) return;
     const formattedSalary = salary ? (salary.includes('₹') ? salary : `₹ ${Number(salary.replace(/\D/g, '')).toLocaleString('en-IN')}`) : '₹ 30,000';
-    const newEmp = { id: `EMP-00${empList.length + 1}`, name, role, phone: phone.replace(/\D/g, ''), salary: formattedSalary, status: 'Active' };
+    const newEmp = { id: `EMP-00${empList.length + 1}`, name, role, phone: phone.replace(/\D/g, ''), email, salary: formattedSalary, status: 'Active' };
     const updated = saveEmployeeToDb(newEmp);
     if (setEmpList) setEmpList(updated);
-    setName(''); setPhone(''); setSalary('');
+    setName(''); setPhone(''); setEmail(''); setSalary('');
     setShowAddModal(false);
   };
 
   const handleOpenEdit = (emp) => {
     setEditingEmp(emp); setEditName(emp.name); setEditRole(emp.role);
-    setEditPhone(emp.phone); setEditSalary(emp.salary.replace(/[^0-9]/g, '')); setEditStatus(emp.status || 'Active');
+    setEditPhone(emp.phone); setEditEmail(emp.email || ''); setEditSalary(emp.salary.replace(/[^0-9]/g, '')); setEditStatus(emp.status || 'Active');
   };
 
   const handleEditSubmit = (e) => {
@@ -2659,7 +2867,7 @@ function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false 
     if (!editingEmp) return;
     const formattedSalary = editSalary ? `₹ ${Number(editSalary).toLocaleString('en-IN')}` : editingEmp.salary;
     const updatedList = empList.map(e => {
-      if (e.id === editingEmp.id) return { ...e, name: editName, role: editRole, phone: editPhone.replace(/\D/g, ''), salary: formattedSalary, status: editStatus };
+      if (e.id === editingEmp.id) return { ...e, name: editName, role: editRole, phone: editPhone.replace(/\D/g, ''), email: editEmail, salary: formattedSalary, status: editStatus };
       return e;
     });
     if (setEmpList) setEmpList(updatedList);
@@ -2694,7 +2902,8 @@ function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false 
                 <th style={{ padding: '13px 16px' }}>Role Title</th>
                 <th style={{ padding: '13px 16px' }}>Mobile</th>
                 <th style={{ padding: '13px 16px' }}>Monthly Salary</th>
-                <th style={{ padding: '13px 16px' }}>Status</th>
+                <th style={{ padding: '13px 16px' }}>Salary Date</th>
+                <th style={{ padding: '13px 16px' }}>Payout Status</th>
                 <th style={{ padding: '13px 16px', textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
@@ -2706,20 +2915,37 @@ function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false 
                   <td style={{ padding: '13px 16px', color: 'var(--fg-text-secondary)' }}>{emp.role}</td>
                   <td style={{ padding: '13px 16px', color: 'var(--fg-text-primary)', fontWeight: 600 }}>{emp.phone}</td>
                   <td style={{ padding: '13px 16px', fontWeight: 800, color: 'var(--fg-accent)' }}>{emp.salary}</td>
+                  <td style={{ padding: '13px 16px', color: 'var(--fg-text-primary)' }}>{emp.salary_date ? `Day ${emp.salary_date}` : 'Day 5'}</td>
                   <td style={{ padding: '13px 16px' }}>
                     <span style={{
                       padding: '3px 8px', borderRadius: 99, fontSize: 10, fontWeight: 700,
-                      background: emp.status === 'Active' ? 'var(--fg-success-soft)' : 'var(--fg-danger-soft)',
-                      color: emp.status === 'Active' ? 'var(--fg-success)' : 'var(--fg-danger)',
-                      border: `1px solid ${emp.status === 'Active' ? 'var(--fg-success-border)' : 'var(--fg-danger-border)'}`,
+                      background: emp.payment_status === 'Paid' ? 'var(--fg-success-soft)' : 'var(--fg-warning-soft)',
+                      color: emp.payment_status === 'Paid' ? 'var(--fg-success)' : 'var(--fg-warning)',
+                      border: `1px solid ${emp.payment_status === 'Paid' ? 'var(--fg-success-border)' : 'var(--fg-warning-border)'}`,
                     }}>
-                      {emp.status || 'Active'}
+                      {emp.payment_status || 'Unpaid'}
                     </span>
                   </td>
                   <td style={{ padding: '13px 16px', textAlign: 'right' }}>
-                    <button onClick={() => handleOpenEdit(emp)} className="fg-btn-ghost" style={{ padding: '5px 10px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                      <Edit3 size={12} /> Edit & Salary
-                    </button>
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                      {emp.payment_status !== 'Paid' ? (
+                        <button
+                          onClick={() => handlePaySalary(emp.id)}
+                          style={{
+                            padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 800,
+                            background: 'var(--fg-success-soft)', border: '1px solid var(--fg-success)',
+                            color: 'var(--fg-success)', cursor: 'pointer'
+                          }}
+                        >
+                          💵 Pay Salary
+                        </button>
+                      ) : (
+                        <span style={{ color: 'var(--fg-success)', fontWeight: 800, fontSize: 11, padding: '5px 0' }}>Settle ✓</span>
+                      )}
+                      <button onClick={() => handleOpenEdit(emp)} className="fg-btn-ghost" style={{ padding: '5px 10px', fontSize: 11 }}>
+                        Edit
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -2744,16 +2970,18 @@ function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false 
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role Title *</label>
                 <select value={role} onChange={e => setRole(e.target.value)} className="fg-select">
-                  <option value="Store Operations Manager">Store Operations Manager</option>
-                  <option value="Billing Specialist">Billing Specialist</option>
-                  <option value="Inventory Manager">Inventory Manager</option>
-                  <option value="Chief Accountant">Chief Accountant</option>
-                  <option value="Store Assistant">Store Assistant</option>
+                  <option value="Financier">Financier</option>
+                  <option value="Cashier (Billing)">Cashier (Billing)</option>
+                  <option value="Store Management">Store Management</option>
                 </select>
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mobile Number *</label>
                 <input type="tel" required maxLength={10} placeholder="10-digit mobile" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} className="fg-input" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email ID *</label>
+                <input type="email" required placeholder="e.g. ramesh@example.com" value={email} onChange={e => setEmail(e.target.value)} className="fg-input" />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monthly Salary (₹)</label>
@@ -2780,11 +3008,19 @@ function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false 
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role Title</label>
-                <input type="text" required value={editRole} onChange={e => setEditRole(e.target.value)} className="fg-input" />
+                <select value={editRole} onChange={e => setEditRole(e.target.value)} className="fg-select">
+                  <option value="Financier">Financier</option>
+                  <option value="Cashier (Billing)">Cashier (Billing)</option>
+                  <option value="Store Management">Store Management</option>
+                </select>
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mobile Number</label>
                 <input type="tel" required maxLength={10} value={editPhone} onChange={e => setEditPhone(e.target.value.replace(/\D/g, ''))} className="fg-input" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email ID</label>
+                <input type="email" required value={editEmail} onChange={e => setEditEmail(e.target.value)} className="fg-input" />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 5, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monthly Salary (₹)</label>
@@ -2860,87 +3096,6 @@ function IntegrationsModule() {
   );
 }
 
-function SettingsModule() {
-  const [authWebhookUrl, setAuthWebhookUrl] = useState(() => {
-    try {
-      return localStorage.getItem('finguard_webhook_url') || 'https://api.agents.snsihub.ai/webhook/2c8af1a7-9f33-4249-b787-a9e239761ca1';
-    } catch (e) {
-      return 'https://api.agents.snsihub.ai/webhook/2c8af1a7-9f33-4249-b787-a9e239761ca1';
-    }
-  });
-
-  const [stockWebhookUrl, setStockWebhookUrl] = useState(() => {
-    try {
-      return localStorage.getItem('finguard_stock_webhook_url') || 'https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea';
-    } catch (e) {
-      return 'https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea';
-    }
-  });
-
-  const handleSaveWebhooks = (e) => {
-    e.preventDefault();
-    try {
-      localStorage.setItem('finguard_webhook_url', authWebhookUrl);
-      localStorage.setItem('finguard_stock_webhook_url', stockWebhookUrl);
-      alert('Webhook Workflow URLs Saved!\n\n1. Auth Login Webhook: ' + authWebhookUrl + '\n2. Stock Webhook: ' + stockWebhookUrl);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  return (
-    <div className="lc-glass-card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)' }}>App, Theme &amp; Webhook Workflows Settings</h3>
-
-      <div style={{ fontSize: 13, color: 'var(--fg-text-secondary)', lineHeight: 1.8 }}>
-        • Database: PostgreSQL &amp; Supabase Storage Connected<br />
-        • Main Admin Account: <code style={{ color: 'var(--fg-accent)' }}>admin@finsight.ai</code> / <code style={{ color: 'var(--fg-accent)' }}>admin123</code><br />
-        • Dual Liquid Themes: Dark Liquid &amp; White Liquid Modes Supported<br />
-        • AI Fraud Protection: High Sensitivity Active
-      </div>
-
-      <form onSubmit={handleSaveWebhooks} style={{ borderTop: '1px solid var(--fg-border)', paddingTop: 18, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div>
-          <h4 style={{ fontSize: 13, fontWeight: 800, color: 'var(--fg-text-primary)', marginBottom: 4 }}>
-            🔑 1. User Login &amp; Registration Webhook Workflow Node
-          </h4>
-          <p style={{ fontSize: 11, color: 'var(--fg-text-muted)', marginBottom: 8 }}>
-            Dispatches Login ID, Main ID, Mobile Number, Name, &amp; Company details on user login / signup.
-          </p>
-          <input
-            type="url"
-            required
-            value={authWebhookUrl}
-            onChange={e => setAuthWebhookUrl(e.target.value)}
-            className="fg-input"
-            style={{ width: '100%', padding: '10px 14px', fontSize: 13 }}
-          />
-        </div>
-
-        <div>
-          <h4 style={{ fontSize: 13, fontWeight: 800, color: 'var(--fg-text-primary)', marginBottom: 4 }}>
-            📦 2. Stock Inventory Webhook Workflow Node (Dedicated)
-          </h4>
-          <p style={{ fontSize: 11, color: 'var(--fg-text-muted)', marginBottom: 8 }}>
-            Dispatches Stock Name, Quantity, Rate, Total Amount, &amp; Vendor details whenever stock is updated (OCR Bill or Manual).
-          </p>
-          <input
-            type="url"
-            required
-            value={stockWebhookUrl}
-            onChange={e => setStockWebhookUrl(e.target.value)}
-            className="fg-input"
-            style={{ width: '100%', padding: '10px 14px', fontSize: 13 }}
-          />
-        </div>
-
-        <button type="submit" className="lc-liquid-btn-primary" style={{ padding: '10px 18px', fontSize: 13, alignSelf: 'flex-start' }}>
-          Save Webhook Workflow URLs
-        </button>
-      </form>
-    </div>
-  );
-}
 
 function ProfileModule({ ownerName, companyName, dbUsersList = [] }) {
   return (
@@ -3009,6 +3164,320 @@ function TableCard({ headers, rows }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   DEDICATED FULL SEPARATE PAGE: ADD NEW EMPLOYEE
+   ═════════════════════════════════════════════════════════════════════ */
+function AddNewEmployeePage({ empList, setEmpList, companyName, activeUserId, onSuccess }) {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('Store Management');
+  const [salary, setSalary] = useState('');
+  const [salaryDate, setSalaryDate] = useState('5');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name || !phone || !email || !password) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    setIsSaving(true);
+    
+    const formattedSalary = salary ? (salary.includes('₹') ? salary : `₹ ${Number(salary.replace(/\D/g, '')).toLocaleString('en-IN')}`) : '₹ 30,000';
+    
+    const newEmp = {
+      id: `EMP-${Math.floor(100 + Math.random() * 900)}`,
+      user_id: activeUserId,
+      name: name,
+      role: role,
+      phone: phone.replace(/\D/g, '').slice(0, 10),
+      email: email.toLowerCase().trim(),
+      salary: formattedSalary,
+      salary_date: salaryDate,
+      payment_status: 'Unpaid',
+      payment_history: [],
+      status: 'Active',
+      joined_date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    };
+
+    const updated = await addStaffToSupabase(newEmp);
+    if (setEmpList) setEmpList(updated);
+    try {
+      await saveEmployeeToDb(newEmp);
+    } catch (e) {}
+
+    const pgRole = role === 'Financier' ? 'accountant' : (role === 'Cashier (Billing)' ? 'billing' : 'stock_manager');
+
+    try {
+      await registerUserInPostgres({
+        companyName: companyName,
+        companyAddress: '',
+        businessType: 'General Retail',
+        employeeCount: '5',
+        mobileNumber: phone.replace(/\D/g, '').slice(0, 10),
+        email: email.toLowerCase().trim(),
+        password: password,
+        role: pgRole,
+        ownerId: activeUserId
+      });
+    } catch (err) {
+      console.error("Failed to register employee login credentials:", err);
+    }
+
+    setIsSaving(false);
+    alert(`Success: Staff member ${name} created successfully!\nLogin credentials registered under role: ${role}`);
+    if (onSuccess) onSuccess();
+  };
+
+  return (
+    <div className="lc-glass-card fg-anim-load-3" style={{ padding: 32, maxWidth: 640, margin: '0 auto', background: 'rgba(8, 12, 13, 0.4)', backdropFilter: 'blur(20px)', border: '1px solid var(--fg-border-accent)', borderRadius: 16 }}>
+      <div style={{ borderBottom: '1px solid var(--fg-border)', paddingBottom: 16, marginBottom: 24 }}>
+        <h3 style={{ fontSize: 20, fontWeight: 800, color: 'var(--fg-text-primary)' }}>👤 Add New Employee Profile</h3>
+        <p style={{ fontSize: 13, color: 'var(--fg-text-muted)', marginTop: 4 }}>
+          Enter staff information and define their login credentials. The employee will be able to log in with these details.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 6, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Full Name *</label>
+            <input type="text" required placeholder="e.g. Ramesh Kumar" value={name} onChange={e => setName(e.target.value)} className="fg-input" style={{ width: '100%' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 6, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mobile Number *</label>
+            <input type="tel" required pattern="[0-9]*" maxLength={10} placeholder="e.g. 9876543210" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} className="fg-input" style={{ width: '100%' }} />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 6, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email ID *</label>
+            <input type="email" required placeholder="e.g. ramesh@company.com" value={email} onChange={e => setEmail(e.target.value)} className="fg-input" style={{ width: '100%' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 6, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Create Login Password *</label>
+            <input type="password" required placeholder="Enter password for employee login" value={password} onChange={e => setPassword(e.target.value)} className="fg-input" style={{ width: '100%' }} />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 6, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role / Authorization Title *</label>
+            <select required value={role} onChange={e => setRole(e.target.value)} className="fg-select" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, background: 'var(--fg-surface)', border: '1px solid var(--fg-border)', color: 'var(--fg-text-primary)', height: '42px' }}>
+              <option value="Financier">Financier (Accountant access)</option>
+              <option value="Cashier (Billing)">Cashier (Billing / POS access)</option>
+              <option value="Store Management">Store Management (Stock Manager access)</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 6, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Monthly Salary (₹)</label>
+            <input type="text" placeholder="e.g. 35000" value={salary} onChange={e => setSalary(e.target.value.replace(/\D/g, ''))} className="fg-input" style={{ width: '100%' }} />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, marginBottom: 6, color: 'var(--fg-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Salary Due Date (Day of Month) *</label>
+            <select required value={salaryDate} onChange={e => setSalaryDate(e.target.value)} className="fg-select" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, background: 'var(--fg-surface)', border: '1px solid var(--fg-border)', color: 'var(--fg-text-primary)', height: '42px' }}>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                <option key={day} value={String(day)}>{day}</option>
+              ))}
+            </select>
+          </div>
+          <div />
+        </div>
+
+        <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+          <button type="button" onClick={onSuccess} className="lc-liquid-btn-ghost" style={{ flex: 1, padding: 12 }}>Cancel</button>
+          <button type="submit" disabled={isSaving} className="lc-liquid-btn-primary" style={{ flex: 2, padding: 12 }}>
+            {isSaving ? 'Registering employee...' : '💾 Register & Save Employee'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   DEDICATED PANEL: PENDING CREDIT BILLS (MARK AS PAID)
+   ═════════════════════════════════════════════════════════════════════ */
+export function PendingBillsModule() {
+  const activeUserSession = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserKey = String(activeUserSession.user_id || activeUserSession.email || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedBill, setSelectedBill] = useState(null);
+
+  const loadBills = async () => {
+    try {
+      setLoading(true);
+      const res = await apiGetCustomerBills();
+      if (res && res.bills) {
+        setBills(res.bills);
+      }
+    } catch (e) {
+      console.warn('Backend bills fetch warning:', e.message);
+      const stored = JSON.parse(localStorage.getItem(`finsight_customer_invoices_${activeUserKey}`) || '[]');
+      setBills(stored);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBills();
+  }, [activeUserKey]);
+
+  const handleMarkPaid = async (billId) => {
+    if (!window.confirm('Are you sure you want to mark this pending credit bill as Paid? This will record the transaction and update your cash reports.')) return;
+    try {
+      await apiPayCustomerBill(billId);
+      alert('Success: Bill marked as Paid! Revenue registers updated.');
+      
+      // Update local storage status
+      const stored = JSON.parse(localStorage.getItem(`finsight_customer_invoices_${activeUserKey}`) || '[]');
+      const updated = stored.map(b => {
+        if (b.id === billId || b.billNo === billId || b.bill_number === billId) {
+          return { ...b, status: 'Paid', payment_date: new Date().toISOString().split('T')[0] };
+        }
+        return b;
+      });
+      localStorage.setItem(`finsight_customer_invoices_${activeUserKey}`, JSON.stringify(updated));
+      localStorage.setItem('finsight_customer_invoices', JSON.stringify(updated));
+
+      loadBills();
+      
+      // Broadcast dashboard analytics update trigger
+      window.dispatchEvent(new Event('finsight_data_updated'));
+    } catch (err) {
+      alert(`Error marking bill paid: ${err.message}`);
+    }
+  };
+
+  const pendingBills = bills.filter(b => b.status === 'Pending' || b.payment_status === 'Pending');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Header */}
+      <div style={{
+        background: 'var(--fg-surface)', padding: 20, borderRadius: 16, border: '1px solid var(--fg-border)',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div>
+          <h3 style={{ fontSize: 17, fontWeight: 800, color: 'var(--fg-text-primary)' }}>Pending Credit Bills ({pendingBills.length} Outstanding)</h3>
+          <p style={{ fontSize: 12, color: 'var(--fg-text-muted)', marginTop: 2 }}>Manage credit sales given to trusted customers and record payments.</p>
+        </div>
+      </div>
+
+      {/* Bills Table */}
+      {loading ? (
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--fg-text-muted)' }}>
+          <RefreshCw className="animate-spin" size={24} style={{ margin: '0 auto 12px' }} />
+          <span>Loading pending bills database...</span>
+        </div>
+      ) : pendingBills.length === 0 ? (
+        <div style={{ padding: 50, textAlign: 'center', background: 'var(--fg-surface)', border: '1px solid var(--fg-border)', borderRadius: 16 }}>
+          <CheckCircle2 size={32} color="var(--fg-success)" style={{ margin: '0 auto 14px' }} />
+          <h4 style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg-text-primary)' }}>All Settled!</h4>
+          <p style={{ fontSize: 12, color: 'var(--fg-text-muted)', marginTop: 4 }}>There are no outstanding customer credit bills currently.</p>
+        </div>
+      ) : (
+        <div className="fg-dark-table">
+          <div style={{ overflowX: 'auto' }}>
+            <table>
+              <thead>
+                <tr>
+                  <th style={{ padding: '13px 16px' }}>Bill No</th>
+                  <th style={{ padding: '13px 16px' }}>Customer Name</th>
+                  <th style={{ padding: '13px 16px' }}>Phone Number</th>
+                  <th style={{ padding: '13px 16px' }}>Amount</th>
+                  <th style={{ padding: '13px 16px' }}>Due Date</th>
+                  <th style={{ padding: '13px 16px' }}>Status</th>
+                  <th style={{ padding: '13px 16px', textAlign: 'right' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingBills.map((bill) => (
+                  <tr key={bill.id}>
+                    <td style={{ padding: '13px 16px', fontWeight: 700, color: 'var(--fg-accent)' }}>{bill.bill_number || bill.billNo || 'N/A'}</td>
+                    <td style={{ padding: '13px 16px', fontWeight: 700, color: 'var(--fg-text-primary)' }}>{bill.customer_name || 'Retail Customer'}</td>
+                    <td style={{ padding: '13px 16px', color: 'var(--fg-text-secondary)' }}>{bill.customer_phone || 'N/A'}</td>
+                    <td style={{ padding: '13px 16px', fontWeight: 800, color: 'var(--fg-warning)' }}>₹ {parseFloat(bill.grand_total || bill.grandTotal || 0).toLocaleString('en-IN')}</td>
+                    <td style={{ padding: '13px 16px', color: 'var(--fg-text-primary)' }}>{bill.due_date || '15 Days Terms'}</td>
+                    <td style={{ padding: '13px 16px' }}>
+                      <span style={{
+                        padding: '3px 8px', borderRadius: 99, fontSize: 10, fontWeight: 700,
+                        background: 'var(--fg-warning-soft)', color: 'var(--fg-warning)',
+                        border: '1px solid var(--fg-warning-border)',
+                      }}>
+                        {bill.status || 'Pending'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '13px 16px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={() => handleMarkPaid(bill.id || bill.bill_number || bill.billNo)}
+                          style={{
+                            padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 800,
+                            background: 'var(--fg-success-soft)', border: '1px solid var(--fg-success)',
+                            color: 'var(--fg-success)', cursor: 'pointer'
+                          }}
+                        >
+                          💵 Mark as Paid
+                        </button>
+                        <button
+                          onClick={() => setSelectedBill(bill)}
+                          style={{
+                            padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                            background: 'var(--fg-accent-soft)', border: '1px solid var(--fg-border-accent)',
+                            color: 'var(--fg-accent)', cursor: 'pointer'
+                          }}
+                        >
+                          👁️ View Items
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Selected Items Detail Modal */}
+      {selectedBill && (
+        <div className="fg-modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="lc-glass-card" style={{ width: 500, padding: 24, borderRadius: 16, border: '1px solid var(--fg-border-accent)', background: 'var(--fg-surface)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--fg-border)', paddingBottom: 10, marginBottom: 14 }}>
+              <h4 style={{ fontSize: 15, fontWeight: 800, color: 'var(--fg-text-primary)', margin: 0 }}>POS Bill Items #{selectedBill.bill_number || selectedBill.billNo}</h4>
+              <button onClick={() => setSelectedBill(null)} style={{ background: 'none', border: 'none', color: 'var(--fg-text-muted)', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+              {selectedBill.items && selectedBill.items.map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--fg-text-secondary)' }}>
+                  <span>{item.description || item.name} (x{item.qty})</span>
+                  <strong>₹ {parseFloat(item.amount || (item.rate * item.qty) || 0).toLocaleString('en-IN')}</strong>
+                </div>
+              ))}
+              <div style={{ borderTop: '1px solid var(--fg-border)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: 'var(--fg-accent)' }}>
+                <span>Grand Total:</span>
+                <span>₹ {parseFloat(selectedBill.grand_total || selectedBill.grandTotal || 0).toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+            <button onClick={() => setSelectedBill(null)} className="fg-btn-primary" style={{ width: '100%', padding: 10 }}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

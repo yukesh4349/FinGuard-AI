@@ -1,15 +1,36 @@
 /**
  * FINSIGHT AI - Centralized REST API Service Client
  * Communicates with the Express Backend Server running on http://localhost:5000/api
+ * Injects Role-Based Access Control (RBAC) headers automatically for authorization.
  */
 
 const API_BASE_URL = (import.meta.env && import.meta.env.VITE_API_URL) || 'http://localhost:5000/api';
 
+function getActiveUserAuthHeaders() {
+  try {
+    const active = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+    return {
+      'x-user-role': active.role || 'owner',
+      'x-user-id': active.user_id || active.email || 'user',
+      'x-shop-id': active.owner_id || active.user_id || 'OWNER-METRO-8492',
+    };
+  } catch (e) {
+    return {
+      'x-user-role': 'owner',
+      'x-user-id': 'user',
+      'x-shop-id': 'OWNER-METRO-8492',
+    };
+  }
+}
+
 async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  const authHeaders = getActiveUserAuthHeaders();
+
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options.headers,
     },
     ...options,
@@ -64,8 +85,12 @@ export const apiScanOcrFile = async (file) => {
   try {
     const formData = new FormData();
     formData.append('file', file);
+    const authHeaders = getActiveUserAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/invoices/scan-file`, {
       method: 'POST',
+      headers: {
+        ...authHeaders,
+      },
       body: formData,
     });
     return await response.json();
@@ -111,6 +136,10 @@ export const apiUpdateInventoryItem = (id, itemData) =>
     method: 'PUT',
     body: JSON.stringify(itemData),
   });
+export const apiDeleteInventoryItem = (id) =>
+  request(`/inventory/${id}`, {
+    method: 'DELETE',
+  });
 
 export const EXTERNAL_AGENT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea';
 
@@ -155,12 +184,63 @@ export const apiAddEmployee = (empData) =>
     method: 'POST',
     body: JSON.stringify(empData),
   });
+export const apiDeleteEmployee = (id) =>
+  request(`/employees/${id}`, {
+    method: 'DELETE',
+  });
 
 // AI Chat Assistant API
-export const apiAiChat = (query, companyName) =>
+export const apiAiChat = (query, companyName, assistantType = 'finance') =>
   request('/ai/chat', {
     method: 'POST',
-    body: JSON.stringify({ query, companyName }),
+    body: JSON.stringify({ query, companyName, assistantType }),
   });
 
 export const apiQueryAiChat = apiAiChat;
+
+export const apiGetAiInsights = () => request('/ai/insights');
+
+// Customer Bills POS API
+export const apiGetCustomerBills = () => request('/customer-bills');
+export const apiCreateCustomerBill = (billData) =>
+  request('/customer-bills', {
+    method: 'POST',
+    body: JSON.stringify(billData),
+  });
+export const apiPayCustomerBill = (id) =>
+  request(`/customer-bills/${id}/pay`, {
+    method: 'PUT',
+  });
+
+// Salary Payout API
+export const apiPayEmployeeSalary = (id) =>
+  request(`/employees/${id}/pay-salary`, {
+    method: 'PUT',
+  });
+
+// Settings & Store Configuration API
+export const apiGetSettings = () => request('/settings');
+export const apiUpdateSettings = (settingsData) =>
+  request('/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settingsData),
+  });
+export const apiChangePassword = (userId, currentPassword, newPassword) =>
+  request('/settings/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ userId, currentPassword, newPassword }),
+  });
+
+// Reports & Automation Actions API
+export const apiSendDailyReport = () =>
+  request('/reports/send-daily', { method: 'POST', body: JSON.stringify({}) });
+
+export const apiSendWeeklyReport = () =>
+  request('/reports/send-weekly', { method: 'POST', body: JSON.stringify({}) });
+
+export const apiSendReminders = () =>
+  request('/reports/send-reminders', { method: 'POST', body: JSON.stringify({}) });
+
+export const apiGetGrowthAdvice = () =>
+  request('/reports/growth-advice', { method: 'POST', body: JSON.stringify({}) });
+

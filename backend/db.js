@@ -17,6 +17,7 @@ const initialDatabase = {
       email: 'admin@finsight.ai',
       password_hash: 'admin123',
       role: 'super_admin',
+      owner_id: 'ADMIN-001',
       created_at: new Date().toISOString(),
     },
     {
@@ -27,6 +28,7 @@ const initialDatabase = {
       email: 'owner@metrosuperstore.com',
       password_hash: 'FS-8924-XK9',
       role: 'owner',
+      owner_id: 'OWNER-METRO-8492',
       created_at: new Date().toISOString(),
     },
     {
@@ -37,6 +39,7 @@ const initialDatabase = {
       email: 'accountant@metrosuperstore.com',
       password_hash: 'FS-CA-2026',
       role: 'accountant',
+      owner_id: 'OWNER-METRO-8492',
       created_at: new Date().toISOString(),
     },
     {
@@ -47,6 +50,7 @@ const initialDatabase = {
       email: 'cashier.billing@metrosuperstore.com',
       password_hash: 'FS-BILL-789',
       role: 'billing',
+      owner_id: 'OWNER-METRO-8492',
       created_at: new Date().toISOString(),
     },
     {
@@ -57,50 +61,91 @@ const initialDatabase = {
       email: 'manager.stock@metrosuperstore.com',
       password_hash: 'FS-STOCK-552',
       role: 'stock_manager',
+      owner_id: 'OWNER-METRO-8492',
       created_at: new Date().toISOString(),
     },
   ],
   employees: [
     {
       id: 'EMP-001',
+      user_id: 'OWNER-METRO-8492',
       name: 'Ramesh Kumar',
       role: 'Senior Cashier & Billing Executive',
       phone: '9876545673',
+      email: 'cashier.billing@metrosuperstore.com',
       salary: '₹ 28,000',
+      salary_date: '10',
+      payment_status: 'Unpaid',
+      payment_history: [],
       status: 'Active',
       joinedDate: '15-Jan-2025',
     },
     {
       id: 'EMP-002',
+      user_id: 'OWNER-METRO-8492',
       name: 'Suresh Patel',
       role: 'Store Stock & Inventory Manager',
       phone: '9876534562',
+      email: 'manager.stock@metrosuperstore.com',
       salary: '₹ 32,000',
+      salary_date: '15',
+      payment_status: 'Unpaid',
+      payment_history: [],
       status: 'Active',
       joinedDate: '01-Mar-2025',
     },
     {
       id: 'EMP-003',
+      user_id: 'OWNER-METRO-8492',
       name: 'Priya Sharma',
       role: 'Store Accountant & Tax Executive',
       phone: '9876523451',
+      email: 'accountant@metrosuperstore.com',
       salary: '₹ 35,000',
+      salary_date: '25',
+      payment_status: 'Unpaid',
+      payment_history: [],
       status: 'Active',
       joinedDate: '10-Jun-2025',
     },
     {
       id: 'EMP-004',
+      user_id: 'OWNER-METRO-8492',
       name: 'Vikram Singh',
       role: 'Logistics & Dispatch Assistant',
       phone: '9876512340',
+      email: 'vikram.dispatch@metrosuperstore.com',
       salary: '₹ 22,000',
+      salary_date: '5',
+      payment_status: 'Unpaid',
+      payment_history: [],
       status: 'Active',
       joinedDate: '20-Nov-2025',
     },
   ],
+  customer_bills: [
+    {
+      id: 'bill-901',
+      user_id: 'OWNER-METRO-8492',
+      bill_number: 'BILL-100231',
+      customer_name: 'Anand Kumar',
+      customer_phone: '9876543210',
+      subtotal: 4500,
+      tax_gst: 225,
+      grand_total: 4725,
+      profit_earned: 900,
+      status: 'Pending',
+      due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      items: [
+        { description: 'Cooking Oil (5L Pack)', qty: 5, rate: 720, gstRate: 5, amount: 3600 }
+      ],
+      created_at: new Date().toISOString()
+    }
+  ],
   invoices: [
     {
       id: 'INV-2026-001',
+      user_id: 'OWNER-METRO-8492',
       invoice_number: 'INV-2026-001',
       supplier_name: 'Apex Supermarket Wholesale',
       invoice_date: '2026-08-01',
@@ -117,6 +162,7 @@ const initialDatabase = {
     },
     {
       id: 'INV-2026-002',
+      user_id: 'OWNER-METRO-8492',
       invoice_number: 'INV-2026-002',
       supplier_name: 'Metro Dairy Distributors',
       invoice_date: '2026-08-02',
@@ -132,6 +178,7 @@ const initialDatabase = {
     },
     {
       id: 'INV-2026-003',
+      user_id: 'OWNER-METRO-8492',
       invoice_number: 'INV-2026-003',
       supplier_name: 'Unknown Traders Corp',
       invoice_date: '2026-08-03',
@@ -150,6 +197,7 @@ const initialDatabase = {
   payments: [
     {
       id: 'PAY-901',
+      user_id: 'OWNER-METRO-8492',
       recipient: 'Apex Supermarket Wholesale',
       amount: '₹ 1,47,500',
       date: '2026-08-02',
@@ -158,6 +206,7 @@ const initialDatabase = {
     },
     {
       id: 'PAY-902',
+      user_id: 'OWNER-METRO-8492',
       recipient: 'Metro Dairy Distributors',
       amount: '₹ 50,400',
       date: '2026-08-03',
@@ -168,6 +217,7 @@ const initialDatabase = {
   expenses: [
     {
       id: 'EXP-101',
+      user_id: 'OWNER-METRO-8492',
       category: 'Electricity Bill',
       amount: '₹ 18,450',
       date: '2026-08-01',
@@ -176,6 +226,7 @@ const initialDatabase = {
     },
     {
       id: 'EXP-102',
+      user_id: 'OWNER-METRO-8492',
       category: 'Store Logistics & Freight',
       amount: '₹ 6,200',
       date: '2026-08-02',
@@ -184,6 +235,7 @@ const initialDatabase = {
     },
     {
       id: 'EXP-103',
+      user_id: 'OWNER-METRO-8492',
       category: 'Shop Maintenance',
       amount: '₹ 3,500',
       date: '2026-08-03',
@@ -192,15 +244,16 @@ const initialDatabase = {
     },
   ],
   transactions: [
-    { id: 'TRX-9011', date: '03 Aug 2026, 09:30 AM', type: 'IN', description: 'Daily Store Retail Customer Sales', category: 'Sales Revenue', amount: '+₹ 1,45,000', balance: '₹ 14,80,000' },
-    { id: 'TRX-9010', date: '02 Aug 2026, 04:15 PM', type: 'OUT', description: 'Vendor Payment - Apex Wholesale', category: 'Supplier Bills', amount: '-₹ 45,000', balance: '₹ 13,35,000' },
-    { id: 'TRX-9009', date: '01 Aug 2026, 06:00 PM', type: 'OUT', description: 'Store Electricity Bill Payment', category: 'Shop Utilities', amount: '-₹ 18,400', balance: '₹ 13,80,000' },
-    { id: 'TRX-9008', date: '31 Jul 2026, 02:30 PM', type: 'IN', description: 'Wholesale Bulk Order Payment', category: 'Bulk Sales', amount: '+₹ 3,20,000', balance: '₹ 13,98,400' },
-    { id: 'TRX-9007', date: '30 Jul 2026, 11:00 AM', type: 'OUT', description: 'Monthly Staff Salary Payout', category: 'Employee Salaries', amount: '-₹ 1,65,000', balance: '₹ 10,78,400' },
+    { id: 'TRX-9011', user_id: 'OWNER-METRO-8492', date: '03 Aug 2026, 09:30 AM', type: 'IN', description: 'Daily Store Retail Customer Sales', category: 'Sales Revenue', amount: '+₹ 1,45,000', balance: '₹ 14,80,000' },
+    { id: 'TRX-9010', user_id: 'OWNER-METRO-8492', date: '02 Aug 2026, 04:15 PM', type: 'OUT', description: 'Vendor Payment - Apex Wholesale', category: 'Supplier Bills', amount: '-₹ 45,000', balance: '₹ 13,35,000' },
+    { id: 'TRX-9009', user_id: 'OWNER-METRO-8492', date: '01 Aug 2026, 06:00 PM', type: 'OUT', description: 'Store Electricity Bill Payment', category: 'Shop Utilities', amount: '-₹ 18,400', balance: '₹ 13,80,000' },
+    { id: 'TRX-9008', user_id: 'OWNER-METRO-8492', date: '31 Jul 2026, 02:30 PM', type: 'IN', description: 'Wholesale Bulk Order Payment', category: 'Bulk Sales', amount: '+₹ 3,20,000', balance: '₹ 13,98,400' },
+    { id: 'TRX-9007', user_id: 'OWNER-METRO-8492', date: '30 Jul 2026, 11:00 AM', type: 'OUT', description: 'Monthly Staff Salary Payout', category: 'Employee Salaries', amount: '-₹ 1,65,000', balance: '₹ 10,78,400' },
   ],
   inventory: [
     {
       id: 'SKU-101',
+      user_id: 'OWNER-METRO-8492',
       name: 'Cooking Oil (5L Pack)',
       category: 'Grocery & FMCG',
       stockQty: 12,
@@ -211,6 +264,7 @@ const initialDatabase = {
     },
     {
       id: 'SKU-102',
+      user_id: 'OWNER-METRO-8492',
       name: 'Basmati Rice Bags (25kg)',
       category: 'Grains & Pulses',
       stockQty: 8,
@@ -221,6 +275,7 @@ const initialDatabase = {
     },
     {
       id: 'SKU-103',
+      user_id: 'OWNER-METRO-8492',
       name: 'Refined Sugar (1kg)',
       category: 'Grocery & FMCG',
       stockQty: 15,
@@ -231,6 +286,7 @@ const initialDatabase = {
     },
     {
       id: 'SKU-104',
+      user_id: 'OWNER-METRO-8492',
       name: 'Fresh Whole Milk (1L)',
       category: 'Dairy Products',
       stockQty: 85,
@@ -241,6 +297,7 @@ const initialDatabase = {
     },
     {
       id: 'SKU-105',
+      user_id: 'OWNER-METRO-8492',
       name: 'Detergent Powder (1kg)',
       category: 'Cleaning Supplies',
       stockQty: 42,
@@ -253,6 +310,7 @@ const initialDatabase = {
   vendors: [
     {
       id: 'VEND-01',
+      user_id: 'OWNER-METRO-8492',
       name: 'Apex Supermarket Wholesale',
       contactPerson: 'Rajesh Mehta',
       phone: '9820011223',
@@ -262,6 +320,7 @@ const initialDatabase = {
     },
     {
       id: 'VEND-02',
+      user_id: 'OWNER-METRO-8492',
       name: 'Metro Dairy Distributors',
       contactPerson: 'Anil Verma',
       phone: '9820033445',
@@ -271,6 +330,7 @@ const initialDatabase = {
     },
     {
       id: 'VEND-03',
+      user_id: 'OWNER-METRO-8492',
       name: 'Unknown Traders Corp',
       contactPerson: 'Vijay Gupta',
       phone: '9820099887',
@@ -289,6 +349,7 @@ const initialDatabase = {
   fraud_alerts: [
     {
       id: 'ALT-101',
+      user_id: 'OWNER-METRO-8492',
       type: 'Duplicate Bill Detected',
       message: 'Duplicate bill INV-2026-003 detected from Unknown Traders Corp.',
       severity: 'HIGH',
@@ -297,6 +358,69 @@ const initialDatabase = {
     },
   ],
   activity_logs: [],
+  webhooks: [],
+  settings: {
+    'OWNER-METRO-8492': {
+      business_profile: {
+        company_name: 'Metro Superstore Ltd',
+        legal_name: 'Metro Retail & Distribution Private Limited',
+        gstin: '33AABCM8291M1Z5',
+        pan: 'AABCM8291M',
+        business_type: 'Supermarket & FMCG Retail',
+        registration_date: '2021-04-15',
+      },
+      shop_info: {
+        store_code: 'STORE-HQ-01',
+        branch_name: 'Main Flagship Store - Anna Nagar',
+        address: 'Plot 42, 2nd Avenue, Anna Nagar East, Chennai, Tamil Nadu 600102',
+        phone: '+91 98765 43210',
+        email: 'store@metrosuperstore.in',
+        currency: 'INR (₹)',
+        timezone: 'Asia/Kolkata (IST)',
+        operating_hours: '08:00 AM - 10:30 PM (Mon-Sun)',
+      },
+      security: {
+        two_factor_auth: false,
+        session_timeout_minutes: 60,
+        enforce_strong_passwords: true,
+        allow_multi_device_login: true,
+        ip_whitelist_enabled: false,
+      },
+      app_preferences: {
+        theme: 'dark',
+        date_format: 'DD/MM/YYYY',
+        auto_backup_enabled: true,
+        invoice_prefix: 'INV-2026-',
+        barcode_scanner_auto_submit: true,
+      },
+    }
+  },
+  roles_permissions: [
+    {
+      role_id: 'owner',
+      title: 'Business Owner',
+      description: 'Unrestricted full administrative control across all store operations, reports, staff, and settings.',
+      modules: ['overview', 'ai_assistant', 'invoices', 'pos_billing', 'pending_bills', 'expenses', 'transactions', 'compliance', 'inventory', 'vendors', 'add_employee', 'employees', 'audit_logs', 'settings'],
+    },
+    {
+      role_id: 'financier',
+      title: 'Financier / Store Accountant',
+      description: 'Access to financial ledger, cash in/out records, tax compliance, and financial reports.',
+      modules: ['transactions', 'expenses', 'compliance', 'audit_logs'],
+    },
+    {
+      role_id: 'cashier',
+      title: 'Store Cashier & Billing Executive',
+      description: 'Customer point-of-sale checkout, customer billing, receipt printing, and read-only inventory lookup.',
+      modules: ['pos_billing', 'pending_bills', 'inventory_readonly'],
+    },
+    {
+      role_id: 'store_manager',
+      title: 'Stock & Store Manager',
+      description: 'Inventory management, stock adjustments, vendor orders, and warehouse tracking.',
+      modules: ['inventory', 'vendors', 'audit_logs'],
+    },
+  ],
 };
 
 class Database {
@@ -341,17 +465,22 @@ class Database {
     return item;
   }
 
-  update(tableName, predicate, updateFn) {
+  update(tableName, predicate, updateFnOrObj) {
     const table = this.getTable(tableName);
-    let updatedCount = 0;
-    table.forEach(item => {
+    let foundItem = null;
+    for (const item of table) {
       if (predicate(item)) {
-        updateFn(item);
-        updatedCount++;
+        if (typeof updateFnOrObj === 'function') {
+          updateFnOrObj(item);
+        } else if (typeof updateFnOrObj === 'object' && updateFnOrObj !== null) {
+          Object.assign(item, updateFnOrObj);
+        }
+        foundItem = item;
+        break;
       }
-    });
-    if (updatedCount > 0) this.save();
-    return updatedCount;
+    }
+    if (foundItem) this.save();
+    return foundItem;
   }
 
   delete(tableName, predicate) {

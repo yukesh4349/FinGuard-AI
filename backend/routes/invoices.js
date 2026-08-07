@@ -3,6 +3,7 @@ import multer from 'multer';
 import Tesseract from 'tesseract.js';
 const { recognize } = Tesseract;
 import { db } from '../db.js';
+import { requireRoles } from '../middleware/rbac.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -52,24 +53,25 @@ function checkDuplicateInDb(invoicesList, supplierName, invoiceNo, grandTotal) {
 }
 
 // GET /api/invoices
-router.get('/', (req, res) => {
-  const invoices = db.getTable('invoices');
+router.get('/', requireRoles(['owner', 'financier', 'cashier']), (req, res) => {
+  const invoices = db.getTable('invoices').filter(inv => inv.user_id === req.shopId);
   res.json({ success: true, invoices });
 });
 
 // POST /api/invoices
-router.post('/', (req, res) => {
+router.post('/', requireRoles(['owner', 'financier', 'cashier']), (req, res) => {
   const { supplier_name, invoice_number, invoice_date, subtotal, tax_gst, grand_total, items } = req.body;
 
   if (!supplier_name || !grand_total) {
     return res.status(400).json({ success: false, error: 'Supplier Name and Total Amount are required.' });
   }
 
-  const existingInvoices = db.getTable('invoices');
+  const existingInvoices = db.getTable('invoices').filter(inv => inv.user_id === req.shopId);
   const dupCheck = checkDuplicateInDb(existingInvoices, supplier_name, invoice_number, grand_total);
 
   const newInvoice = {
     id: `INV-${Date.now()}`,
+    user_id: req.shopId,
     invoice_number: invoice_number || `INV-${Math.floor(1000 + Math.random() * 9000)}`,
     supplier_name,
     invoice_date: invoice_date || new Date().toISOString().split('T')[0],
@@ -88,6 +90,7 @@ router.post('/', (req, res) => {
   if (dupCheck.isDuplicate) {
     db.insert('fraud_alerts', {
       id: `ALT-${Date.now()}`,
+      user_id: req.shopId,
       type: 'Duplicate Invoice Warning',
       message: dupCheck.reason,
       severity: 'HIGH',
@@ -100,12 +103,13 @@ router.post('/', (req, res) => {
   if (items && Array.isArray(items)) {
     const inventory = db.getTable('inventory');
     items.forEach(item => {
-      const existing = inventory.find(i => i.name.toLowerCase() === (item.name || '').toLowerCase());
+      const existing = inventory.find(i => i.name.toLowerCase() === (item.name || '').toLowerCase() && i.user_id === req.shopId);
       if (existing) {
-        existing.stockQty += parseInt(item.qty || 1);
+        existing.stockQty = (existing.stockQty || 0) + parseInt(item.qty || 1);
       } else if (item.name) {
         db.insert('inventory', {
           id: `SKU-${Math.floor(100 + Math.random() * 900)}`,
+          user_id: req.shopId,
           name: item.name,
           category: 'General Goods',
           stockQty: parseInt(item.qty || 1),
@@ -116,6 +120,7 @@ router.post('/', (req, res) => {
         });
       }
     });
+    db.save();
   }
 
   res.status(201).json({
@@ -129,14 +134,15 @@ router.post('/', (req, res) => {
 });
 
 // POST /api/invoices/upload (OCR process endpoint with robust duplicate check)
-router.post('/upload', (req, res) => {
+router.post('/upload', requireRoles(['owner', 'financier']), (req, res) => {
   const { supplierName, invoiceNumber, invoiceDate, subtotal, taxGst, grandTotal, items, rawText } = req.body;
 
-  const existingInvoices = db.getTable('invoices');
+  const existingInvoices = db.getTable('invoices').filter(inv => inv.user_id === req.shopId);
   const dupCheck = checkDuplicateInDb(existingInvoices, supplierName, invoiceNumber, grandTotal);
 
   const newInvoice = {
     id: `ocr-${Date.now()}`,
+    user_id: req.shopId,
     invoice_number: invoiceNumber || `INV-OCR-${Math.floor(1000 + Math.random() * 9000)}`,
     supplier_name: supplierName || 'OCR Upload Vendor',
     invoice_date: invoiceDate || new Date().toISOString().split('T')[0],
@@ -156,6 +162,7 @@ router.post('/upload', (req, res) => {
   if (dupCheck.isDuplicate) {
     db.insert('fraud_alerts', {
       id: `ALT-${Date.now()}`,
+      user_id: req.shopId,
       type: 'Duplicate Invoice Warning',
       message: dupCheck.reason,
       severity: 'HIGH',
@@ -172,13 +179,14 @@ router.post('/upload', (req, res) => {
       const costVal = parseFloat(String(item.rate || item.unitPrice || '100').replace(/[^0-9.]/g, '')) || 100;
       const sellingVal = item.sellingPrice ? item.sellingPrice : `₹ ${Math.round(costVal * 1.20).toLocaleString('en-IN')}`;
 
-      const existingIdx = inventory.findIndex(i => (i.name || '').toLowerCase().trim() === (item.name || '').toLowerCase().trim());
+      const existingIdx = inventory.findIndex(i => (i.name || '').toLowerCase().trim() === (item.name || '').toLowerCase().trim() && i.user_id === req.shopId);
       if (existingIdx >= 0) {
         inventory[existingIdx].stockQty = (inventory[existingIdx].stockQty || 0) + qtyVal;
         if (sellingVal) inventory[existingIdx].sellingPrice = sellingVal;
       } else if (item.name) {
         db.insert('inventory', {
           id: `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
+          user_id: req.shopId,
           name: item.name,
           category: 'General Store',
           stockQty: qtyVal,
@@ -190,11 +198,13 @@ router.post('/upload', (req, res) => {
         });
       }
     });
+    db.save();
   }
 
   // Record system audit log
   db.insert('activity_logs', {
     id: `LOG-${Date.now()}`,
+    user_id: req.shopId,
     action: '📄 Uploaded Vendor Invoice',
     details: `Vendor bill #${newInvoice.invoice_number} from '${newInvoice.supplier_name}' scanned & saved - Total: ₹ ${parseFloat(newInvoice.grand_total || 0).toLocaleString('en-IN')}`,
     category: 'Vendor Billing',

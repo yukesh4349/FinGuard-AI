@@ -117,11 +117,13 @@ export default function LoginPage({
             user_id: result.user?.user_id || userId,
             company_name: result.user?.company_name || companyName,
             email: result.user?.email || userId,
+            role: result.user?.role || (selectedRole ? selectedRole.id : 'owner'),
+            mobile_number: result.user?.mobile_number || mobileNum,
           };
           localStorage.setItem('finsight_active_user', JSON.stringify(activeUserObj));
           if (result.user?.company_name) setCompanyName(result.user.company_name);
           if (onNavigateToDashboard) {
-            onNavigateToDashboard(selectedRole ? selectedRole.id : 'owner', result.user?.company_name || companyName, userId || 'OWNER-USER');
+            onNavigateToDashboard(result.user?.role || (selectedRole ? selectedRole.id : 'owner'), result.user?.company_name || companyName, userId || 'OWNER-USER');
           }
         } else {
           setErrorMessage(result.message || 'Invalid Email, Password, or Mobile Number.');

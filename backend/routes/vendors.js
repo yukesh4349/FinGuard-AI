@@ -1,16 +1,17 @@
 import { Router } from 'express';
 import { db } from '../db.js';
+import { requireRoles } from '../middleware/rbac.js';
 
 const router = Router();
 
 // GET /api/vendors
-router.get('/', (req, res) => {
-  const vendors = db.getTable('vendors');
+router.get('/', requireRoles(['owner', 'store_manager']), (req, res) => {
+  const vendors = db.getTable('vendors').filter(v => v.user_id === req.shopId);
   res.json({ success: true, vendors });
 });
 
 // POST /api/vendors
-router.post('/', (req, res) => {
+router.post('/', requireRoles(['owner', 'store_manager']), (req, res) => {
   const { name, contactPerson, phone, gstin } = req.body;
   if (!name) {
     return res.status(400).json({ success: false, error: 'Vendor name is required.' });
@@ -18,6 +19,7 @@ router.post('/', (req, res) => {
 
   const newVendor = {
     id: `VEND-${Math.floor(10 + Math.random() * 90)}`,
+    user_id: req.shopId,
     name,
     contactPerson: contactPerson || 'N/A',
     phone: phone || 'N/A',

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { triggerWebhookNode, triggerStockWebhookNode } from './postgresDb';
+import { triggerWebhookNode, triggerStockWebhookNode, saveStockItemToPostgres } from './postgresDb';
 
 // Supabase Environment Credentials (Configured in .env file)
 const supabaseUrl = (import.meta.env && import.meta.env.VITE_SUPABASE_URL) || 'https://lmsiipuvxewlqpxdshgt.supabase.co';
@@ -341,6 +341,20 @@ export async function saveStockToSupabase(stockPayload = {}) {
 
   localStorage.setItem(localKey, JSON.stringify(updatedStock));
   localStorage.setItem('finsight_stock_inventory', JSON.stringify(updatedStock));
+
+  // Sync to PostgreSQL / Express backend API
+  formattedItems.forEach(async (it) => {
+    try {
+      await saveStockItemToPostgres({
+        name: it.name,
+        category: it.category,
+        stockQty: it.stock_qty,
+        minAlertThreshold: 15,
+        unitPrice: it.unit_price,
+        supplier: it.supplier_name
+      });
+    } catch (e) {}
+  });
 
   // Insert/Upsert into Supabase table public.inventory if configured
   if (isSupabaseConfigured()) {

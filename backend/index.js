@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
@@ -10,6 +11,10 @@ import inventoryRoutes from './routes/inventory.js';
 import vendorRoutes from './routes/vendors.js';
 import employeeRoutes from './routes/employees.js';
 import aiRoutes from './routes/ai.js';
+import settingsRoutes from './routes/settings.js';
+import customerBillsRoutes from './routes/customer_bills.js';
+import reportsRoutes from './routes/reports.js';
+import { validateShopIsolation } from './middleware/rbac.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,15 +25,20 @@ app.use(express.json());
 
 // API Route mounts
 app.use('/api/auth', authRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/invoices', invoiceRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/expenses', expenseRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/vendors', vendorRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/ai', aiRoutes);
+
+// Apply shop isolation middleware on all business data endpoints
+app.use('/api/dashboard', validateShopIsolation(), dashboardRoutes);
+app.use('/api/invoices', validateShopIsolation(), invoiceRoutes);
+app.use('/api/payments', validateShopIsolation(), paymentRoutes);
+app.use('/api/expenses', validateShopIsolation(), expenseRoutes);
+app.use('/api/transactions', validateShopIsolation(), transactionRoutes);
+app.use('/api/inventory', validateShopIsolation(), inventoryRoutes);
+app.use('/api/vendors', validateShopIsolation(), vendorRoutes);
+app.use('/api/employees', validateShopIsolation(), employeeRoutes);
+app.use('/api/ai', validateShopIsolation(), aiRoutes);
+app.use('/api/settings', validateShopIsolation(), settingsRoutes);
+app.use('/api/customer-bills', validateShopIsolation(), customerBillsRoutes);
+app.use('/api/reports', validateShopIsolation(), reportsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

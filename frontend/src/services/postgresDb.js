@@ -3,7 +3,7 @@
  * Bridges frontend services with the Express REST API Backend.
  */
 
-import { apiGetUsers, apiLogin, apiSignup, apiGetEmployees, apiAddEmployee, apiGetDashboardStats, apiGetNotifications } from './api';
+import { apiGetUsers, apiLogin, apiSignup, apiGetEmployees, apiAddEmployee, apiGetDashboardStats, apiGetNotifications, apiGetInventory, apiCreateInventoryItem } from './api';
 import { registerUserInSupabase, authenticateUserInSupabase } from './supabaseClient';
 
 export const POSTGRES_CONFIG = {
@@ -184,6 +184,29 @@ export async function saveEmployeeToDb(emp) {
   const list = getStoredEmployees();
   list.push(emp);
   return list;
+}
+
+export async function fetchInventoryFromBackend() {
+  try {
+    const res = await apiGetInventory();
+    if (res && res.inventory) {
+      localStorage.setItem('finsight_stock_inventory', JSON.stringify(res.inventory));
+      return res.inventory;
+    }
+  } catch (e) {
+    console.warn('[Postgres Service]: Falling back to local storage cache for inventory');
+  }
+  const raw = localStorage.getItem('finsight_stock_inventory');
+  return raw ? JSON.parse(raw) : [];
+}
+
+export async function saveStockItemToPostgres(item) {
+  try {
+    const res = await apiCreateInventoryItem(item);
+    return res;
+  } catch (e) {
+    console.error('[Postgres Service] Error saving inventory item:', e);
+  }
 }
 
 export const DEFAULT_OFFICIAL_GST_RATES = [

@@ -1,6 +1,19 @@
 {
   "users": [
     {
+      "id": 7,
+      "user_id": "OWNER-1611",
+      "company_name": "babu mart",
+      "company_address": "",
+      "business_type": "General Retail",
+      "employee_count": "5",
+      "mobile_number": "1234567890",
+      "email": "finance@gmail.com",
+      "password_hash": "123",
+      "role": "accountant",
+      "created_at": "2026-08-06T17:30:20.002Z"
+    },
+    {
       "id": 6,
       "user_id": "OWNER-3697",
       "company_name": "yukesh kanna",
@@ -62,6 +75,36 @@
     }
   ],
   "employees": [
+    {
+      "id": "EMP-413",
+      "user_id": "OWNER-METRO-8492",
+      "name": "John Staff",
+      "role": "Cashier",
+      "phone": "9991112223",
+      "salary": "₹ 25000",
+      "salary_date": "5",
+      "payment_status": "Paid",
+      "payment_history": [
+        {
+          "date": "2026-08-07",
+          "amount": "₹ 25000",
+          "status": "Paid"
+        }
+      ],
+      "status": "Active",
+      "joined_date": "07 Aug 2026",
+      "created_at": "2026-08-07T03:57:52.807Z",
+      "payment_date": "2026-08-07"
+    },
+    {
+      "id": "EMP-276",
+      "name": "finance",
+      "role": "Financier",
+      "phone": "1234567890",
+      "salary": "₹ 25,000",
+      "status": "Active",
+      "created_at": "2026-08-06T17:30:19.941Z"
+    },
     {
       "id": "EMP-001",
       "name": "Ramesh Kumar",
@@ -774,6 +817,16 @@
   ],
   "expenses": [
     {
+      "id": "EXP-652",
+      "user_id": "OWNER-METRO-8492",
+      "category": "Staff Salary",
+      "amount": 25000,
+      "date": "2026-08-07",
+      "paidTo": "John Staff",
+      "status": "Paid",
+      "created_at": "2026-08-07T03:57:52.826Z"
+    },
+    {
       "id": "EXP-101",
       "category": "Electricity Bill",
       "amount": "₹ 18,450",
@@ -799,6 +852,39 @@
     }
   ],
   "transactions": [
+    {
+      "id": "TRX-8911",
+      "user_id": "OWNER-METRO-8492",
+      "date": "2026-08-07",
+      "type": "OUT",
+      "description": "Staff Salary Payout - John Staff",
+      "category": "Employee Salaries",
+      "amount": "-₹ 25,000",
+      "balance": "₹ 14,80,000",
+      "created_at": "2026-08-07T03:57:52.835Z"
+    },
+    {
+      "id": "TRX-6131",
+      "user_id": "OWNER-METRO-8492",
+      "date": "2026-08-07",
+      "type": "IN",
+      "description": "Paid Customer POS Bill #BILL-TEST-32915 - Jane Doe",
+      "category": "Sales Revenue",
+      "amount": "₹ 1,180",
+      "balance": "₹ 14,80,000",
+      "created_at": "2026-08-07T03:57:52.774Z"
+    },
+    {
+      "id": "TRX-8908",
+      "user_id": "OWNER-METRO-8492",
+      "date": "2026-08-07",
+      "type": "IN",
+      "description": "Paid Customer POS Bill #BILL-TEST-28294 - Jane Doe",
+      "category": "Sales Revenue",
+      "amount": "₹ 1,180",
+      "balance": "₹ 14,80,000",
+      "created_at": "2026-08-07T03:57:34.072Z"
+    },
     {
       "id": "TRX-9011",
       "date": "03 Aug 2026, 09:30 AM",
@@ -1851,6 +1937,158 @@
       ],
       "timestamp": "2026-08-05T06:35:48.924Z",
       "status": "TRIGGERED_PROCESSED"
+    }
+  ],
+  "settings": {
+    "OWNER-METRO-8492": {
+      "business_profile": {
+        "company_name": "Metro Superstore Ltd",
+        "legal_name": "Metro Retail & Distribution Private Limited",
+        "gstin": "33AABCM8291M1Z5",
+        "pan": "AABCM8291M",
+        "business_type": "Supermarket & FMCG Retail",
+        "registration_date": "2021-04-15"
+      },
+      "shop_info": {
+        "store_code": "STORE-HQ-01",
+        "branch_name": "Main Flagship Store - Anna Nagar",
+        "address": "Plot 42, 2nd Avenue, Anna Nagar East, Chennai, Tamil Nadu 600102",
+        "phone": "+91 98765 43210",
+        "email": "store@metrosuperstore.in",
+        "currency": "INR (₹)",
+        "timezone": "Asia/Kolkata (IST)",
+        "operating_hours": "08:00 AM - 10:30 PM (Mon-Sun)"
+      },
+      "notifications": {
+        "low_stock_alerts": true,
+        "fraud_detection_alerts": true,
+        "daily_sales_digest": true,
+        "tax_filing_reminders": true,
+        "email_notifications": true,
+        "sms_notifications": false
+      },
+      "security": {
+        "two_factor_auth": false,
+        "session_timeout_minutes": 60,
+        "enforce_strong_passwords": true,
+        "allow_multi_device_login": true,
+        "ip_whitelist_enabled": false
+      },
+      "app_preferences": {
+        "theme": "dark",
+        "date_format": "DD/MM/YYYY",
+        "auto_backup_enabled": true,
+        "invoice_prefix": "INV-2026-",
+        "barcode_scanner_auto_submit": true
+      }
+    },
+    "USR-7494": {
+      "business_profile": {
+        "company_name": "Metro Superstore Ltd",
+        "legal_name": "Metro Retail & Distribution Private Limited",
+        "gstin": "33AABCM8291M1Z5",
+        "pan": "AABCM8291M",
+        "business_type": "Supermarket & FMCG Retail",
+        "registration_date": "2021-04-15"
+      },
+      "shop_info": {
+        "store_code": "STORE-HQ-01",
+        "branch_name": "Main Flagship Store - Anna Nagar",
+        "address": "Plot 42, 2nd Avenue, Anna Nagar East, Chennai, Tamil Nadu 600102",
+        "phone": "+91 98765 43210",
+        "email": "store@metrosuperstore.in",
+        "currency": "INR (₹)",
+        "timezone": "Asia/Kolkata (IST)",
+        "operating_hours": "08:00 AM - 10:30 PM (Mon-Sun)"
+      },
+      "security": {
+        "two_factor_auth": false,
+        "session_timeout_minutes": 60,
+        "enforce_strong_passwords": true,
+        "allow_multi_device_login": true,
+        "ip_whitelist_enabled": false
+      },
+      "app_preferences": {
+        "theme": "dark",
+        "date_format": "DD/MM/YYYY",
+        "auto_backup_enabled": true,
+        "invoice_prefix": "INV-2026-",
+        "barcode_scanner_auto_submit": true
+      }
+    }
+  },
+  "customer_bills": [
+    {
+      "id": "bill-1786075072761",
+      "user_id": "OWNER-METRO-8492",
+      "bill_number": "BILL-TEST-32915",
+      "customer_name": "Jane Doe",
+      "customer_phone": "9998887776",
+      "subtotal": 1000,
+      "tax_gst": 180,
+      "grand_total": 1180,
+      "profit_earned": 200,
+      "status": "Paid",
+      "due_date": "2026-08-30",
+      "payment_date": "2026-08-07",
+      "items": [
+        {
+          "description": "Test Item",
+          "qty": 1,
+          "rate": 1000,
+          "amount": 1000
+        }
+      ],
+      "created_at": "2026-08-07T03:57:52.761Z"
+    },
+    {
+      "id": "bill-1786075054034",
+      "user_id": "OWNER-METRO-8492",
+      "bill_number": "BILL-TEST-28294",
+      "customer_name": "Jane Doe",
+      "customer_phone": "9998887776",
+      "subtotal": 1000,
+      "tax_gst": 180,
+      "grand_total": 1180,
+      "profit_earned": 200,
+      "status": "Paid",
+      "due_date": "2026-08-30",
+      "payment_date": "2026-08-07",
+      "items": [
+        {
+          "description": "Test Item",
+          "qty": 1,
+          "rate": 1000,
+          "amount": 1000
+        }
+      ],
+      "created_at": "2026-08-07T03:57:34.034Z"
+    }
+  ],
+  "activity_logs": [
+    {
+      "id": "LOG-1786075072848",
+      "user_id": "OWNER-METRO-8492",
+      "action": "💵 Employee Salary Paid",
+      "details": "Paid salary of ₹ 25,000 to John Staff",
+      "category": "Employees",
+      "created_at": "2026-08-07T03:57:52.848Z"
+    },
+    {
+      "id": "LOG-1786075072785",
+      "user_id": "OWNER-METRO-8492",
+      "action": "💳 Customer POS Bill Marked Paid",
+      "details": "Bill #BILL-TEST-32915 for 'Jane Doe' was marked paid - Amount: ₹ 1,180",
+      "category": "POS Sales",
+      "created_at": "2026-08-07T03:57:52.785Z"
+    },
+    {
+      "id": "LOG-1786075054073",
+      "user_id": "OWNER-METRO-8492",
+      "action": "💳 Customer POS Bill Marked Paid",
+      "details": "Bill #BILL-TEST-28294 for 'Jane Doe' was marked paid - Amount: ₹ 1,180",
+      "category": "POS Sales",
+      "created_at": "2026-08-07T03:57:34.073Z"
     }
   ]
 }

@@ -1,16 +1,17 @@
 import { Router } from 'express';
 import { db } from '../db.js';
+import { requireRoles } from '../middleware/rbac.js';
 
 const router = Router();
 
-// GET /api/inventory
+// GET /api/inventory (All roles can read)
 router.get('/', (req, res) => {
-  const inventory = db.getTable('inventory');
+  const inventory = db.getTable('inventory').filter(i => i.user_id === req.shopId);
   res.json({ success: true, inventory });
 });
 
-// POST /api/inventory
-router.post('/', (req, res) => {
+// POST /api/inventory (Owner and Store Manager only)
+router.post('/', requireRoles(['owner', 'store_manager']), (req, res) => {
   const { name, category, stockQty, minAlertThreshold, unitPrice, supplier } = req.body;
   if (!name || stockQty === undefined) {
     return res.status(400).json({ success: false, error: 'Item Name and Stock Quantity are required.' });
@@ -21,6 +22,7 @@ router.post('/', (req, res) => {
 
   const newItem = {
     id: `SKU-${Math.floor(100 + Math.random() * 900)}`,
+    user_id: req.shopId,
     name,
     category: category || 'General Store',
     stockQty: qty,
@@ -31,27 +33,70 @@ router.post('/', (req, res) => {
   };
 
   db.insert('inventory', newItem);
+
+  // Audit log
+  db.insert('activity_logs', {
+    id: `LOG-${Date.now()}`,
+    user_id: req.shopId,
+    action: '📦 Added Inventory SKU',
+    details: `Added ${newItem.name} (${qty} units) to store inventory.`,
+    category: 'Inventory',
+    created_at: new Date().toISOString(),
+  });
+
   res.status(201).json({ success: true, item: newItem });
 });
 
-// PUT /api/inventory/:id
-router.put('/:id', (req, res) => {
+// PUT /api/inventory/:id (Owner and Store Manager only)
+router.put('/:id', requireRoles(['owner', 'store_manager']), (req, res) => {
   const { id } = req.params;
   const updates = req.body;
-  const updated = db.update('inventory', item => item.id === id, updates);
+  const updated = db.update('inventory', item => item.id === id && item.user_id === req.shopId, updates);
 
   if (!updated) {
     return res.status(404).json({ success: false, error: 'Item not found.' });
   }
 
-  if (updated.stockQty <= (updated.minAlertThreshold || 15)) {
-    updated.status = 'Low Stock Alert';
-  } else {
-    updated.status = 'Healthy Stock';
-  }
+  // Recalculate status based on current stock levels
+  const qty = parseInt(updated.stockQty) || 0;
+  const threshold = parseInt(updated.minAlertThreshold) || 15;
+  updated.status = qty <= threshold ? 'Low Stock Alert' : 'Healthy Stock';
   db.save();
 
+  // Audit log
+  db.insert('activity_logs', {
+    id: `LOG-${Date.now()}`,
+    user_id: req.shopId,
+    action: '✏️ Updated Inventory SKU',
+    details: `Adjusted inventory details for ${updated.name} (Current Qty: ${qty}).`,
+    category: 'Inventory',
+    created_at: new Date().toISOString(),
+  });
+
   res.json({ success: true, item: updated });
+});
+
+// DELETE /api/inventory/:id (Owner only)
+router.delete('/:id', requireRoles(['owner']), (req, res) => {
+  const { id } = req.params;
+  const item = db.getTable('inventory').find(i => i.id === id && i.user_id === req.shopId);
+  const itemName = item ? item.name : id;
+  const removed = db.delete('inventory', i => i.id === id && i.user_id === req.shopId);
+  if (!removed) {
+    return res.status(404).json({ success: false, error: 'Item not found.' });
+  }
+
+  // Audit log
+  db.insert('activity_logs', {
+    id: `LOG-${Date.now()}`,
+    user_id: req.shopId,
+    action: '🗑️ Deleted Inventory SKU',
+    details: `Removed '${itemName}' from store database.`,
+    category: 'Inventory',
+    created_at: new Date().toISOString(),
+  });
+
+  res.json({ success: true, message: 'Item deleted.', inventory: db.getTable('inventory').filter(i => i.user_id === req.shopId) });
 });
 
 // ══════════════════════════════════════════════════════════════════════════
