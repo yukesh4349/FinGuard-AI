@@ -1159,6 +1159,7 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
   const livePendingBillsCount = stats.pendingBillsCount || 0;
   const livePendingBillsAmount = stats.pendingBillsAmount || 0;
   const liveSalesVsExpenses = liveExpenses;
+  const livePendingBills = livePending;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>

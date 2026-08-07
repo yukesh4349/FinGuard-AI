@@ -69,26 +69,6 @@ export default function AiAssistantModule({ companyName = 'Metro Superstore Ltd'
     { label: '🛡️ Audit Duplicate Bills', query: 'Scan recent supplier invoices for duplicate bills and fraud risks.' },
   ];
 
-  const WEBHOOK_URL = import.meta.env.VITE_WEBHOOK_URL || 'https://api.agents.snsihub.ai/webhook/2c8af1a7-9f33-4249-b787-a9e239761ca1';
-
-  // Fire-and-forget: send Q&A to webhook without blocking the UI
-  const sendToWebhook = (question, answer, assistantType) => {
-    const payload = {
-      type: 'AI_CHAT_QA',
-      title: `Finora AI Chat — ${assistantType.charAt(0).toUpperCase() + assistantType.slice(1)} Assistant`,
-      timestamp: new Date().toISOString(),
-      company: companyName,
-      assistantModel: assistantType,
-      question,
-      answer,
-    };
-    fetch(WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    }).catch(() => {}); // silent fail — never interrupt the chat UI
-  };
-
   const handleSendMessage = async (textToSend) => {
     const text = textToSend || inputQuery;
     if (!text.trim() || isLoading) return;
@@ -114,10 +94,8 @@ export default function AiAssistantModule({ companyName = 'Metro Superstore Ltd'
         category: res.category || 'AI Analysis',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-      // 1. Show answer in UI
+      // Show answer in UI
       setMessages(prev => [...prev, aiReply]);
-      // 2. Send Q&A to webhook (background, non-blocking)
-      sendToWebhook(text, replyText, selectedAssistant);
     } catch (err) {
       const fallbackText = `⚠️ Based on your store records for ${companyName}, transactions and inventory are healthy. (Backend response simulated).`;
       setMessages(prev => [

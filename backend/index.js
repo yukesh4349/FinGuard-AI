@@ -20,7 +20,20 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({ origin: '*' }));
+const allowedOrigins = process.env.ALLOWED_CORS_ORIGINS
+  ? process.env.ALLOWED_CORS_ORIGINS.split(',').map(o => o.trim())
+  : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS Policy: Origin ${origin} not allowed.`));
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // API Route mounts

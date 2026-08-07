@@ -4,99 +4,111 @@ import { requireRoles } from '../middleware/rbac.js';
 
 const router = Router();
 
-// GET /api/customer-bills - fetch all customer bills scoped by shop_id (requires owner or financier or cashier)
-router.get('/', requireRoles(['owner', 'financier', 'cashier']), (req, res) => {
-  const shopId = req.shopId;
-  const bills = db.getTable('customer_bills').filter(b => b.user_id === shopId);
-  res.json({ success: true, bills });
+// GET /api/customer-bills
+router.get('/', requireRoles(['owner', 'financier', 'cashier']), async (req, res) => {
+  try {
+    const bills = await db.fetchScoped('customer_bills', req.shopId);
+    res.json({ success: true, bills });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-// POST /api/customer-bills - create a new customer bill (requires owner or cashier)
-router.post('/', requireRoles(['owner', 'cashier']), (req, res) => {
-  const shopId = req.shopId;
-  const { bill_number, customer_name, customer_phone, subtotal, tax_gst, grand_total, profit_earned, items, status, due_date } = req.body;
+// POST /api/customer-bills
+router.post('/', requireRoles(['owner', 'cashier']), async (req, res) => {
+  try {
+    const shopId = req.shopId;
+    const { bill_number, customer_name, customer_phone, subtotal, tax_gst, grand_total, profit_earned, items, status, due_date } = req.body;
 
-  if (!customer_name || !grand_total) {
-    return res.status(400).json({ success: false, error: 'Customer name and total amount are required.' });
+    if (!customer_name || !grand_total) {
+      return res.status(400).json({ success: false, error: 'Customer name and total amount are required.' });
+    }
+
+    const billNo = bill_number || `BILL-${Math.floor(100000 + Math.random() * 900000)}`;
+    const billStatus = status || 'Paid';
+
+    const newBill = {
+      id: `bill-${Date.now()}`,
+      user_id: shopId,
+      bill_number: billNo,
+      customer_name,
+      customer_phone: customer_phone || 'N/A',
+      subtotal: parseFloat(subtotal || grand_total),
+      tax_gst: parseFloat(tax_gst || 0),
+      grand_total: parseFloat(grand_total),
+      profit_earned: parseFloat(profit_earned || 0),
+      status: billStatus,
+      due_date: due_date || null,
+      payment_date: billStatus === 'Paid' ? new Date().toISOString().split('T')[0] : null,
+      items: items || [],
+    };
+
+    const saved = await db.insert('customer_bills', newBill);
+
+    // If Paid, immediately insert transaction record
+    if (billStatus === 'Paid') {
+      await db.insert('transactions', {
+        id: `TRX-${Math.floor(1000 + Math.random() * 9000)}`,
+        user_id: shopId,
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        type: 'IN',
+        description: `Customer POS Sale (Bill #${billNo} - ${customer_name})`,
+        category: 'Sales Revenue',
+        amount: `₹ ${parseFloat(grand_total).toLocaleString('en-IN')}`,
+        balance: '—',
+      });
+    }
+
+    res.status(201).json({ success: true, bill: saved });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
+});
 
-  const billNo = bill_number || `BILL-${Math.floor(100000 + Math.random() * 900000)}`;
+// PUT /api/customer-bills/:id/pay
+router.put('/:id/pay', requireRoles(['owner', 'cashier']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const shopId = req.shopId;
 
-  const newBill = {
-    id: `bill-${Date.now()}`,
-    user_id: shopId,
-    bill_number: billNo,
-    customer_name,
-    customer_phone: customer_phone || 'N/A',
-    subtotal: parseFloat(subtotal || grand_total),
-    tax_gst: parseFloat(tax_gst || 0),
-    grand_total: parseFloat(grand_total),
-    profit_earned: parseFloat(profit_earned || 0),
-    status: status || 'Paid',
-    due_date: due_date || null,
-    payment_date: status === 'Paid' ? new Date().toISOString().split('T')[0] : null,
-    items: items || [],
-    created_at: new Date().toISOString(),
-  };
+    // Verify the bill exists and belongs to this shop
+    const bills = await db.fetchScoped('customer_bills', shopId);
+    const bill = bills.find(b => b.id === id);
+    if (!bill) {
+      return res.status(404).json({ success: false, error: 'Pending bill not found.' });
+    }
 
-  db.insert('customer_bills', newBill);
+    const paymentDate = new Date().toISOString().split('T')[0];
+    const updated = await db.update('customer_bills', 'id', id, {
+      status: 'Paid',
+      payment_date: paymentDate,
+    });
 
-  // If status is Paid, immediately insert transaction record!
-  if (status === 'Paid') {
-    db.insert('transactions', {
+    // Insert transaction
+    await db.insert('transactions', {
       id: `TRX-${Math.floor(1000 + Math.random() * 9000)}`,
       user_id: shopId,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       type: 'IN',
-      description: `Customer POS Sale (Bill #${billNo} - ${customer_name})`,
+      description: `Paid Customer POS Bill #${bill.bill_number} - ${bill.customer_name}`,
       category: 'Sales Revenue',
-      amount: `₹ ${parseFloat(grand_total).toLocaleString('en-IN')}`,
-      balance: '₹ 14,80,000',
-      created_at: new Date().toISOString(),
+      amount: `₹ ${parseFloat(bill.grand_total).toLocaleString('en-IN')}`,
+      balance: '—',
     });
+
+    // Audit Log
+    await db.insert('activity_logs', {
+      id: `LOG-${Date.now()}`,
+      user_id: shopId,
+      action: '💳 Customer POS Bill Marked Paid',
+      details: `Bill #${bill.bill_number} for '${bill.customer_name}' was marked paid - Amount: ₹ ${parseFloat(bill.grand_total).toLocaleString('en-IN')}`,
+      category: 'POS Sales',
+    });
+
+    res.json({ success: true, bill: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-
-  res.status(201).json({ success: true, bill: newBill });
-});
-
-// PUT /api/customer-bills/:id/pay - mark a pending bill as paid
-router.put('/:id/pay', requireRoles(['owner', 'cashier']), (req, res) => {
-  const { id } = req.params;
-  const shopId = req.shopId;
-
-  const updated = db.update('customer_bills', b => b.id === id && b.user_id === shopId, bill => {
-    bill.status = 'Paid';
-    bill.payment_date = new Date().toISOString().split('T')[0];
-  });
-
-  if (!updated) {
-    return res.status(404).json({ success: false, error: 'Pending bill not found.' });
-  }
-
-  // Insert transaction
-  db.insert('transactions', {
-    id: `TRX-${Math.floor(1000 + Math.random() * 9000)}`,
-    user_id: shopId,
-    date: new Date().toISOString().split('T')[0],
-    type: 'IN',
-    description: `Paid Customer POS Bill #${updated.bill_number} - ${updated.customer_name}`,
-    category: 'Sales Revenue',
-    amount: `₹ ${parseFloat(updated.grand_total).toLocaleString('en-IN')}`,
-    balance: '₹ 14,80,000',
-    created_at: new Date().toISOString(),
-  });
-
-  // Audit Log
-  db.insert('activity_logs', {
-    id: `LOG-${Date.now()}`,
-    user_id: shopId,
-    action: '💳 Customer POS Bill Marked Paid',
-    details: `Bill #${updated.bill_number} for '${updated.customer_name}' was marked paid - Amount: ₹ ${parseFloat(updated.grand_total).toLocaleString('en-IN')}`,
-    category: 'POS Sales',
-    created_at: new Date().toISOString(),
-  });
-
-  res.json({ success: true, bill: updated });
 });
 
 export default router;

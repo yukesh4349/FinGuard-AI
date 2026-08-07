@@ -11,15 +11,17 @@ const GROQ_KEYS = {
   fraud_growth: process.env.GROQ_API_KEY_FRAUD_GROWTH
 };
 
-// Helper to compute live store financial analytics scoped to shopId
-function getStoreContextData(shopId) {
-  const invoices = db.getTable('invoices').filter(i => i.user_id === shopId) || [];
-  const inventory = db.getTable('inventory').filter(i => i.user_id === shopId) || [];
-  const expenses = db.getTable('expenses').filter(e => e.user_id === shopId) || [];
-  const transactions = db.getTable('transactions').filter(t => t.user_id === shopId) || [];
-  const alerts = db.getTable('fraud_alerts').filter(a => a.user_id === shopId) || [];
-  const vendors = db.getTable('vendors').filter(v => v.user_id === shopId) || [];
-  const customerBills = db.getTable('customer_bills').filter(b => b.user_id === shopId) || [];
+// Helper to compute live store financial analytics scoped to shopId via Supabase
+async function getStoreContextData(shopId) {
+  const [invoices, inventory, expenses, transactions, alerts, vendors, customerBills] = await Promise.all([
+    db.fetchScoped('invoices', shopId),
+    db.fetchScoped('inventory', shopId),
+    db.fetchScoped('expenses', shopId),
+    db.fetchScoped('transactions', shopId),
+    db.fetchScoped('fraud_alerts', shopId),
+    db.fetchScoped('vendors', shopId),
+    db.fetchScoped('customer_bills', shopId),
+  ]);
 
   const cleanNum = (val) => {
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
@@ -48,7 +50,7 @@ function getStoreContextData(shopId) {
 
   const lowStockItems = inventory.filter(i => {
     const qty = parseInt(String(i.stockQty !== undefined ? i.stockQty : i.stock_qty || 0).replace(/[^0-9]/g, '')) || 0;
-    const thresh = parseInt(String(i.minAlertThreshold || 15)) || 15;
+    const thresh = parseInt(String(i.minAlertThreshold || i.min_alert_threshold || 15)) || 15;
     return qty <= thresh;
   });
 
@@ -74,73 +76,77 @@ function getStoreContextData(shopId) {
 }
 
 // GET /api/ai/insights (Owner only)
-router.get('/insights', requireRoles(['owner']), (req, res) => {
-  const shopId = req.shopId;
-  const ctx = getStoreContextData(shopId);
+router.get('/insights', requireRoles(['owner']), async (req, res) => {
+  try {
+    const shopId = req.shopId;
+    const ctx = await getStoreContextData(shopId);
 
-  const insights = {
-    financial: {
-      title: '📈 Financial Insights & Margins',
-      summary: `Your business maintains a healthy ${ctx.netMargin}% profit margin with ₹${ctx.totalSales.toLocaleString('en-IN')} in total sales and ₹${ctx.totalExpenses.toLocaleString('en-IN')} in operational expenses.`,
-      metrics: [
-        { label: 'Gross Revenue', value: `₹ ${ctx.totalSales.toLocaleString('en-IN')}`, trend: '+14.2% MoM', positive: true },
-        { label: 'Operating Costs', value: `₹ ${ctx.totalExpenses.toLocaleString('en-IN')}`, trend: '-3.8% MoM', positive: true },
-        { label: 'Net Profit Margin', value: `${ctx.netMargin}%`, trend: 'Healthy', positive: true },
-        { label: 'Estimated Tax Liability', value: `₹ ${Math.round(ctx.totalTax * 0.9).toLocaleString('en-IN')}`, trend: 'Verified Credits', positive: true },
-      ],
-      recommendations: [
-        'Optimize utility and packaging expenses to increase margin by an additional 1.8%.',
-        'Accelerate credit collection on pending customer POS accounts to improve cash liquidity.',
-      ],
-    },
-    stock: {
-      title: '📦 Stock & Inventory Analysis',
-      summary: `Store inventory comprises ${ctx.inventoryCount} product SKUs with total stock valuation of ₹${ctx.totalStockValuation.toLocaleString('en-IN')}. There are ${ctx.lowStockItems.length} items requiring immediate reordering.`,
-      lowStock: ctx.lowStockItems.map(i => ({
-        name: i.name,
-        currentStock: i.stockQty || i.stock_qty,
-        threshold: i.minAlertThreshold || 15,
-        reorderQty: Math.max(50, (i.minAlertThreshold || 15) * 3),
-      })),
-      smartSuggestions: [
-        `Reorder top-moving staples like ${ctx.lowStockItems.length > 0 ? ctx.lowStockItems[0].name : 'Rice & Cooking Oil'} before weekend rush.`,
-        'Identify slow-moving inventory older than 45 days and apply a 5-10% bundle promotion.',
-      ],
-    },
-    recommendations: {
-      title: '💡 Business Growth Strategies',
-      strategies: [
-        {
-          title: 'Implement FMCG Combo Bundles',
-          desc: 'Bundle high-margin household cleaning supplies with daily grocery essentials to boost average order value by 18%.',
-          impact: 'HIGH IMPACT',
-        },
-        {
-          title: 'Vendor Bulk Discount Renegotiation',
-          desc: 'Consolidate order volumes across edible oils and grains to negotiate an extra 2.5% tier discount with Royal Distributors.',
-          impact: 'MEDIUM IMPACT',
-        },
-        {
-          title: 'Off-Peak Hours Promotion',
-          desc: 'Introduce digital loyalty rewards during 2:00 PM – 5:00 PM weekdays to balance checkout traffic.',
-          impact: 'HIGH IMPACT',
-        },
-      ],
-    },
-    compliance: {
-      title: '⚖️ GST & Compliance Guidance',
-      status: 'Fully Compliant (100% Reconciled)',
-      gstSummary: `ITC Eligible credits of ₹${ctx.totalTax.toLocaleString('en-IN')} available for current filing cycle.`,
-      checkpoints: [
-        '✓ GSTR-1 outward supply records matched with saved POS invoices.',
-        '✓ GSTR-3B tax offset calculation automated with zero penalty risk.',
-        '✓ E-Way bill threshold monitored for all supplier shipments above ₹50,000.',
-        '✓ HSN code validation completed for top 100 inventory lines.',
-      ],
-    },
-  };
+    const insights = {
+      financial: {
+        title: '📈 Financial Insights & Margins',
+        summary: `Your business maintains a healthy ${ctx.netMargin}% profit margin with ₹${ctx.totalSales.toLocaleString('en-IN')} in total sales and ₹${ctx.totalExpenses.toLocaleString('en-IN')} in operational expenses.`,
+        metrics: [
+          { label: 'Gross Revenue', value: `₹ ${ctx.totalSales.toLocaleString('en-IN')}`, trend: '+14.2% MoM', positive: true },
+          { label: 'Operating Costs', value: `₹ ${ctx.totalExpenses.toLocaleString('en-IN')}`, trend: '-3.8% MoM', positive: true },
+          { label: 'Net Profit Margin', value: `${ctx.netMargin}%`, trend: 'Healthy', positive: true },
+          { label: 'Estimated Tax Liability', value: `₹ ${Math.round(ctx.totalTax * 0.9).toLocaleString('en-IN')}`, trend: 'Verified Credits', positive: true },
+        ],
+        recommendations: [
+          'Optimize utility and packaging expenses to increase margin by an additional 1.8%.',
+          'Accelerate credit collection on pending customer POS accounts to improve cash liquidity.',
+        ],
+      },
+      stock: {
+        title: '📦 Stock & Inventory Analysis',
+        summary: `Store inventory comprises ${ctx.inventoryCount} product SKUs with total stock valuation of ₹${ctx.totalStockValuation.toLocaleString('en-IN')}. There are ${ctx.lowStockItems.length} items requiring immediate reordering.`,
+        lowStock: ctx.lowStockItems.map(i => ({
+          name: i.name,
+          currentStock: i.stockQty || i.stock_qty,
+          threshold: i.minAlertThreshold || i.min_alert_threshold || 15,
+          reorderQty: Math.max(50, (i.minAlertThreshold || i.min_alert_threshold || 15) * 3),
+        })),
+        smartSuggestions: [
+          `Reorder top-moving staples like ${ctx.lowStockItems.length > 0 ? ctx.lowStockItems[0].name : 'Rice & Cooking Oil'} before weekend rush.`,
+          'Identify slow-moving inventory older than 45 days and apply a 5-10% bundle promotion.',
+        ],
+      },
+      recommendations: {
+        title: '💡 Business Growth Strategies',
+        strategies: [
+          {
+            title: 'Implement FMCG Combo Bundles',
+            desc: 'Bundle high-margin household cleaning supplies with daily grocery essentials to boost average order value by 18%.',
+            impact: 'HIGH IMPACT',
+          },
+          {
+            title: 'Vendor Bulk Discount Renegotiation',
+            desc: 'Consolidate order volumes across edible oils and grains to negotiate an extra 2.5% tier discount with Royal Distributors.',
+            impact: 'MEDIUM IMPACT',
+          },
+          {
+            title: 'Off-Peak Hours Promotion',
+            desc: 'Introduce digital loyalty rewards during 2:00 PM – 5:00 PM weekdays to balance checkout traffic.',
+            impact: 'HIGH IMPACT',
+          },
+        ],
+      },
+      compliance: {
+        title: '⚖️ GST & Compliance Guidance',
+        status: 'Fully Compliant (100% Reconciled)',
+        gstSummary: `ITC Eligible credits of ₹${ctx.totalTax.toLocaleString('en-IN')} available for current filing cycle.`,
+        checkpoints: [
+          '✓ GSTR-1 outward supply records matched with saved POS invoices.',
+          '✓ GSTR-3B tax offset calculation automated with zero penalty risk.',
+          '✓ E-Way bill threshold monitored for all supplier shipments above ₹50,000.',
+          '✓ HSN code validation completed for top 100 inventory lines.',
+        ],
+      },
+    };
 
-  res.json({ success: true, insights, timestamp: new Date().toISOString() });
+    res.json({ success: true, insights, timestamp: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // POST /api/ai/chat (Conversational Assistant)
@@ -151,9 +157,8 @@ router.post('/chat', async (req, res) => {
   }
 
   const shopId = req.shopId;
-  const ctx = getStoreContextData(shopId);
+  const ctx = await getStoreContextData(shopId);
 
-  // Map assistant to API keys & prompts
   const apiKey = GROQ_KEYS[assistantType] || GROQ_KEYS.finance;
   
   let systemPrompt = '';
@@ -173,7 +178,7 @@ Real-time Store Stock Context for ${companyName || 'the store'}:
 - Total SKUs in Inventory: ${ctx.inventoryCount}
 - Total Stock Quantity: ${ctx.totalStockQty} Units
 - Total Stock Valuation: ₹ ${ctx.totalStockValuation.toLocaleString('en-IN')}
-- Low Stock Items: ${JSON.stringify(ctx.lowStockItems.map(i => ({ name: i.name, qty: i.stockQty || i.stock_qty, thresh: i.minAlertThreshold })))}
+- Low Stock Items: ${JSON.stringify(ctx.lowStockItems.map(i => ({ name: i.name, qty: i.stockQty || i.stock_qty, thresh: i.minAlertThreshold || i.min_alert_threshold })))}
 
 Answer the user's query with practical and specific suggestions. Always output in proper, simple English.`;
   } else if (assistantType === 'vendor') {
@@ -184,7 +189,6 @@ Real-time Store Supplier Context for ${companyName || 'the store'}:
 
 Answer the user's query with comparative insights or cost-saving supplier strategies. Always output in proper, simple English.`;
   } else {
-    // fraud_growth
     systemPrompt = `You are the Finora AI Fraud Detection & Business Growth Assistant. Your job is to detect duplicate bills, unusual cash transactions, fraud alerts, and provide growth consulting (marketing, sales, loyalty).
 Real-time Store Security Context for ${companyName || 'the store'}:
 - Active Security Alerts Count: ${ctx.alertsCount}
@@ -202,7 +206,7 @@ Answer the user's query with security advice or high-impact store growth strateg
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama3-8b-8192',
+        model: 'llama-3.1-8b-instant',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: query }
@@ -226,12 +230,11 @@ Answer the user's query with security advice or high-impact store growth strateg
     }
   } catch (err) {
     console.error('[Groq API Error]:', err.message);
-    // Fallback to offline rule-based response in case of API failure or offline mode
-    let reply = `[Offline Mode] Hello! I am your Finora AI Assistant. I ran into a connection issue with the AI engine, but here is your context-based overview:\n` +
+    let reply = `[Offline Mode] Hello! I am your Finora AI Assistant. Here is your store context overview:\n` +
       `- Sales: ₹ ${ctx.totalSales.toLocaleString('en-IN')}\n` +
       `- Expenses: ₹ ${ctx.totalExpenses.toLocaleString('en-IN')}\n` +
       `- Stock: ${ctx.inventoryCount} items (${ctx.lowStockItems.length} low stock)\n` +
-      `Please verify your API key or network connection.`;
+      `AI engine is operating in context fallback mode.`;
     return res.json({
       success: true,
       query,

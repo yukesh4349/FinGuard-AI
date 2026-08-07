@@ -28,7 +28,6 @@ function checkDuplicateInDb(invoicesList, supplierName, invoiceNo, grandTotal) {
     const existingNormSupplier = normalizeName(inv.supplier_name);
     const existingTotal = parseFloat(inv.grand_total || 0);
 
-    // Check 1: Exact normalized invoice number match
     if (normNo && existingNormNo && normNo === existingNormNo) {
       return {
         isDuplicate: true,
@@ -37,7 +36,6 @@ function checkDuplicateInDb(invoicesList, supplierName, invoiceNo, grandTotal) {
       };
     }
 
-    // Check 2: Same supplier + Same Grand Total amount
     if (normSupplier && existingNormSupplier && (normSupplier.includes(existingNormSupplier) || existingNormSupplier.includes(normSupplier))) {
       if (totalVal > 0 && Math.abs(totalVal - existingTotal) < 5) {
         return {
@@ -53,172 +51,177 @@ function checkDuplicateInDb(invoicesList, supplierName, invoiceNo, grandTotal) {
 }
 
 // GET /api/invoices
-router.get('/', requireRoles(['owner', 'financier', 'cashier']), (req, res) => {
-  const invoices = db.getTable('invoices').filter(inv => inv.user_id === req.shopId);
-  res.json({ success: true, invoices });
+router.get('/', requireRoles(['owner', 'financier', 'cashier']), async (req, res) => {
+  try {
+    const invoices = await db.fetchScoped('invoices', req.shopId);
+    res.json({ success: true, invoices });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // POST /api/invoices
-router.post('/', requireRoles(['owner', 'financier', 'cashier']), (req, res) => {
-  const { supplier_name, invoice_number, invoice_date, subtotal, tax_gst, grand_total, items } = req.body;
+router.post('/', requireRoles(['owner', 'financier', 'cashier']), async (req, res) => {
+  try {
+    const { supplier_name, invoice_number, invoice_date, subtotal, tax_gst, grand_total, items } = req.body;
 
-  if (!supplier_name || !grand_total) {
-    return res.status(400).json({ success: false, error: 'Supplier Name and Total Amount are required.' });
-  }
+    if (!supplier_name || !grand_total) {
+      return res.status(400).json({ success: false, error: 'Supplier Name and Total Amount are required.' });
+    }
 
-  const existingInvoices = db.getTable('invoices').filter(inv => inv.user_id === req.shopId);
-  const dupCheck = checkDuplicateInDb(existingInvoices, supplier_name, invoice_number, grand_total);
+    const existingInvoices = await db.fetchScoped('invoices', req.shopId);
+    const dupCheck = checkDuplicateInDb(existingInvoices, supplier_name, invoice_number, grand_total);
 
-  const newInvoice = {
-    id: `INV-${Date.now()}`,
-    user_id: req.shopId,
-    invoice_number: invoice_number || `INV-${Math.floor(1000 + Math.random() * 9000)}`,
-    supplier_name,
-    invoice_date: invoice_date || new Date().toISOString().split('T')[0],
-    subtotal: parseFloat(subtotal || grand_total),
-    tax_gst: parseFloat(tax_gst || 0),
-    grand_total: parseFloat(grand_total),
-    status: dupCheck.isDuplicate ? 'Flagged High Risk' : 'Verified',
-    riskScore: dupCheck.isDuplicate ? '0.95 (Duplicate Bill Flagged)' : '0.01 (Safe)',
-    duplicateReason: dupCheck.isDuplicate ? dupCheck.reason : null,
-    items: items || [],
-    created_at: new Date().toISOString(),
-  };
-
-  db.insert('invoices', newInvoice);
-
-  if (dupCheck.isDuplicate) {
-    db.insert('fraud_alerts', {
-      id: `ALT-${Date.now()}`,
+    const newInvoice = {
+      id: `INV-${Date.now()}`,
       user_id: req.shopId,
-      type: 'Duplicate Invoice Warning',
-      message: dupCheck.reason,
-      severity: 'HIGH',
-      timestamp: new Date().toISOString(),
-      resolved: false,
-    });
-  }
+      invoice_number: invoice_number || `INV-${Math.floor(1000 + Math.random() * 9000)}`,
+      supplier_name,
+      invoice_date: invoice_date || new Date().toISOString().split('T')[0],
+      subtotal: parseFloat(subtotal || grand_total),
+      tax_gst: parseFloat(tax_gst || 0),
+      grand_total: parseFloat(grand_total),
+      status: dupCheck.isDuplicate ? 'Flagged High Risk' : 'Verified',
+      risk_score: dupCheck.isDuplicate ? '0.95 (Duplicate Bill Flagged)' : '0.01 (Safe)',
+      duplicate_reason: dupCheck.isDuplicate ? dupCheck.reason : null,
+      items: items || [],
+    };
 
-  // Automatically update stock inventory if items were provided
-  if (items && Array.isArray(items)) {
-    const inventory = db.getTable('inventory');
-    items.forEach(item => {
-      const existing = inventory.find(i => i.name.toLowerCase() === (item.name || '').toLowerCase() && i.user_id === req.shopId);
-      if (existing) {
-        existing.stockQty = (existing.stockQty || 0) + parseInt(item.qty || 1);
-      } else if (item.name) {
-        db.insert('inventory', {
-          id: `SKU-${Math.floor(100 + Math.random() * 900)}`,
-          user_id: req.shopId,
-          name: item.name,
-          category: 'General Goods',
-          stockQty: parseInt(item.qty || 1),
-          minAlertThreshold: 15,
-          unitPrice: item.sellingPrice || `₹ ${item.price || 100}`,
-          status: 'Healthy Stock',
-          supplier: supplier_name,
-        });
+    const saved = await db.insert('invoices', newInvoice);
+
+    if (dupCheck.isDuplicate) {
+      await db.insert('fraud_alerts', {
+        id: `ALT-${Date.now()}`,
+        user_id: req.shopId,
+        type: 'Duplicate Invoice Warning',
+        message: dupCheck.reason,
+        severity: 'HIGH',
+      });
+    }
+
+    // Automatically update stock inventory if items were provided
+    if (items && Array.isArray(items)) {
+      const inventory = await db.fetchScoped('inventory', req.shopId);
+      for (const item of items) {
+        const existing = inventory.find(i => (i.name || '').toLowerCase() === (item.name || '').toLowerCase());
+        const qtyVal = parseInt(item.qty || 1);
+        if (existing) {
+          const newQty = (parseInt(existing.stock_qty || existing.stockQty || 0)) + qtyVal;
+          await db.update('inventory', 'id', existing.id, { stock_qty: newQty });
+        } else if (item.name) {
+          await db.insert('inventory', {
+            id: `SKU-${Math.floor(100 + Math.random() * 900)}`,
+            user_id: req.shopId,
+            name: item.name,
+            category: 'General Goods',
+            stock_qty: qtyVal,
+            min_alert_threshold: 15,
+            unit_price: item.sellingPrice || `₹ ${item.price || 100}`,
+            status: 'Healthy Stock',
+            supplier_name: supplier_name,
+          });
+        }
       }
-    });
-    db.save();
-  }
+    }
 
-  res.status(201).json({
-    success: true,
-    isDuplicate: dupCheck.isDuplicate,
-    message: dupCheck.isDuplicate
-      ? `Duplicate Warning: ${dupCheck.reason}`
-      : 'Bill saved successfully!',
-    invoice: newInvoice
-  });
+    res.status(201).json({
+      success: true,
+      isDuplicate: dupCheck.isDuplicate,
+      message: dupCheck.isDuplicate
+        ? `Duplicate Warning: ${dupCheck.reason}`
+        : 'Bill saved successfully!',
+      invoice: saved
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // POST /api/invoices/upload (OCR process endpoint with robust duplicate check)
-router.post('/upload', requireRoles(['owner', 'financier']), (req, res) => {
-  const { supplierName, invoiceNumber, invoiceDate, subtotal, taxGst, grandTotal, items, rawText } = req.body;
+router.post('/upload', requireRoles(['owner', 'financier']), async (req, res) => {
+  try {
+    const { supplierName, invoiceNumber, invoiceDate, subtotal, taxGst, grandTotal, items, rawText } = req.body;
 
-  const existingInvoices = db.getTable('invoices').filter(inv => inv.user_id === req.shopId);
-  const dupCheck = checkDuplicateInDb(existingInvoices, supplierName, invoiceNumber, grandTotal);
+    const existingInvoices = await db.fetchScoped('invoices', req.shopId);
+    const dupCheck = checkDuplicateInDb(existingInvoices, supplierName, invoiceNumber, grandTotal);
 
-  const newInvoice = {
-    id: `ocr-${Date.now()}`,
-    user_id: req.shopId,
-    invoice_number: invoiceNumber || `INV-OCR-${Math.floor(1000 + Math.random() * 9000)}`,
-    supplier_name: supplierName || 'OCR Upload Vendor',
-    invoice_date: invoiceDate || new Date().toISOString().split('T')[0],
-    subtotal: parseFloat(subtotal || grandTotal || 0),
-    tax_gst: parseFloat(taxGst || 0),
-    grand_total: parseFloat(grandTotal || 0),
-    status: dupCheck.isDuplicate ? 'Flagged High Risk' : 'Verified',
-    riskScore: dupCheck.isDuplicate ? '0.96 (Duplicate Bill Detected)' : '0.02 (Safe Verified)',
-    duplicateReason: dupCheck.isDuplicate ? dupCheck.reason : null,
-    items: items || [],
-    raw_text: rawText || '',
-    created_at: new Date().toISOString(),
-  };
-
-  db.insert('invoices', newInvoice);
-
-  if (dupCheck.isDuplicate) {
-    db.insert('fraud_alerts', {
-      id: `ALT-${Date.now()}`,
+    const newInvoice = {
+      id: `ocr-${Date.now()}`,
       user_id: req.shopId,
-      type: 'Duplicate Invoice Warning',
-      message: dupCheck.reason,
-      severity: 'HIGH',
-      timestamp: new Date().toISOString(),
-      resolved: false,
-    });
-  }
+      invoice_number: invoiceNumber || `INV-OCR-${Math.floor(1000 + Math.random() * 9000)}`,
+      supplier_name: supplierName || 'OCR Upload Vendor',
+      invoice_date: invoiceDate || new Date().toISOString().split('T')[0],
+      subtotal: parseFloat(subtotal || grandTotal || 0),
+      tax_gst: parseFloat(taxGst || 0),
+      grand_total: parseFloat(grandTotal || 0),
+      status: dupCheck.isDuplicate ? 'Flagged High Risk' : 'Verified',
+      risk_score: dupCheck.isDuplicate ? '0.96 (Duplicate Bill Detected)' : '0.02 (Safe Verified)',
+      duplicate_reason: dupCheck.isDuplicate ? dupCheck.reason : null,
+      items: items || [],
+      raw_text: rawText || '',
+    };
 
-  // Automatically update stock inventory from extracted OCR items
-  if (items && Array.isArray(items)) {
-    const inventory = db.getTable('inventory');
-    items.forEach(item => {
-      const qtyVal = parseInt(String(item.qty || '1').replace(/[^0-9]/g, '')) || 1;
-      const costVal = parseFloat(String(item.rate || item.unitPrice || '100').replace(/[^0-9.]/g, '')) || 100;
-      const sellingVal = item.sellingPrice ? item.sellingPrice : `₹ ${Math.round(costVal * 1.20).toLocaleString('en-IN')}`;
+    const saved = await db.insert('invoices', newInvoice);
 
-      const existingIdx = inventory.findIndex(i => (i.name || '').toLowerCase().trim() === (item.name || '').toLowerCase().trim() && i.user_id === req.shopId);
-      if (existingIdx >= 0) {
-        inventory[existingIdx].stockQty = (inventory[existingIdx].stockQty || 0) + qtyVal;
-        if (sellingVal) inventory[existingIdx].sellingPrice = sellingVal;
-      } else if (item.name) {
-        db.insert('inventory', {
-          id: `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
-          user_id: req.shopId,
-          name: item.name,
-          category: 'General Store',
-          stockQty: qtyVal,
-          minAlertThreshold: 15,
-          unitPrice: `₹ ${costVal.toLocaleString('en-IN')}`,
-          sellingPrice: sellingVal,
-          status: 'Healthy Stock',
-          supplier: supplierName || 'OCR Upload Vendor',
-        });
+    if (dupCheck.isDuplicate) {
+      await db.insert('fraud_alerts', {
+        id: `ALT-${Date.now()}`,
+        user_id: req.shopId,
+        type: 'Duplicate Invoice Warning',
+        message: dupCheck.reason,
+        severity: 'HIGH',
+      });
+    }
+
+    // Automatically update stock inventory from extracted OCR items
+    if (items && Array.isArray(items)) {
+      const inventory = await db.fetchScoped('inventory', req.shopId);
+      for (const item of items) {
+        const qtyVal = parseInt(String(item.qty || '1').replace(/[^0-9]/g, '')) || 1;
+        const costVal = parseFloat(String(item.rate || item.unitPrice || '100').replace(/[^0-9.]/g, '')) || 100;
+        const sellingVal = item.sellingPrice ? item.sellingPrice : `₹ ${Math.round(costVal * 1.20).toLocaleString('en-IN')}`;
+
+        const existing = inventory.find(i => (i.name || '').toLowerCase().trim() === (item.name || '').toLowerCase().trim());
+        if (existing) {
+          const newQty = (parseInt(existing.stock_qty || existing.stockQty || 0)) + qtyVal;
+          await db.update('inventory', 'id', existing.id, { stock_qty: newQty, selling_price: sellingVal });
+        } else if (item.name) {
+          await db.insert('inventory', {
+            id: `SKU-${Math.floor(1000 + Math.random() * 9000)}`,
+            user_id: req.shopId,
+            name: item.name,
+            category: 'General Store',
+            stock_qty: qtyVal,
+            min_alert_threshold: 15,
+            unit_price: `₹ ${costVal.toLocaleString('en-IN')}`,
+            selling_price: sellingVal,
+            status: 'Healthy Stock',
+            supplier_name: supplierName || 'OCR Upload Vendor',
+          });
+        }
       }
+    }
+
+    // Record system audit log
+    await db.insert('activity_logs', {
+      id: `LOG-${Date.now()}`,
+      user_id: req.shopId,
+      action: '📄 Uploaded Vendor Invoice',
+      details: `Vendor bill #${newInvoice.invoice_number} from '${newInvoice.supplier_name}' scanned & saved - Total: ₹ ${parseFloat(newInvoice.grand_total || 0).toLocaleString('en-IN')}`,
+      category: 'Vendor Billing',
     });
-    db.save();
+
+    res.json({
+      success: true,
+      isDuplicate: dupCheck.isDuplicate,
+      message: dupCheck.isDuplicate
+        ? `Duplicate Bill Intercepted: ${dupCheck.reason}`
+        : 'Bill scanned, saved, and stock updated!',
+      invoice: saved
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-
-  // Record system audit log
-  db.insert('activity_logs', {
-    id: `LOG-${Date.now()}`,
-    user_id: req.shopId,
-    action: '📄 Uploaded Vendor Invoice',
-    details: `Vendor bill #${newInvoice.invoice_number} from '${newInvoice.supplier_name}' scanned & saved - Total: ₹ ${parseFloat(newInvoice.grand_total || 0).toLocaleString('en-IN')}`,
-    category: 'Vendor Billing',
-    created_at: new Date().toISOString(),
-  });
-
-  res.json({
-    success: true,
-    isDuplicate: dupCheck.isDuplicate,
-    message: dupCheck.isDuplicate
-      ? `Duplicate Bill Intercepted: ${dupCheck.reason}`
-      : 'Bill scanned, saved, and stock updated!',
-    invoice: newInvoice
-  });
 });
 
 function parseOcrTextServer(text = '', fileName = '') {
@@ -249,7 +252,6 @@ function parseOcrTextServer(text = '', fileName = '') {
   let invoiceNumber = '';
   let invoiceDate = '';
 
-  // 1. Supplier Name extraction
   for (let l of lines) {
     if (/invoice|bill|tax|date|gstin|total|subtotal|amount|bill to|ship to|address|phone|email/i.test(l)) continue;
     if (l.length >= 3 && /[a-zA-Z]/.test(l)) {
@@ -261,7 +263,6 @@ function parseOcrTextServer(text = '', fileName = '') {
     supplierName = fileName ? fileName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9\s]/g, " ").trim() : 'Supplier Vendor';
   }
 
-  // 2. Invoice Number extraction
   for (let l of lines) {
     const invMatch = l.match(/(?:invoice|bill|inv)\s*(?:no|num|number|code|#)?\s*[:.\-]?\s*([A-Za-z0-9\-]{3,20})/i);
     if (invMatch && invMatch[1]) {
@@ -274,7 +275,6 @@ function parseOcrTextServer(text = '', fileName = '') {
     invoiceNumber = `${cleanName}-${Math.floor(100 + Math.random() * 900)}`;
   }
 
-  // 3. Invoice Date extraction
   for (let l of lines) {
     const dateMatch = l.match(/(?:date|dt)\s*[:.\-]?\s*([\d\/\-\.\s\w]{6,15})/i) || l.match(/(\b\d{1,2}[\/\-\.](?:\d{1,2}|[A-Za-z]{3})[\/\-\.]\d{2,4}\b)/);
     if (dateMatch && dateMatch[1]) {
@@ -286,7 +286,6 @@ function parseOcrTextServer(text = '', fileName = '') {
     invoiceDate = new Date().toISOString().split('T')[0];
   }
 
-  // 4. Line Items extraction
   const items = [];
   lines.forEach((line, index) => {
     if (/invoice|bill|gstin|subtotal|grand total|tax|amount|header|sl\.\s*no|date|total payable/i.test(line)) {
@@ -336,10 +335,13 @@ function parseOcrTextServer(text = '', fileName = '') {
   };
 }
 
-const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || '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';
+const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
 
 async function processBillImageWithNvidiaAi(base64Data, fileName = '') {
   try {
+    if (!NVIDIA_API_KEY) {
+      throw new Error('NVIDIA_API_KEY environment variable is not defined in the backend configuration (.env).');
+    }
     const dataUri = base64Data.startsWith('data:') 
       ? base64Data 
       : `data:image/png;base64,${base64Data}`;
@@ -393,8 +395,6 @@ JSON Structure:
     const data = await response.json();
     if (data && data.choices && data.choices[0] && data.choices[0].message) {
       const content = data.choices[0].message.content || '';
-      console.log('[NVIDIA Vision AI Response Received]:', content.slice(0, 200));
-
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsedJson = JSON.parse(jsonMatch[0]);
@@ -432,20 +432,17 @@ JSON Structure:
   return { success: false };
 }
 
-// POST /api/invoices/scan-file (Server-Side Real Neural OCR Engine via multipart file + NVIDIA Vision AI)
+// POST /api/invoices/scan-file
 router.post('/scan-file', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'No image file uploaded.' });
     }
 
-    console.log('[OCR Backend Engine]: Scanning uploaded bill file:', req.file.originalname, req.file.size, 'bytes');
-
     const base64Str = req.file.buffer.toString('base64');
     const mimeType = req.file.mimetype || 'image/png';
     const dataUri = `data:${mimeType};base64,${base64Str}`;
 
-    // 1. Primary: Run NVIDIA Vision AI OCR
     const nvidiaRes = await processBillImageWithNvidiaAi(dataUri, req.file.originalname);
     if (nvidiaRes.success && nvidiaRes.ocrData) {
       return res.json({
@@ -456,10 +453,7 @@ router.post('/scan-file', upload.single('file'), async (req, res) => {
       });
     }
 
-    // 2. Fallback: Tesseract OCR + Local Parser
     const { data: { text } } = await recognize(req.file.buffer, 'eng');
-    console.log('[OCR Backend Fallback Raw Text]:', text);
-
     const parsed = parseOcrTextServer(text, req.file.originalname);
     return res.json({
       success: true,
@@ -468,12 +462,11 @@ router.post('/scan-file', upload.single('file'), async (req, res) => {
       ocrData: parsed,
     });
   } catch (err) {
-    console.error('[OCR Backend Server Error]:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// POST /api/invoices/scan-base64 (Server-Side Real Neural OCR Engine via base64 + NVIDIA Vision AI)
+// POST /api/invoices/scan-base64
 router.post('/scan-base64', async (req, res) => {
   try {
     const { imageBase64, fileName } = req.body;
@@ -481,7 +474,6 @@ router.post('/scan-base64', async (req, res) => {
       return res.status(400).json({ success: false, error: 'No imageBase64 provided.' });
     }
 
-    // 1. Primary: Run NVIDIA Vision AI OCR
     const nvidiaRes = await processBillImageWithNvidiaAi(imageBase64, fileName || 'uploaded_bill.png');
     if (nvidiaRes.success && nvidiaRes.ocrData) {
       return res.json({
@@ -492,7 +484,6 @@ router.post('/scan-base64', async (req, res) => {
       });
     }
 
-    // 2. Fallback: Tesseract OCR + Local Parser
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
 
@@ -506,7 +497,6 @@ router.post('/scan-base64', async (req, res) => {
       ocrData: parsed,
     });
   } catch (err) {
-    console.error('[OCR Base64 Server Error]:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });

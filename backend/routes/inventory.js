@@ -4,178 +4,154 @@ import { requireRoles } from '../middleware/rbac.js';
 
 const router = Router();
 
-// GET /api/inventory (All roles can read)
-router.get('/', (req, res) => {
-  const inventory = db.getTable('inventory').filter(i => i.user_id === req.shopId);
-  res.json({ success: true, inventory });
-});
-
-// POST /api/inventory (Owner and Store Manager only)
-router.post('/', requireRoles(['owner', 'store_manager']), (req, res) => {
-  const { name, category, stockQty, minAlertThreshold, unitPrice, supplier } = req.body;
-  if (!name || stockQty === undefined) {
-    return res.status(400).json({ success: false, error: 'Item Name and Stock Quantity are required.' });
+// GET /api/inventory
+router.get('/', async (req, res) => {
+  try {
+    const inventory = await db.fetchScoped('inventory', req.shopId);
+    res.json({ success: true, inventory });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-
-  const qty = parseInt(stockQty);
-  const threshold = parseInt(minAlertThreshold || 15);
-
-  const newItem = {
-    id: `SKU-${Math.floor(100 + Math.random() * 900)}`,
-    user_id: req.shopId,
-    name,
-    category: category || 'General Store',
-    stockQty: qty,
-    minAlertThreshold: threshold,
-    unitPrice: unitPrice.toString().startsWith('₹') ? unitPrice : `₹ ${unitPrice}`,
-    status: qty <= threshold ? 'Low Stock Alert' : 'Healthy Stock',
-    supplier: supplier || 'General Supplier',
-  };
-
-  db.insert('inventory', newItem);
-
-  // Audit log
-  db.insert('activity_logs', {
-    id: `LOG-${Date.now()}`,
-    user_id: req.shopId,
-    action: '📦 Added Inventory SKU',
-    details: `Added ${newItem.name} (${qty} units) to store inventory.`,
-    category: 'Inventory',
-    created_at: new Date().toISOString(),
-  });
-
-  res.status(201).json({ success: true, item: newItem });
 });
 
-// PUT /api/inventory/:id (Owner and Store Manager only)
-router.put('/:id', requireRoles(['owner', 'store_manager']), (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
-  const updated = db.update('inventory', item => item.id === id && item.user_id === req.shopId, updates);
+// POST /api/inventory
+router.post('/', requireRoles(['owner', 'store_manager']), async (req, res) => {
+  try {
+    const { name, category, stockQty, minAlertThreshold, unitPrice, supplier } = req.body;
+    if (!name || stockQty === undefined) {
+      return res.status(400).json({ success: false, error: 'Item Name and Stock Quantity are required.' });
+    }
+    const qty = parseInt(stockQty);
+    const threshold = parseInt(minAlertThreshold || 15);
+    const newItem = {
+      id: `SKU-${Math.floor(100 + Math.random() * 900)}`,
+      user_id: req.shopId,
+      name,
+      category: category || 'General Store',
+      stock_qty: qty,
+      min_alert_threshold: threshold,
+      unit_price: String(unitPrice || '0').startsWith('₹') ? String(unitPrice) : `₹ ${unitPrice}`,
+      status: qty <= threshold ? 'Low Stock Alert' : 'Healthy Stock',
+      supplier_name: supplier || 'General Supplier',
+    };
 
-  if (!updated) {
-    return res.status(404).json({ success: false, error: 'Item not found.' });
+    const saved = await db.insert('inventory', newItem);
+
+    await db.insert('activity_logs', {
+      id: `LOG-${Date.now()}`,
+      user_id: req.shopId,
+      action: '📦 Added Inventory SKU',
+      details: `Added ${name} (${qty} units) to store inventory.`,
+      category: 'Inventory',
+    });
+
+    res.status(201).json({ success: true, item: saved });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-
-  // Recalculate status based on current stock levels
-  const qty = parseInt(updated.stockQty) || 0;
-  const threshold = parseInt(updated.minAlertThreshold) || 15;
-  updated.status = qty <= threshold ? 'Low Stock Alert' : 'Healthy Stock';
-  db.save();
-
-  // Audit log
-  db.insert('activity_logs', {
-    id: `LOG-${Date.now()}`,
-    user_id: req.shopId,
-    action: '✏️ Updated Inventory SKU',
-    details: `Adjusted inventory details for ${updated.name} (Current Qty: ${qty}).`,
-    category: 'Inventory',
-    created_at: new Date().toISOString(),
-  });
-
-  res.json({ success: true, item: updated });
 });
 
-// DELETE /api/inventory/:id (Owner only)
-router.delete('/:id', requireRoles(['owner']), (req, res) => {
-  const { id } = req.params;
-  const item = db.getTable('inventory').find(i => i.id === id && i.user_id === req.shopId);
-  const itemName = item ? item.name : id;
-  const removed = db.delete('inventory', i => i.id === id && i.user_id === req.shopId);
-  if (!removed) {
-    return res.status(404).json({ success: false, error: 'Item not found.' });
+// PUT /api/inventory/:id
+router.put('/:id', requireRoles(['owner', 'store_manager']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Validate ownership
+    const inv = await db.fetchScoped('inventory', req.shopId);
+    const existing = inv.find(i => i.id === id);
+    if (!existing) return res.status(404).json({ success: false, error: 'Item not found.' });
+
+    const updates = { ...req.body };
+    // Normalise incoming camelCase to snake_case for Supabase
+    if (updates.stockQty !== undefined)          { updates.stock_qty = parseInt(updates.stockQty); delete updates.stockQty; }
+    if (updates.minAlertThreshold !== undefined)  { updates.min_alert_threshold = parseInt(updates.minAlertThreshold); delete updates.minAlertThreshold; }
+    if (updates.unitPrice !== undefined)          { updates.unit_price = updates.unitPrice; delete updates.unitPrice; }
+    if (updates.supplier !== undefined)           { updates.supplier_name = updates.supplier; delete updates.supplier; }
+
+    // Auto-compute status
+    const qty = parseInt(updates.stock_qty ?? existing.stockQty ?? 0);
+    const threshold = parseInt(updates.min_alert_threshold ?? existing.minAlertThreshold ?? 15);
+    updates.status = qty <= threshold ? 'Low Stock Alert' : 'Healthy Stock';
+    updates.updated_at = new Date().toISOString();
+
+    const updated = await db.update('inventory', 'id', id, updates);
+
+    await db.insert('activity_logs', {
+      id: `LOG-${Date.now()}`,
+      user_id: req.shopId,
+      action: '✏️ Updated Inventory SKU',
+      details: `Adjusted inventory details for ${existing.name} (Current Qty: ${qty}).`,
+      category: 'Inventory',
+    });
+
+    res.json({ success: true, item: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-
-  // Audit log
-  db.insert('activity_logs', {
-    id: `LOG-${Date.now()}`,
-    user_id: req.shopId,
-    action: '🗑️ Deleted Inventory SKU',
-    details: `Removed '${itemName}' from store database.`,
-    category: 'Inventory',
-    created_at: new Date().toISOString(),
-  });
-
-  res.json({ success: true, message: 'Item deleted.', inventory: db.getTable('inventory').filter(i => i.user_id === req.shopId) });
 });
 
-// ══════════════════════════════════════════════════════════════════════════
-// STOCK WEBHOOK EVENT ENGINE (TRIGGERS FOR STOCK LOADED & CUSTOMER BOUGHT)
-// ══════════════════════════════════════════════════════════════════════════
+// DELETE /api/inventory/:id
+router.delete('/:id', requireRoles(['owner']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const inv = await db.fetchScoped('inventory', req.shopId);
+    const item = inv.find(i => i.id === id);
+    if (!item) return res.status(404).json({ success: false, error: 'Item not found.' });
 
-// Secondary Webhook Listener Endpoint for Stock Updates
-router.post('/webhook/stock-updates', (req, res) => {
+    await db.delete('inventory', 'id', id);
+
+    await db.insert('activity_logs', {
+      id: `LOG-${Date.now()}`,
+      user_id: req.shopId,
+      action: '🗑️ Deleted Inventory SKU',
+      details: `Removed '${item.name}' from store database.`,
+      category: 'Inventory',
+    });
+
+    const inventory = await db.fetchScoped('inventory', req.shopId);
+    res.json({ success: true, message: 'Item deleted.', inventory });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─── Webhook endpoints ────────────────────────────────────────────────────────
+const EXTERNAL_AGENT_WEBHOOK_URL = process.env.VITE_STOCK_WEBHOOK_URL || 'https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea';
+
+router.post('/webhook/stock-updates', async (req, res) => {
   const { eventType, items, source, timestamp, referenceId } = req.body;
-
-  console.log(`[SECONDARY WEBHOOK RECEIVED] Event: ${eventType} | Source: ${source} | Ref: ${referenceId}`);
-
-  const webhookLog = {
-    id: `WH-${Math.floor(1000 + Math.random() * 9000)}`,
-    eventType,
-    source: source || 'System Engine',
-    referenceId: referenceId || 'REF-000',
-    itemCount: Array.isArray(items) ? items.length : 1,
-    timestamp: timestamp || new Date().toISOString(),
-    status: 'DELIVERED_SUCCESS',
-  };
-
-  db.insert('webhooks', webhookLog);
-
-  res.json({
-    success: true,
-    message: `Secondary Stock Webhook triggered and logged for event ${eventType}`,
-    log: webhookLog,
-  });
+  console.log(`[WEBHOOK RECEIVED] Event: ${eventType} | Source: ${source}`);
+  res.json({ success: true, message: `Stock Webhook received for event ${eventType}` });
 });
 
-const EXTERNAL_AGENT_WEBHOOK_URL = 'https://api.agents.snsihub.ai/webhook/e812ce73-c455-4de1-bdb0-dc7b51f0a4ea';
-
-// Trigger Webhook Endpoint (Called when stock is loaded OR customer buys stock)
-router.post('/webhook/trigger', (req, res) => {
+router.post('/webhook/trigger', async (req, res) => {
   const { eventType, items, supplierName, customerName, billNo, source, grandTotal } = req.body;
-
   const isStockOut = (eventType || '').includes('BOUGHT') || (eventType || '').includes('CUSTOMER') || (eventType || '').includes('OUT');
   const typeKey = isStockOut ? 'STOCK_CUSTOMER_BOUGHT' : 'STOCK_IN_LOADED';
 
   const payload = {
-    id: `WH-EVT-${Math.floor(10000 + Math.random() * 90000)}`,
-    webhookTarget: EXTERNAL_AGENT_WEBHOOK_URL,
     eventType: typeKey,
     flowType: isStockOut ? 'STOCK_OUT (Customer POS Sale)' : 'STOCK_IN (Vendor Purchase)',
-    source: source || (isStockOut ? `Customer POS Sale (${customerName || 'Retail Customer'})` : `Vendor Purchase Bill (${supplierName || 'Supplier'})`),
+    source: source || (isStockOut ? `Customer POS Sale (${customerName || 'Customer'})` : `Vendor Purchase (${supplierName || 'Supplier'})`),
     referenceId: billNo || `BILL-${Math.floor(1000 + Math.random() * 9000)}`,
     customerName: customerName || null,
     supplierName: supplierName || null,
     grandTotal: grandTotal || null,
     items: items || [],
     timestamp: new Date().toISOString(),
-    status: 'DELIVERED_SUCCESS',
   };
 
-  db.insert('webhooks', payload);
+  fetch(EXTERNAL_AGENT_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).catch(err => console.warn('[Webhook dispatch]:', err.message));
 
-  // Dispatch payload to external agent webhook URL endpoint
-  try {
-    fetch(EXTERNAL_AGENT_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    }).catch(err => console.warn('External Webhook dispatch notice:', err.message));
-  } catch (e) {}
-
-  console.log(`⚡ [EXTERNAL AGENT WEBHOOK DISPATCHED] ${payload.eventType} to ${EXTERNAL_AGENT_WEBHOOK_URL}`);
-
-  res.json({
-    success: true,
-    message: `Stock Webhook ${payload.eventType} successfully triggered and sent to ${EXTERNAL_AGENT_WEBHOOK_URL}`,
-    webhookEvent: payload,
-  });
+  console.log(`⚡ [WEBHOOK DISPATCHED] ${payload.eventType} → ${EXTERNAL_AGENT_WEBHOOK_URL}`);
+  res.json({ success: true, message: `Stock Webhook ${payload.eventType} triggered.`, webhookEvent: payload });
 });
 
-// GET /api/inventory/webhook/logs — Retrieve Webhook Event Logs
-router.get('/webhook/logs', (req, res) => {
-  const logs = db.getTable('webhooks');
-  res.json({ success: true, count: logs.length, logs });
+router.get('/webhook/logs', async (req, res) => {
+  res.json({ success: true, logs: [] });
 });
 
 export default router;

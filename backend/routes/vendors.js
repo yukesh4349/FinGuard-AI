@@ -4,32 +4,35 @@ import { requireRoles } from '../middleware/rbac.js';
 
 const router = Router();
 
-// GET /api/vendors
-router.get('/', requireRoles(['owner', 'store_manager']), (req, res) => {
-  const vendors = db.getTable('vendors').filter(v => v.user_id === req.shopId);
-  res.json({ success: true, vendors });
+router.get('/', requireRoles(['owner', 'store_manager']), async (req, res) => {
+  try {
+    const vendors = await db.fetchScoped('vendors', req.shopId);
+    res.json({ success: true, vendors });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
-// POST /api/vendors
-router.post('/', requireRoles(['owner', 'store_manager']), (req, res) => {
-  const { name, contactPerson, phone, gstin } = req.body;
-  if (!name) {
-    return res.status(400).json({ success: false, error: 'Vendor name is required.' });
+router.post('/', requireRoles(['owner', 'store_manager']), async (req, res) => {
+  try {
+    const { name, contactPerson, phone, gstin } = req.body;
+    if (!name) {
+      return res.status(400).json({ success: false, error: 'Vendor name is required.' });
+    }
+    const saved = await db.insert('vendors', {
+      id: `VEND-${Math.floor(10 + Math.random() * 90)}`,
+      user_id: req.shopId,
+      name,
+      contact_person: contactPerson || 'N/A',
+      phone: phone || 'N/A',
+      gstin: gstin || 'Unverified GSTIN',
+      total_billed: '₹ 0',
+      trust_score: '100% (New Vendor)',
+    });
+    res.status(201).json({ success: true, vendor: saved });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-
-  const newVendor = {
-    id: `VEND-${Math.floor(10 + Math.random() * 90)}`,
-    user_id: req.shopId,
-    name,
-    contactPerson: contactPerson || 'N/A',
-    phone: phone || 'N/A',
-    gstin: gstin || 'Unverified GSTIN',
-    totalBilled: '₹ 0',
-    trustScore: '100% (New Vendor)',
-  };
-
-  db.insert('vendors', newVendor);
-  res.status(201).json({ success: true, vendor: newVendor });
 });
 
 export default router;

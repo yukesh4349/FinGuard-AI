@@ -16,21 +16,29 @@ node_modules
 dist
 **/dist
 dist-ssr
+build
 *.local
+
+# Environment variables & Secrets
+.env
+.env.production
+.env.development
+.env.local
+**/.env
+**/.env.local
+**/.env.production
+**/.env.development
+!.env.example
+!**/.env.example
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
-# Environment variables
-.env
-.env.production
-.env.development
-.env.local

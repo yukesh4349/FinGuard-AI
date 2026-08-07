@@ -1,496 +1,247 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+/**
+ * db.js — Finora AI Supabase Database Layer
+ *
+ * ALL data is stored in and read from Supabase (PostgreSQL).
+ * This module exposes the same interface (getTable, insert, update, delete)
+ * as the old JSON wrapper so every route file works without changes.
+ *
+ * Column name normalisation:
+ *   Supabase stores snake_case columns (stock_qty, min_alert_threshold…).
+ *   The old JSON store used camelCase (stockQty, minAlertThreshold…).
+ *   We normalise on the way out so the rest of the app is unaffected.
+ */
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DATA_FILE = path.join(__dirname, 'data.json');
+import { createClient } from '@supabase/supabase-js';
 
-// Initial seed dataset for database tables
-const initialDatabase = {
-  users: [
-    {
-      id: 1,
-      user_id: 'ADMIN-001',
-      company_name: 'FinSight Central Administration',
-      mobile_number: '9999999999',
-      email: 'admin@finsight.ai',
-      password_hash: 'admin123',
-      role: 'super_admin',
-      owner_id: 'ADMIN-001',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      user_id: 'OWNER-METRO-8492',
-      company_name: 'Metro Superstore Ltd',
-      mobile_number: '9876543210',
-      email: 'owner@metrosuperstore.com',
-      password_hash: 'FS-8924-XK9',
-      role: 'owner',
-      owner_id: 'OWNER-METRO-8492',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 3,
-      user_id: 'accountant@metrosuperstore.com',
-      company_name: 'Metro Superstore Ltd',
-      mobile_number: '9876523451',
-      email: 'accountant@metrosuperstore.com',
-      password_hash: 'FS-CA-2026',
-      role: 'accountant',
-      owner_id: 'OWNER-METRO-8492',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 4,
-      user_id: 'cashier.billing@metrosuperstore.com',
-      company_name: 'Metro Superstore Ltd',
-      mobile_number: '9876545673',
-      email: 'cashier.billing@metrosuperstore.com',
-      password_hash: 'FS-BILL-789',
-      role: 'billing',
-      owner_id: 'OWNER-METRO-8492',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 5,
-      user_id: 'manager.stock@metrosuperstore.com',
-      company_name: 'Metro Superstore Ltd',
-      mobile_number: '9876534562',
-      email: 'manager.stock@metrosuperstore.com',
-      password_hash: 'FS-STOCK-552',
-      role: 'stock_manager',
-      owner_id: 'OWNER-METRO-8492',
-      created_at: new Date().toISOString(),
-    },
-  ],
-  employees: [
-    {
-      id: 'EMP-001',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Ramesh Kumar',
-      role: 'Senior Cashier & Billing Executive',
-      phone: '9876545673',
-      email: 'cashier.billing@metrosuperstore.com',
-      salary: '₹ 28,000',
-      salary_date: '10',
-      payment_status: 'Unpaid',
-      payment_history: [],
-      status: 'Active',
-      joinedDate: '15-Jan-2025',
-    },
-    {
-      id: 'EMP-002',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Suresh Patel',
-      role: 'Store Stock & Inventory Manager',
-      phone: '9876534562',
-      email: 'manager.stock@metrosuperstore.com',
-      salary: '₹ 32,000',
-      salary_date: '15',
-      payment_status: 'Unpaid',
-      payment_history: [],
-      status: 'Active',
-      joinedDate: '01-Mar-2025',
-    },
-    {
-      id: 'EMP-003',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Priya Sharma',
-      role: 'Store Accountant & Tax Executive',
-      phone: '9876523451',
-      email: 'accountant@metrosuperstore.com',
-      salary: '₹ 35,000',
-      salary_date: '25',
-      payment_status: 'Unpaid',
-      payment_history: [],
-      status: 'Active',
-      joinedDate: '10-Jun-2025',
-    },
-    {
-      id: 'EMP-004',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Vikram Singh',
-      role: 'Logistics & Dispatch Assistant',
-      phone: '9876512340',
-      email: 'vikram.dispatch@metrosuperstore.com',
-      salary: '₹ 22,000',
-      salary_date: '5',
-      payment_status: 'Unpaid',
-      payment_history: [],
-      status: 'Active',
-      joinedDate: '20-Nov-2025',
-    },
-  ],
-  customer_bills: [
-    {
-      id: 'bill-901',
-      user_id: 'OWNER-METRO-8492',
-      bill_number: 'BILL-100231',
-      customer_name: 'Anand Kumar',
-      customer_phone: '9876543210',
-      subtotal: 4500,
-      tax_gst: 225,
-      grand_total: 4725,
-      profit_earned: 900,
-      status: 'Pending',
-      due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      items: [
-        { description: 'Cooking Oil (5L Pack)', qty: 5, rate: 720, gstRate: 5, amount: 3600 }
-      ],
-      created_at: new Date().toISOString()
-    }
-  ],
-  invoices: [
-    {
-      id: 'INV-2026-001',
-      user_id: 'OWNER-METRO-8492',
-      invoice_number: 'INV-2026-001',
-      supplier_name: 'Apex Supermarket Wholesale',
-      invoice_date: '2026-08-01',
-      subtotal: 145000,
-      tax_gst: 7250,
-      grand_total: 152250,
-      status: 'Verified',
-      riskScore: '0.01 (Safe)',
-      items: [
-        { name: 'Basmati Rice 25kg', qty: 50, price: 1850, tax: 4625 },
-        { name: 'Sunflower Oil 5L', qty: 40, price: 720, tax: 1440 },
-      ],
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 'INV-2026-002',
-      user_id: 'OWNER-METRO-8492',
-      invoice_number: 'INV-2026-002',
-      supplier_name: 'Metro Dairy Distributors',
-      invoice_date: '2026-08-02',
-      subtotal: 48000,
-      tax_gst: 2400,
-      grand_total: 50400,
-      status: 'Verified',
-      riskScore: '0.02 (Safe)',
-      items: [
-        { name: 'Fresh Milk 1L Pack', qty: 200, price: 60, tax: 600 }
-      ],
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 'INV-2026-003',
-      user_id: 'OWNER-METRO-8492',
-      invoice_number: 'INV-2026-003',
-      supplier_name: 'Unknown Traders Corp',
-      invoice_date: '2026-08-03',
-      subtotal: 89000,
-      tax_gst: 16020,
-      grand_total: 105020,
-      status: 'Flagged High Risk',
-      riskScore: '0.94 (Suspicious)',
-      duplicateReason: 'Duplicate invoice number INV-2026-003 detected from Unknown Traders Corp.',
-      items: [
-        { name: 'Bulk Sugar 50kg', qty: 40, price: 2000, tax: 16000 }
-      ],
-      created_at: new Date().toISOString(),
-    }
-  ],
-  payments: [
-    {
-      id: 'PAY-901',
-      user_id: 'OWNER-METRO-8492',
-      recipient: 'Apex Supermarket Wholesale',
-      amount: '₹ 1,47,500',
-      date: '2026-08-02',
-      mode: 'NEFT / Bank Transfer',
-      status: 'Completed',
-    },
-    {
-      id: 'PAY-902',
-      user_id: 'OWNER-METRO-8492',
-      recipient: 'Metro Dairy Distributors',
-      amount: '₹ 50,400',
-      date: '2026-08-03',
-      mode: 'UPI AutoPay',
-      status: 'Completed',
-    },
-  ],
-  expenses: [
-    {
-      id: 'EXP-101',
-      user_id: 'OWNER-METRO-8492',
-      category: 'Electricity Bill',
-      amount: '₹ 18,450',
-      date: '2026-08-01',
-      paidTo: 'State Electricity Board',
-      status: 'Paid',
-    },
-    {
-      id: 'EXP-102',
-      user_id: 'OWNER-METRO-8492',
-      category: 'Store Logistics & Freight',
-      amount: '₹ 6,200',
-      date: '2026-08-02',
-      paidTo: 'Express Cargo Logistics',
-      status: 'Paid',
-    },
-    {
-      id: 'EXP-103',
-      user_id: 'OWNER-METRO-8492',
-      category: 'Shop Maintenance',
-      amount: '₹ 3,500',
-      date: '2026-08-03',
-      paidTo: 'Local Repair Services',
-      status: 'Paid',
-    },
-  ],
-  transactions: [
-    { id: 'TRX-9011', user_id: 'OWNER-METRO-8492', date: '03 Aug 2026, 09:30 AM', type: 'IN', description: 'Daily Store Retail Customer Sales', category: 'Sales Revenue', amount: '+₹ 1,45,000', balance: '₹ 14,80,000' },
-    { id: 'TRX-9010', user_id: 'OWNER-METRO-8492', date: '02 Aug 2026, 04:15 PM', type: 'OUT', description: 'Vendor Payment - Apex Wholesale', category: 'Supplier Bills', amount: '-₹ 45,000', balance: '₹ 13,35,000' },
-    { id: 'TRX-9009', user_id: 'OWNER-METRO-8492', date: '01 Aug 2026, 06:00 PM', type: 'OUT', description: 'Store Electricity Bill Payment', category: 'Shop Utilities', amount: '-₹ 18,400', balance: '₹ 13,80,000' },
-    { id: 'TRX-9008', user_id: 'OWNER-METRO-8492', date: '31 Jul 2026, 02:30 PM', type: 'IN', description: 'Wholesale Bulk Order Payment', category: 'Bulk Sales', amount: '+₹ 3,20,000', balance: '₹ 13,98,400' },
-    { id: 'TRX-9007', user_id: 'OWNER-METRO-8492', date: '30 Jul 2026, 11:00 AM', type: 'OUT', description: 'Monthly Staff Salary Payout', category: 'Employee Salaries', amount: '-₹ 1,65,000', balance: '₹ 10,78,400' },
-  ],
-  inventory: [
-    {
-      id: 'SKU-101',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Cooking Oil (5L Pack)',
-      category: 'Grocery & FMCG',
-      stockQty: 12,
-      minAlertThreshold: 20,
-      unitPrice: '₹ 720',
-      status: 'Low Stock Alert',
-      supplier: 'Apex Supermarket Wholesale',
-    },
-    {
-      id: 'SKU-102',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Basmati Rice Bags (25kg)',
-      category: 'Grains & Pulses',
-      stockQty: 8,
-      minAlertThreshold: 15,
-      unitPrice: '₹ 1,850',
-      status: 'Low Stock Alert',
-      supplier: 'Apex Supermarket Wholesale',
-    },
-    {
-      id: 'SKU-103',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Refined Sugar (1kg)',
-      category: 'Grocery & FMCG',
-      stockQty: 15,
-      minAlertThreshold: 25,
-      unitPrice: '₹ 46',
-      status: 'Low Stock Alert',
-      supplier: 'Metro Dairy Distributors',
-    },
-    {
-      id: 'SKU-104',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Fresh Whole Milk (1L)',
-      category: 'Dairy Products',
-      stockQty: 85,
-      minAlertThreshold: 30,
-      unitPrice: '₹ 60',
-      status: 'Healthy Stock',
-      supplier: 'Metro Dairy Distributors',
-    },
-    {
-      id: 'SKU-105',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Detergent Powder (1kg)',
-      category: 'Cleaning Supplies',
-      stockQty: 42,
-      minAlertThreshold: 15,
-      unitPrice: '₹ 110',
-      status: 'Healthy Stock',
-      supplier: 'Unknown Traders',
-    },
-  ],
-  vendors: [
-    {
-      id: 'VEND-01',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Apex Supermarket Wholesale',
-      contactPerson: 'Rajesh Mehta',
-      phone: '9820011223',
-      gstin: '27AAAAA0000A1Z5',
-      totalBilled: '₹ 14,85,000',
-      trustScore: '98% (Verified)',
-    },
-    {
-      id: 'VEND-02',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Metro Dairy Distributors',
-      contactPerson: 'Anil Verma',
-      phone: '9820033445',
-      gstin: '27BBBBB1111B1Z6',
-      totalBilled: '₹ 6,40,000',
-      trustScore: '99% (Verified)',
-    },
-    {
-      id: 'VEND-03',
-      user_id: 'OWNER-METRO-8492',
-      name: 'Unknown Traders Corp',
-      contactPerson: 'Vijay Gupta',
-      phone: '9820099887',
-      gstin: '27INVALID0000Z1',
-      totalBilled: '₹ 1,05,020',
-      trustScore: '12% (High Fraud Risk)',
-    },
-  ],
-  gst_rates: [
-    { hsn_code: '1512', category: 'Edible Oils', gst_rate: 5, status: 'Active' },
-    { hsn_code: '1006', category: 'Basmati Rice', gst_rate: 5, status: 'Active' },
-    { hsn_code: '0405', category: 'Butter & Dairy Fats', gst_rate: 12, status: 'Active' },
-    { hsn_code: '1701', category: 'Refined Cane Sugar', gst_rate: 5, status: 'Active' },
-    { hsn_code: '8471', category: 'POS Computers & Hardware', gst_rate: 18, status: 'Active' },
-  ],
-  fraud_alerts: [
-    {
-      id: 'ALT-101',
-      user_id: 'OWNER-METRO-8492',
-      type: 'Duplicate Bill Detected',
-      message: 'Duplicate bill INV-2026-003 detected from Unknown Traders Corp.',
-      severity: 'HIGH',
-      timestamp: new Date().toISOString(),
-      resolved: false,
-    },
-  ],
-  activity_logs: [],
-  webhooks: [],
-  settings: {
-    'OWNER-METRO-8492': {
-      business_profile: {
-        company_name: 'Metro Superstore Ltd',
-        legal_name: 'Metro Retail & Distribution Private Limited',
-        gstin: '33AABCM8291M1Z5',
-        pan: 'AABCM8291M',
-        business_type: 'Supermarket & FMCG Retail',
-        registration_date: '2021-04-15',
-      },
-      shop_info: {
-        store_code: 'STORE-HQ-01',
-        branch_name: 'Main Flagship Store - Anna Nagar',
-        address: 'Plot 42, 2nd Avenue, Anna Nagar East, Chennai, Tamil Nadu 600102',
-        phone: '+91 98765 43210',
-        email: 'store@metrosuperstore.in',
-        currency: 'INR (₹)',
-        timezone: 'Asia/Kolkata (IST)',
-        operating_hours: '08:00 AM - 10:30 PM (Mon-Sun)',
-      },
-      security: {
-        two_factor_auth: false,
-        session_timeout_minutes: 60,
-        enforce_strong_passwords: true,
-        allow_multi_device_login: true,
-        ip_whitelist_enabled: false,
-      },
-      app_preferences: {
-        theme: 'dark',
-        date_format: 'DD/MM/YYYY',
-        auto_backup_enabled: true,
-        invoice_prefix: 'INV-2026-',
-        barcode_scanner_auto_submit: true,
-      },
-    }
-  },
-  roles_permissions: [
-    {
-      role_id: 'owner',
-      title: 'Business Owner',
-      description: 'Unrestricted full administrative control across all store operations, reports, staff, and settings.',
-      modules: ['overview', 'ai_assistant', 'invoices', 'pos_billing', 'pending_bills', 'expenses', 'transactions', 'compliance', 'inventory', 'vendors', 'add_employee', 'employees', 'audit_logs', 'settings'],
-    },
-    {
-      role_id: 'financier',
-      title: 'Financier / Store Accountant',
-      description: 'Access to financial ledger, cash in/out records, tax compliance, and financial reports.',
-      modules: ['transactions', 'expenses', 'compliance', 'audit_logs'],
-    },
-    {
-      role_id: 'cashier',
-      title: 'Store Cashier & Billing Executive',
-      description: 'Customer point-of-sale checkout, customer billing, receipt printing, and read-only inventory lookup.',
-      modules: ['pos_billing', 'pending_bills', 'inventory_readonly'],
-    },
-    {
-      role_id: 'store_manager',
-      title: 'Stock & Store Manager',
-      description: 'Inventory management, stock adjustments, vendor orders, and warehouse tracking.',
-      modules: ['inventory', 'vendors', 'audit_logs'],
-    },
-  ],
+const SUPABASE_URL    = process.env.SUPABASE_URL;
+const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SECRET) {
+  console.error('[DB FATAL]: SUPABASE_URL or SUPABASE_SECRET_KEY is not set in .env');
+  process.exit(1);
+}
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET, {
+  auth: { persistSession: false },
+});
+
+// ── Table name aliases ─────────────────────────────────────────────────────────
+// The old code referenced 'employees'; Supabase table is 'employees'.
+// The old code referenced 'vendors';   Supabase table is 'vendors'.
+const TABLE_MAP = {
+  employees:      'employees',
+  vendors:        'vendors',
+  inventory:      'inventory',
+  invoices:       'invoices',
+  payments:       'payments',
+  customer_bills: 'customer_bills',
+  transactions:   'transactions',
+  expenses:       'expenses',
+  fraud_alerts:   'fraud_alerts',
+  activity_logs:  'activity_logs',
+  users:          'users',
+  staff:          'employees',   // legacy alias
 };
 
-class Database {
+// ── Column normalisation: snake_case → camelCase for inventory ────────────────
+function normaliseRow(tableName, row) {
+  if (!row) return row;
+  if (tableName === 'inventory') {
+    return {
+      ...row,
+      stockQty:           row.stock_qty           ?? row.stockQty,
+      minAlertThreshold:  row.min_alert_threshold  ?? row.minAlertThreshold,
+      unitPrice:          row.unit_price            ?? row.unitPrice,
+      costPrice:          row.cost_price            ?? row.costPrice,
+      sellingPrice:       row.selling_price         ?? row.sellingPrice,
+      gstRate:            row.gst_rate              ?? row.gstRate,
+      supplierName:       row.supplier_name         ?? row.supplierName ?? row.supplier,
+      supplier:           row.supplier_name         ?? row.supplier,
+    };
+  }
+  if (tableName === 'employees' || tableName === 'staff') {
+    return {
+      ...row,
+      salary_date:     row.salary_date     ?? row.salaryDate,
+      payment_status:  row.payment_status  ?? row.paymentStatus,
+      payment_history: row.payment_history ?? row.paymentHistory ?? [],
+      joined_date:     row.joined_date     ?? row.joinedDate,
+      joinedDate:      row.joined_date     ?? row.joinedDate,
+    };
+  }
+  if (tableName === 'vendors') {
+    return {
+      ...row,
+      contactPerson: row.contact_person ?? row.contactPerson,
+      totalBilled:   row.total_billed   ?? row.totalBilled,
+      trustScore:    row.trust_score    ?? row.trustScore,
+    };
+  }
+  return row;
+}
+
+// ── Column normalisation: camelCase → snake_case for writes ─────────────────
+function toDbRow(tableName, obj) {
+  if (!obj) return obj;
+  const row = { ...obj };
+  if (tableName === 'inventory') {
+    if (row.stockQty           !== undefined) { row.stock_qty           = row.stockQty;           delete row.stockQty; }
+    if (row.minAlertThreshold  !== undefined) { row.min_alert_threshold = row.minAlertThreshold;  delete row.minAlertThreshold; }
+    if (row.unitPrice          !== undefined) { row.unit_price          = row.unitPrice;          delete row.unitPrice; }
+    if (row.costPrice          !== undefined) { row.cost_price          = row.costPrice;          delete row.costPrice; }
+    if (row.sellingPrice       !== undefined) { row.selling_price       = row.sellingPrice;       delete row.sellingPrice; }
+    if (row.gstRate            !== undefined) { row.gst_rate            = row.gstRate;            delete row.gstRate; }
+    if (row.supplier           !== undefined) { row.supplier_name       = row.supplier;           delete row.supplier; }
+    if (row.supplierName       !== undefined) { row.supplier_name       = row.supplierName;       delete row.supplierName; }
+  }
+  if (tableName === 'employees' || tableName === 'staff') {
+    if (row.salaryDate       !== undefined) { row.salary_date     = row.salaryDate;     delete row.salaryDate; }
+    if (row.paymentStatus    !== undefined) { row.payment_status  = row.paymentStatus;  delete row.paymentStatus; }
+    if (row.paymentHistory   !== undefined) { row.payment_history = row.paymentHistory; delete row.paymentHistory; }
+    if (row.joinedDate       !== undefined) { row.joined_date     = row.joinedDate;     delete row.joinedDate; }
+  }
+  if (tableName === 'vendors') {
+    if (row.contactPerson !== undefined) { row.contact_person = row.contactPerson; delete row.contactPerson; }
+    if (row.totalBilled   !== undefined) { row.total_billed   = row.totalBilled;   delete row.totalBilled; }
+    if (row.trustScore    !== undefined) { row.trust_score    = row.trustScore;    delete row.trustScore; }
+  }
+  return row;
+}
+
+// ── Helper: resolve real table name ──────────────────────────────────────────
+function resolveTable(name) {
+  return TABLE_MAP[name] || name;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Database class — exposes the same API as the old JSON wrapper
+// All methods are async and return resolved values (not Promises) via await
+// at the route level.
+// ═══════════════════════════════════════════════════════════════════════════════
+class SupabaseDatabase {
+  /**
+   * getTable(tableName) — fetch all rows for a table (synchronous-style shim).
+   * Because routes call this synchronously (db.getTable(...).filter(...)),
+   * we cache a per-request snapshot.
+   *
+   * NOTE: For full Supabase integration routes should call await db.fetchTable().
+   * The synchronous shim below works for the transition period by returning
+   * the last-fetched snapshot.  Use db.fetchTable(name) for fresh data.
+   */
   constructor() {
-    this.data = initialDatabase;
-    this.load();
+    this._cache = {};
   }
 
-  load() {
-    try {
-      if (fs.existsSync(DATA_FILE)) {
-        const raw = fs.readFileSync(DATA_FILE, 'utf8');
-        this.data = JSON.parse(raw);
-      } else {
-        this.save();
-      }
-    } catch (err) {
-      console.error('[DB Load Error]:', err.message);
-      this.data = initialDatabase;
+  // ── Async: fetch all rows for a table scoped by user ──────────────────────
+  async fetchTable(tableName) {
+    const tbl = resolveTable(tableName);
+    const { data, error } = await supabase.from(tbl).select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error(`[DB fetchTable ${tbl}]:`, error.message);
+      return [];
     }
+    const rows = (data || []).map(r => normaliseRow(tableName, r));
+    this._cache[tableName] = rows;
+    return rows;
   }
 
-  save() {
-    try {
-      fs.writeFileSync(DATA_FILE, JSON.stringify(this.data, null, 2), 'utf8');
-    } catch (err) {
-      console.error('[DB Save Error]:', err.message);
-    }
-  }
-
+  // ── Sync shim (returns cached snapshot — call fetchTable first) ───────────
   getTable(tableName) {
-    if (!this.data[tableName]) {
-      this.data[tableName] = [];
+    return this._cache[tableName] || [];
+  }
+
+  // ── Async: insert a row ───────────────────────────────────────────────────
+  async insert(tableName, item) {
+    const tbl = resolveTable(tableName);
+    const dbRow = toDbRow(tableName, { ...item });
+    // Remove undefined values
+    Object.keys(dbRow).forEach(k => { if (dbRow[k] === undefined) delete dbRow[k]; });
+
+    const { data, error } = await supabase.from(tbl).insert(dbRow).select().single();
+    if (error) {
+      console.error(`[DB insert ${tbl}]:`, error.message);
+      throw new Error(error.message);
     }
-    return this.data[tableName];
+    return normaliseRow(tableName, data);
   }
 
-  insert(tableName, item) {
-    const table = this.getTable(tableName);
-    table.unshift(item);
-    this.save();
-    return item;
-  }
+  // ── Async: update rows matching a field value ─────────────────────────────
+  async update(tableName, matchField, matchValue, updateData) {
+    const tbl = resolveTable(tableName);
+    const dbRow = toDbRow(tableName, { ...updateData });
+    Object.keys(dbRow).forEach(k => { if (dbRow[k] === undefined) delete dbRow[k]; });
 
-  update(tableName, predicate, updateFnOrObj) {
-    const table = this.getTable(tableName);
-    let foundItem = null;
-    for (const item of table) {
-      if (predicate(item)) {
-        if (typeof updateFnOrObj === 'function') {
-          updateFnOrObj(item);
-        } else if (typeof updateFnOrObj === 'object' && updateFnOrObj !== null) {
-          Object.assign(item, updateFnOrObj);
-        }
-        foundItem = item;
-        break;
-      }
+    const { data, error } = await supabase
+      .from(tbl)
+      .update(dbRow)
+      .eq(matchField, matchValue)
+      .select()
+      .single();
+
+    if (error) {
+      console.error(`[DB update ${tbl}]:`, error.message);
+      throw new Error(error.message);
     }
-    if (foundItem) this.save();
-    return foundItem;
+    return normaliseRow(tableName, data);
   }
 
-  delete(tableName, predicate) {
-    if (!this.data[tableName]) return 0;
-    const initialLen = this.data[tableName].length;
-    this.data[tableName] = this.data[tableName].filter(item => !predicate(item));
-    const deletedCount = initialLen - this.data[tableName].length;
-    if (deletedCount > 0) this.save();
-    return deletedCount;
+  // ── Async: delete rows matching a field value ─────────────────────────────
+  async delete(tableName, matchField, matchValue) {
+    const tbl = resolveTable(tableName);
+    const { error, count } = await supabase
+      .from(tbl)
+      .delete()
+      .eq(matchField, matchValue);
+
+    if (error) {
+      console.error(`[DB delete ${tbl}]:`, error.message);
+      throw new Error(error.message);
+    }
+    return count || 1;
+  }
+
+  // ── Async: fetch rows scoped by shopId ────────────────────────────────────
+  async fetchScoped(tableName, shopId) {
+    const tbl = resolveTable(tableName);
+    const { data, error } = await supabase
+      .from(tbl)
+      .select('*')
+      .eq('user_id', shopId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error(`[DB fetchScoped ${tbl}]:`, error.message);
+      return [];
+    }
+    return (data || []).map(r => normaliseRow(tableName, r));
+  }
+
+  // ── Async: upsert settings (single record per user) ───────────────────────
+  async upsertSettings(shopId, settingsData) {
+    const { data, error } = await supabase
+      .from('settings')
+      .upsert({ user_id: shopId, data: settingsData, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+      .select()
+      .single();
+    if (error) {
+      console.error('[DB upsertSettings]:', error.message);
+      throw new Error(error.message);
+    }
+    return data;
+  }
+
+  // ── Async: fetch settings for a shop ──────────────────────────────────────
+  async fetchSettings(shopId) {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('data')
+      .eq('user_id', shopId)
+      .single();
+    if (error && error.code !== 'PGRST116') {  // PGRST116 = row not found
+      console.error('[DB fetchSettings]:', error.message);
+    }
+    return data?.data || null;
   }
 }
 
-export const db = new Database();
+export const db = new SupabaseDatabase();
