@@ -32,8 +32,15 @@ async function getFullStoreContext(shopId) {
 
   const totalSales = customerBills.filter(b => b.status === 'Paid')
     .reduce((sum, b) => sum + cleanNum(b.grand_total), 0);
-  const totalExpenses = expenses.reduce((sum, e) => sum + cleanNum(e.amount), 0)
+
+  const vendorReturnCredits = transactions
+    .filter(t => t.category === 'vendor_return' || t.transaction_type === 'vendor_return')
+    .reduce((sum, t) => sum + cleanNum(t.amount), 0);
+
+  const grossExpenses = expenses.reduce((sum, e) => sum + cleanNum(e.amount), 0)
     + invoices.reduce((sum, i) => sum + cleanNum(i.grand_total), 0);
+
+  const totalExpenses = Math.max(0, grossExpenses - vendorReturnCredits);
 
   const pendingBills = customerBills.filter(b =>
     b.status === 'Pending' || b.status === 'Pending Payment (Credit)'
@@ -406,6 +413,16 @@ Generate 5 specific actionable growth strategies for this store. Keep it concise
       report: payload,
       webhookStatus: webhookResult,
     });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/reports/audit-logs
+router.get('/audit-logs', async (req, res) => {
+  try {
+    const logs = await db.fetchScoped('activity_logs', req.shopId);
+    res.json({ success: true, logs });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

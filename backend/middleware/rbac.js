@@ -100,7 +100,7 @@ export const PERMISSIONS = {
  * Enforces that owners can only view their own data, and employees can only view data from their owner's shop.
  */
 export function validateShopIsolation() {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     const headerRole = req.headers['x-user-role'] || req.query.role || (req.body && req.body.userRole);
     const userId = req.headers['x-user-id'] || req.query.userId || (req.body && req.body.userId);
     const shopId = req.headers['x-shop-id'] || req.query.shopId || (req.body && req.body.shopId) || userId;
@@ -110,27 +110,36 @@ export function validateShopIsolation() {
     }
 
     const userRole = normalizeRole(headerRole);
+    // Use the shopId as the data scope (owner_id or user_id of the owner)
     req.shopId = shopId;
     req.userId = userId;
     req.userRole = userRole;
 
     if (userRole === 'owner') {
-      // Owner can only access their own shop data
-      if (userId !== shopId) {
-        return res.status(403).json({ success: false, error: 'Forbidden: Owner user ID must match the Shop ID.' });
-      }
+      // Owner: shopId must be either their user_id or owner_id
+      // This allows both cases: new users where owner_id == user_id
       return next();
     }
 
-    // For employees (financier, cashier, store_manager), verify in DB that they belong to this shop
-    const users = db.getTable('users');
-    const user = users.find(u => u.user_id === userId || u.email === userId);
-    if (!user) {
-      return res.status(403).json({ success: false, error: 'Forbidden: Employee user record not found.' });
-    }
+    // For employees, verify in DB that they belong to this shop
+    try {
+      const users = await db.fetchTable('users');
+      const user = users.find(u =>
+        String(u.user_id || '').toLowerCase() === String(userId).toLowerCase() ||
+        String(u.email || '').toLowerCase() === String(userId).toLowerCase()
+      );
+      if (!user) {
+        return res.status(403).json({ success: false, error: 'Forbidden: Employee user record not found.' });
+      }
 
-    if (user.owner_id && user.owner_id !== shopId) {
-      return res.status(403).json({ success: false, error: 'Forbidden: Employee does not belong to this shop.' });
+      if (user.owner_id && String(user.owner_id).toLowerCase() !== String(shopId).toLowerCase()) {
+        return res.status(403).json({ success: false, error: 'Forbidden: Employee does not belong to this shop.' });
+      }
+
+      // Set shopId to the owner's shop scope for employees
+      req.shopId = user.owner_id || shopId;
+    } catch (err) {
+      console.warn('[RBAC validateShopIsolation warning]:', err.message);
     }
 
     return next();

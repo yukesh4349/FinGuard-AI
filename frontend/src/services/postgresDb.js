@@ -39,84 +39,112 @@ export function getStoredUsers() {
 }
 
 export async function registerUserInPostgres({ companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role = 'owner' }) {
-  // Sync to Supabase
-  try {
-    await registerUserInSupabase({ companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role });
-  } catch (supaErr) {
-    console.warn('[Supabase Registration Sync]:', supaErr);
-  }
+  const customUserId = `USR-${Math.floor(1000 + Math.random() * 9000)}`;
+  let createdUser = null;
 
+  // 1. Register via Express API backend
   try {
-    const res = await apiSignup({ companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role });
-    if (res.success) {
-      triggerWebhookNode({
-        event: 'user_signup',
-        login_id: res.user.user_id,
-        main_id: res.user.user_id,
-        mobile_number: res.user.mobile_number,
-        name: companyName,
-        email,
-        company_name: companyName,
-        company_address: companyAddress,
-        business_type: businessType,
-        employee_count: employeeCount,
-      });
-      return { success: true, user: res.user, message: res.message };
+    const res = await apiSignup({ companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role, customUserId });
+    if (res.success && res.user) {
+      createdUser = res.user;
     }
   } catch (err) {
     console.error('[Signup API Error]:', err);
   }
 
-  // Local fallback user object
-  const fallbackUser = {
-    user_id: `USR-${Math.floor(1000 + Math.random() * 9000)}`,
-    company_name: companyName,
-    company_address: companyAddress || '',
-    business_type: businessType || 'Supermarket',
-    employee_count: employeeCount || '5',
-    mobile_number: mobileNumber,
-    email: email.toLowerCase().trim(),
-    password_hash: password,
-    role: role,
-    created_at: new Date().toISOString(),
-  };
+  // 2. Sync with Supabase client
+  try {
+    const supaRes = await registerUserInSupabase({
+      companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role,
+      userId: createdUser?.user_id || customUserId
+    });
+    if (!createdUser && supaRes.success) {
+      createdUser = supaRes.user;
+    }
+  } catch (supaErr) {
+    console.warn('[Supabase Registration Sync]:', supaErr);
+  }
 
-  return { success: true, user: fallbackUser, message: 'Registration successful!' };
+  if (!createdUser) {
+    createdUser = {
+      user_id: customUserId,
+      company_name: companyName,
+      company_address: companyAddress || '',
+      business_type: businessType || 'General Store',
+      employee_count: employeeCount || '5',
+      mobile_number: mobileNumber,
+      email: email ? email.toLowerCase().trim() : `${mobileNumber}@finguard.ai`,
+      password_hash: password,
+      role: role,
+      created_at: new Date().toISOString(),
+    };
+  }
+
+  // Update local storage cache
+  try {
+    const existingUsers = JSON.parse(localStorage.getItem('finsight_postgres_users') || '[]');
+    existingUsers.unshift(createdUser);
+    localStorage.setItem('finsight_postgres_users', JSON.stringify(existingUsers));
+  } catch (e) {}
+
+  triggerWebhookNode({
+    event: 'user_signup',
+    login_id: createdUser.user_id,
+    main_id: createdUser.user_id,
+    mobile_number: mobileNumber,
+    name: companyName,
+    email,
+    company_name: companyName,
+    company_address: companyAddress,
+    business_type: businessType,
+    employee_count: employeeCount,
+  });
+
+  return { success: true, user: createdUser, message: 'Registration successful!' };
 }
 
 export async function authenticateUserInPostgres(identifier = '', password = '', mobileNumber = '') {
-  // 1. First authenticate with Supabase Client
-  const supaRes = await authenticateUserInSupabase(identifier, password);
-  if (supaRes.success) {
-    triggerWebhookNode({
-      event: 'user_login',
-      login_id: supaRes.user.user_id || supaRes.user.email,
-      main_id: supaRes.user.user_id || supaRes.user.email,
-      mobile_number: supaRes.user.mobile_number || mobileNumber,
-      name: supaRes.user.company_name,
-      email: supaRes.user.email,
-      company_name: supaRes.user.company_name,
-    });
-    return supaRes;
-  }
-
-  // 2. Try Express API auth endpoint
+  // 1. Try Express REST API first (primary source of truth)
   try {
-    const res = await apiLogin(identifier, password);
-    if (res.success) {
+    const res = await apiLogin(identifier, password, null, mobileNumber);
+    if (res.success && res.user) {
+      // Ensure owner accounts have owner_id == user_id
+      const user = { ...res.user };
+      if (!user.role || user.role === 'owner') {
+        user.owner_id = user.owner_id || user.user_id;
+      }
       triggerWebhookNode({
         event: 'user_login',
-        login_id: res.user.user_id,
-        main_id: res.user.user_id,
-        mobile_number: res.user.mobile_number || mobileNumber,
-        name: res.user.company_name,
-        email: res.user.email,
-        company_name: res.user.company_name,
+        login_id: user.user_id,
+        main_id: user.user_id,
+        mobile_number: user.mobile_number || mobileNumber,
+        name: user.company_name,
+        email: user.email,
+        company_name: user.company_name,
       });
-      return { success: true, user: res.user, isSuperAdmin: res.user.role === 'super_admin' };
+      return { success: true, user, isSuperAdmin: user.role === 'super_admin' };
     }
   } catch (err) {
-    console.error('[Auth API Error]:', err);
+    console.warn('[Auth REST API Warning]:', err.message);
+  }
+
+  // 2. Fall back to Supabase / Local storage auth
+  const supaRes = await authenticateUserInSupabase(identifier, password, mobileNumber);
+  if (supaRes.success) {
+    const user = { ...supaRes.user };
+    if (!user.role || user.role === 'owner') {
+      user.owner_id = user.owner_id || user.user_id;
+    }
+    triggerWebhookNode({
+      event: 'user_login',
+      login_id: user.user_id || user.email,
+      main_id: user.user_id || user.email,
+      mobile_number: user.mobile_number || mobileNumber,
+      name: user.company_name,
+      email: user.email,
+      company_name: user.company_name,
+    });
+    return { ...supaRes, user };
   }
 
   return supaRes;
@@ -187,16 +215,21 @@ export async function saveEmployeeToDb(emp) {
 }
 
 export async function fetchInventoryFromBackend() {
+  const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+  const activeUserId = activeUser.user_id || activeUser.email || 'user';
+  const userKey = String(activeUserId).toLowerCase().replace(/[^a-z0-9]/g, '');
+  const localKey = userKey && userKey !== 'user' ? `finsight_stock_inventory_${userKey}` : 'finsight_stock_inventory';
+
   try {
     const res = await apiGetInventory();
     if (res && res.inventory) {
-      localStorage.setItem('finsight_stock_inventory', JSON.stringify(res.inventory));
+      localStorage.setItem(localKey, JSON.stringify(res.inventory));
       return res.inventory;
     }
   } catch (e) {
     console.warn('[Postgres Service]: Falling back to local storage cache for inventory');
   }
-  const raw = localStorage.getItem('finsight_stock_inventory');
+  const raw = localStorage.getItem(localKey);
   return raw ? JSON.parse(raw) : [];
 }
 

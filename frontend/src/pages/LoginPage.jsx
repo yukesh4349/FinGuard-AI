@@ -113,17 +113,30 @@ export default function LoginPage({
         setIsLoggingIn(false);
         if (result.success) {
           setIsSuccess(true);
+          const loggedUserId = result.user?.user_id || userId;
+          const loggedRole = result.user?.role || (selectedRole ? selectedRole.id : 'owner');
+          // For owners: owner_id = their own user_id (data scope = their account)
+          const loggedOwnerId = (loggedRole === 'owner')
+            ? loggedUserId
+            : (result.user?.owner_id || loggedUserId);
           const activeUserObj = {
-            user_id: result.user?.user_id || userId,
+            user_id: loggedUserId,
+            owner_id: loggedOwnerId,
             company_name: result.user?.company_name || companyName,
             email: result.user?.email || userId,
-            role: result.user?.role || (selectedRole ? selectedRole.id : 'owner'),
+            role: loggedRole,
             mobile_number: result.user?.mobile_number || mobileNum,
           };
           localStorage.setItem('finsight_active_user', JSON.stringify(activeUserObj));
+          // Clear stale global (non-user-scoped) caches to prevent cross-user data bleed
+          localStorage.removeItem('finsight_stock_inventory');
+          localStorage.removeItem('finsight_ocr_invoices');
+          localStorage.removeItem('finsight_customer_invoices');
+          localStorage.removeItem('finsight_transactions');
+          localStorage.removeItem('finsight_expenses');
           if (result.user?.company_name) setCompanyName(result.user.company_name);
           if (onNavigateToDashboard) {
-            onNavigateToDashboard(result.user?.role || (selectedRole ? selectedRole.id : 'owner'), result.user?.company_name || companyName, userId || 'OWNER-USER');
+            onNavigateToDashboard(loggedRole, result.user?.company_name || companyName, loggedUserId);
           }
         } else {
           setErrorMessage(result.message || 'Invalid Email, Password, or Mobile Number.');

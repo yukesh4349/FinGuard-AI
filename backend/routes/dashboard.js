@@ -61,9 +61,9 @@ router.get('/stats', async (req, res) => {
         pendingBillsCount,
         pendingBillsAmount,
         sparklines: {
-          revenue: [40, 55, 70, 60, 85, 95],
-          profit:  [20, 25, 38, 42, 50, 64],
-          gst:     [12, 18, 22, 28, 32, 48],
+          revenue: invoices.length > 0 ? [40, 55, 70, 60, 85, 95] : [0, 0, 0, 0, 0, 0],
+          profit:  invoices.length > 0 ? [20, 25, 38, 42, 50, 64] : [0, 0, 0, 0, 0, 0],
+          gst:     invoices.length > 0 ? [12, 18, 22, 28, 32, 48] : [0, 0, 0, 0, 0, 0],
         },
       },
     });

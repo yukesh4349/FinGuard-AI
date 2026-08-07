@@ -255,6 +255,27 @@ CREATE INDEX idx_settings_user_id ON public.settings(user_id);
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY settings_policy ON public.settings FOR ALL USING (true) WITH CHECK (true);
 
+-- ── 13. SALARY PAYMENTS TABLE ────────────────────────────────────────
+CREATE TABLE public.salary_payments (
+    id             VARCHAR(100) PRIMARY KEY,
+    user_id        VARCHAR(100) NOT NULL,
+    owner_id       VARCHAR(100) NOT NULL,
+    employee_id    VARCHAR(100) NOT NULL,
+    employee_name  VARCHAR(255),
+    amount         DECIMAL(12,2) NOT NULL,
+    payment_date   DATE         DEFAULT CURRENT_DATE,
+    status         VARCHAR(50)  DEFAULT 'Paid',
+    payment_method VARCHAR(50)  DEFAULT 'Cash',
+    created_at     TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_salary_payments_user_id ON public.salary_payments(user_id);
+CREATE INDEX idx_salary_payments_owner_id ON public.salary_payments(owner_id);
+CREATE INDEX idx_salary_payments_employee ON public.salary_payments(employee_id);
+
+ALTER TABLE public.salary_payments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY salary_payments_policy ON public.salary_payments FOR ALL USING (true) WITH CHECK (true);
+
 -- ── 13. OFFICIAL GOVT GST RATES TABLE ────────────────────────────────
 CREATE TABLE public.official_gst_rates (
     id       SERIAL PRIMARY KEY,

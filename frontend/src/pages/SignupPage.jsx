@@ -114,15 +114,27 @@ export default function SignupPage({ onBack, onNavigateToLogin }) {
         setIsSubmitting(false);
         if (result.success) {
           setCreatedUser(result.user);
+          const userId = result.user?.user_id || email;
+          // For owners: owner_id MUST equal user_id so all their data is scoped to their own account
+          const ownerId = result.user?.owner_id || userId;
           const activeUserObj = {
-            user_id: result.user?.user_id || email,
+            user_id: userId,
+            owner_id: ownerId,
             owner_name: ownerName,
             company_name: companyName,
             company_address: companyAddress,
             employee_count: employeeCount,
             email: email,
+            mobile_number: mobileNum,
+            role: result.user?.role || 'owner',
           };
           localStorage.setItem('finsight_active_user', JSON.stringify(activeUserObj));
+          // Clear any stale global inventory / invoice caches so new owner starts fresh
+          localStorage.removeItem('finsight_stock_inventory');
+          localStorage.removeItem('finsight_ocr_invoices');
+          localStorage.removeItem('finsight_customer_invoices');
+          localStorage.removeItem('finsight_transactions');
+          localStorage.removeItem('finsight_expenses');
         } else {
           setErrorMessage(result.message || 'Error creating account.');
         }

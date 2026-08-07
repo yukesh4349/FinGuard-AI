@@ -24,7 +24,9 @@ import {
   apiCreateInventoryItem,
   apiGetCustomerBills,
   apiPayCustomerBill,
-  apiPayEmployeeSalary
+  apiPayEmployeeSalary,
+  apiReturnVendorItem,
+  apiGetAuditLogs
 } from '../services/api';
 import AiAssistantModule from '../components/dashboard/AiAssistantModule';
 import SettingsModule from '../components/dashboard/SettingsModule';
@@ -153,8 +155,9 @@ export default function BusinessOwnerDashboard({
   useEffect(() => {
     if (moduleId && allowedModuleIds.includes(moduleId)) {
       setActiveModule(moduleId);
-    } else if (!allowedModuleIds.includes(activeModule)) {
+    } else {
       setActiveModule(defaultModuleForRole);
+      navigate(`/dashboard/${defaultModuleForRole}`, { replace: true });
     }
   }, [moduleId, activeRole]);
 
@@ -247,9 +250,26 @@ export default function BusinessOwnerDashboard({
             <img src="/favcon_logo.png" alt="Finora Logo" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)', letterSpacing: '-0.01em' }}>Finora</div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--fg-accent)', letterSpacing: '0.04em' }}>SMART FINANCE & BUSINESS</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--fg-accent)', letterSpacing: '0.04em' }}>SMART FINANCE &amp; BUSINESS</div>
             </div>
           </div>
+        </div>
+
+        {/* Tagline Strip */}
+        <div style={{
+          margin: '0 12px 4px',
+          padding: '7px 12px',
+          borderRadius: 8,
+          background: 'linear-gradient(90deg, rgba(243,205,151,0.10) 0%, rgba(226,179,107,0.06) 100%)',
+          border: '1px solid rgba(243,205,151,0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+        }}>
+          <span style={{ fontSize: 9, color: 'var(--fg-accent)', fontWeight: 700 }}>⚡</span>
+          <span style={{ fontSize: 10, color: 'var(--fg-text-secondary)', fontWeight: 600, letterSpacing: '0.02em' }}>
+            Keep your shop safe from wrong bills &amp; lost profits
+          </span>
         </div>
 
         {/* Module Search */}
@@ -371,10 +391,10 @@ export default function BusinessOwnerDashboard({
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--fg-text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {activeUserSession.name || ownerName || 'Active User'}
+                {activeUserSession.company_name || companyName || 'My Shop'}
               </div>
               <div style={{ fontSize: 10, color: 'var(--fg-accent)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {currentRoleInfo.title}
+                {activeUserSession.owner_name || ownerName || currentRoleInfo.title}
               </div>
             </div>
           </div>
@@ -764,7 +784,7 @@ export default function BusinessOwnerDashboard({
 /* ═════════════════════════════════════════════════════════════════════
    MINI SVG LINE SPARKLINE COMPONENT FOR TOP KPI CARDS
    ═════════════════════════════════════════════════════════════════════ */
-function MiniLineSparkline({ data = [40, 55, 70, 60, 85, 95], color = "#F3CD97" }) {
+function MiniLineSparkline({ data = [0, 0, 0, 0, 0, 0], color = "#F3CD97" }) {
   const min = Math.min(...data);
   const max = Math.max(...data);
   const points = data.map((v, i) => {
@@ -797,10 +817,10 @@ function MiniLineSparkline({ data = [40, 55, 70, 60, 85, 95], color = "#F3CD97" 
    ═════════════════════════════════════════════════════════════════════ */
 function DualLineChart({
   labels = ['Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Aug 2026'],
-  line1Data = [28.4, 34.2, 41.8, 38.5, 44.9, 48.3],
-  line2Data = [26.0, 31.5, 37.8, 41.0, 43.5, 49.8],
-  line1Label = 'Live Cash Flow Revenue (₹ 48.3L)',
-  line2Label = 'AI Working Capital Forecast (₹ 49.8L)',
+  line1Data = [0, 0, 0, 0, 0, 0],
+  line2Data = [0, 0, 0, 0, 0, 0],
+  line1Label = 'Live Cash Flow Revenue',
+  line2Label = 'AI Working Capital Forecast',
   line1Color = '#F3CD97',
   line2Color = '#9B7CFF',
   height = 220,
@@ -994,17 +1014,19 @@ function DualLineChart({
    ═════════════════════════════════════════════════════════════════════ */
 function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenAddEmp, onOpenUpload, onOpenCreateInvoice, onOpenReport }) {
   const [stats, setStats] = useState({
-    totalMonthlyRevenue: '₹ 48.30L',
-    totalInvoicesVal: 4829500,
-    totalInvoicesCount: 3,
-    estimatedGstClaimable: '₹ 32,150',
-    lowStockItemsCount: 3,
-    highRiskInvoicesCount: 1,
-    activeAlertsCount: 2,
+    totalMonthlyRevenue: '₹ 0',
+    totalInvoicesVal: 0,
+    totalInvoicesCount: 0,
+    estimatedGstClaimable: '₹ 0',
+    lowStockItemsCount: 0,
+    highRiskInvoicesCount: 0,
+    activeAlertsCount: 0,
+    pendingBillsCount: 0,
+    pendingBillsAmount: 0,
     sparklines: {
-      revenue: [40, 55, 70, 60, 85, 95],
-      profit: [20, 25, 38, 42, 50, 64],
-      gst: [12, 18, 22, 28, 32, 48],
+      revenue: [0, 0, 0, 0, 0, 0],
+      profit: [0, 0, 0, 0, 0, 0],
+      gst: [0, 0, 0, 0, 0, 0],
     },
   });
 
@@ -2521,74 +2543,130 @@ function AuditLogsModule() {
   const activeUserId = activeUserSession.user_id || activeUserSession.email || 'user';
 
   const [activityLogs, setActivityLogs] = useState([]);
-  const [filterCategory, setFilterCategory] = useState('ALL');
+  const [filterModule, setFilterModule] = useState('ALL');
+  const [filterRole, setFilterRole] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    getActivityLogsFromSupabase(activeUserId).then(logs => {
-      if (logs) setActivityLogs(logs);
-    });
+    let isMounted = true;
+    const fetchLogs = async () => {
+      try {
+        const res = await apiGetAuditLogs();
+        if (res && res.success && Array.isArray(res.logs) && res.logs.length > 0) {
+          if (isMounted) setActivityLogs(res.logs);
+          return;
+        }
+      } catch (err) {}
+      
+      const supaLogs = await getActivityLogsFromSupabase(activeUserId);
+      if (isMounted && supaLogs) setActivityLogs(supaLogs);
+    };
+
+    fetchLogs();
+    return () => { isMounted = false; };
   }, [activeUserId]);
 
-  const filteredLogs = filterCategory === 'ALL'
-    ? activityLogs
-    : activityLogs.filter(l => (l.category || '').toLowerCase().includes(filterCategory.toLowerCase()));
+  const filteredLogs = activityLogs.filter(l => {
+    const modMatch = filterModule === 'ALL' || (l.module || l.category || '').toLowerCase().includes(filterModule.toLowerCase());
+    const roleMatch = filterRole === 'ALL' || (l.user_role || '').toLowerCase().includes(filterRole.toLowerCase());
+    const text = `${l.action || ''} ${l.details || ''} ${l.description || ''} ${l.user_name || ''} ${l.user_role || ''}`.toLowerCase();
+    const queryMatch = !searchQuery || text.includes(searchQuery.toLowerCase());
+    return modMatch && roleMatch && queryMatch;
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            ⏱️ System Audit Logs
+          <h3 style={{ fontSize: 17, fontWeight: 800, color: 'var(--fg-text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            ⏱️ System Audit Logs ({activityLogs.length} Records)
           </h3>
-          <p style={{ fontSize: 11, color: 'var(--fg-text-muted)', marginTop: 2 }}>Complete activity trail of stock additions, deletions, MRP price updates, customer POS sales, and vendor bill uploads saved in Supabase</p>
+          <p style={{ fontSize: 12, color: 'var(--fg-text-muted)', marginTop: 2 }}>
+            Complete tamper-proof activity trail of stock additions, returns, salary payouts, customer bills, and user logins saved in Supabase
+          </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 8 }}>
-          {['ALL', 'Inventory', 'Price Management', 'POS Sales', 'Vendor Billing'].map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilterCategory(cat)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: 8,
-                fontSize: 11,
-                fontWeight: filterCategory === cat ? 800 : 500,
-                background: filterCategory === cat ? 'var(--fg-accent)' : 'var(--fg-bg-card)',
-                color: filterCategory === cat ? '#000' : 'var(--fg-text-secondary)',
-                border: '1px solid var(--fg-border)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Filter Controls */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--fg-surface)', border: '1px solid var(--fg-border)', borderRadius: 8, padding: '4px 10px' }}>
+            <Search size={13} color="var(--fg-text-muted)" />
+            <input
+              type="text"
+              placeholder="Search audit logs..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--fg-text-primary)', fontSize: 12 }}
+            />
+          </div>
+
+          <select
+            value={filterModule}
+            onChange={e => setFilterModule(e.target.value)}
+            className="fg-select"
+            style={{ padding: '6px 10px', fontSize: 11, borderRadius: 8, background: 'var(--fg-surface)', border: '1px solid var(--fg-border)', color: 'var(--fg-text-primary)' }}
+          >
+            <option value="ALL">All Modules</option>
+            <option value="Inventory">Inventory</option>
+            <option value="Billing">Billing (POS)</option>
+            <option value="Employees">Employees / Salary</option>
+            <option value="Authentication">Authentication</option>
+          </select>
+
+          <select
+            value={filterRole}
+            onChange={e => setFilterRole(e.target.value)}
+            className="fg-select"
+            style={{ padding: '6px 10px', fontSize: 11, borderRadius: 8, background: 'var(--fg-surface)', border: '1px solid var(--fg-border)', color: 'var(--fg-text-primary)' }}
+          >
+            <option value="ALL">All Roles</option>
+            <option value="owner">Business Owner</option>
+            <option value="store_manager">Store Manager</option>
+            <option value="cashier">Cashier</option>
+            <option value="financier">Financier</option>
+          </select>
         </div>
       </div>
 
       {filteredLogs.length === 0 ? (
-        <div style={{ padding: 32, textCenter: 'center', background: 'var(--fg-bg-card)', borderRadius: 12, border: '1px solid var(--fg-border)', textAlign: 'center' }}>
-          <p style={{ fontSize: 13, color: 'var(--fg-text-muted)' }}>⏱️ No activity logs recorded yet. Any action like adding/deleting stock, updating MRP prices, generating POS bills, or uploading vendor invoices will record an audit log entry here!</p>
+        <div style={{ padding: 36, background: 'var(--fg-surface)', borderRadius: 14, border: '1px solid var(--fg-border)', textAlign: 'center' }}>
+          <Clock size={32} color="var(--fg-text-muted)" style={{ marginBottom: 10 }} />
+          <p style={{ fontSize: 13, color: 'var(--fg-text-muted)' }}>No matching audit logs recorded yet. Perform actions like vendor returns, customer billing, or paying salaries to generate live audit logs.</p>
         </div>
       ) : (
         <TableCard
-          headers={['Log ID', 'Timestamp / Date', 'Action Event', 'Details & Notes', 'Category']}
+          headers={['Timestamp / Date', 'User & Role', 'Action Event', 'Module', 'Description / Details']}
           rows={filteredLogs.map(l => [
-            l.id || `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
-            l.formattedTime || (l.created_at ? new Date(l.created_at).toLocaleString('en-IN') : 'Just now'),
-            <strong style={{ color: 'var(--fg-text-primary)' }}>{l.action}</strong>,
-            l.details,
+            <span style={{ fontSize: 11, color: 'var(--fg-text-secondary)', fontWeight: 600 }}>
+              {l.formattedTime || (l.created_at ? new Date(l.created_at).toLocaleString('en-IN') : 'Just now')}
+            </span>,
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--fg-text-primary)' }}>
+                {l.user_name || l.employee_id || l.user_id || 'User'}
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--fg-accent)', fontWeight: 600, textTransform: 'capitalize' }}>
+                {l.user_role || 'owner'}
+              </div>
+            </div>,
+            <strong style={{ fontSize: 12, color: 'var(--fg-text-primary)' }}>{l.action}</strong>,
             <span style={{
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: 700,
               padding: '3px 8px',
               borderRadius: 6,
-              background: 'var(--fg-bg-primary)',
-              border: '1px solid var(--fg-border)',
+              background: 'var(--fg-accent-soft)',
+              border: '1px solid var(--fg-border-accent)',
               color: 'var(--fg-accent)',
             }}>
-              {l.category || 'System Log'}
+              {l.module || l.category || 'System'}
             </span>,
+            <div style={{ fontSize: 12, color: 'var(--fg-text-secondary)' }}>
+              {l.description || l.details}
+              {(l.old_value || l.new_value) && (
+                <div style={{ fontSize: 10, color: 'var(--fg-text-muted)', marginTop: 2 }}>
+                  Change: {l.old_value || 'N/A'} → {l.new_value || 'N/A'}
+                </div>
+              )}
+            </div>,
           ])}
         />
       )}
@@ -2840,20 +2918,31 @@ function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false 
       const res = await apiPayEmployeeSalary(empId);
       if (res && res.success) {
         alert('Salary paid successfully!');
-        if (setEmpList) setEmpList(res.employees);
+        if (setEmpList && Array.isArray(res.employees)) {
+          setEmpList(res.employees);
+        }
       }
     } catch (err) {
       alert(`Error paying salary: ${err.message}`);
     }
   };
 
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !phone || !email) return;
+    if (!name || !phone) return;
     const formattedSalary = salary ? (salary.includes('₹') ? salary : `₹ ${Number(salary.replace(/\D/g, '')).toLocaleString('en-IN')}`) : '₹ 30,000';
-    const newEmp = { id: `EMP-00${empList.length + 1}`, name, role, phone: phone.replace(/\D/g, ''), email, salary: formattedSalary, status: 'Active' };
-    const updated = saveEmployeeToDb(newEmp);
-    if (setEmpList) setEmpList(updated);
+    const newEmp = {
+      name,
+      role: role || 'Store Management',
+      phone: phone.replace(/\D/g, ''),
+      email: email || `${phone.replace(/\D/g, '')}@finguard.ai`,
+      salary: formattedSalary,
+      status: 'Active'
+    };
+    const updated = await saveEmployeeToDb(newEmp);
+    if (setEmpList && Array.isArray(updated)) {
+      setEmpList(updated);
+    }
     setName(''); setPhone(''); setEmail(''); setSalary('');
     setShowAddModal(false);
   };
@@ -2941,7 +3030,17 @@ function EmployeeManagementModule({ empList, setEmpList, initialOpenAdd = false 
                           💵 Pay Salary
                         </button>
                       ) : (
-                        <span style={{ color: 'var(--fg-success)', fontWeight: 800, fontSize: 11, padding: '5px 0' }}>Settle ✓</span>
+                        <button
+                          disabled
+                          title="Salary already paid for this cycle"
+                          style={{
+                            padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: 800,
+                            background: 'rgba(16,185,129,0.15)', border: '1px solid var(--fg-success)',
+                            color: 'var(--fg-success)', cursor: 'not-allowed', opacity: 0.9
+                          }}
+                        >
+                          Paid ✓
+                        </button>
                       )}
                       <button onClick={() => handleOpenEdit(emp)} className="fg-btn-ghost" style={{ padding: '5px 10px', fontSize: 11 }}>
                         Edit

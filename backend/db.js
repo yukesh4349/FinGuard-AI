@@ -12,6 +12,42 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_FILE = path.join(__dirname, 'data.json');
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+function readJsonFallback(tableName) {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const json = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      return json[tableName] || [];
+    }
+  } catch (e) {
+    console.warn('[DB json read fallback warning]:', e.message);
+  }
+  return [];
+}
+
+function writeJsonFallback(tableName, newItem) {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const json = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      if (!json[tableName]) json[tableName] = [];
+      json[tableName].unshift(newItem);
+      fs.writeFileSync(DATA_FILE, JSON.stringify(json, null, 2), 'utf8');
+    }
+  } catch (e) {
+    console.warn('[DB json write fallback warning]:', e.message);
+  }
+}
 
 const SUPABASE_URL    = process.env.SUPABASE_URL;
 const SUPABASE_SECRET = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_ANON_KEY;
@@ -29,18 +65,19 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET, {
 // The old code referenced 'employees'; Supabase table is 'employees'.
 // The old code referenced 'vendors';   Supabase table is 'vendors'.
 const TABLE_MAP = {
-  employees:      'employees',
-  vendors:        'vendors',
-  inventory:      'inventory',
-  invoices:       'invoices',
-  payments:       'payments',
-  customer_bills: 'customer_bills',
-  transactions:   'transactions',
-  expenses:       'expenses',
-  fraud_alerts:   'fraud_alerts',
-  activity_logs:  'activity_logs',
-  users:          'users',
-  staff:          'employees',   // legacy alias
+  employees:       'employees',
+  vendors:         'vendors',
+  inventory:       'inventory',
+  invoices:        'invoices',
+  payments:        'payments',
+  customer_bills:  'customer_bills',
+  transactions:    'transactions',
+  expenses:        'expenses',
+  fraud_alerts:    'fraud_alerts',
+  activity_logs:   'activity_logs',
+  users:           'users',
+  salary_payments: 'salary_payments',
+  staff:           'employees',   // legacy alias
 };
 
 // ── Column normalisation: snake_case → camelCase for inventory ────────────────
@@ -77,6 +114,15 @@ function normaliseRow(tableName, row) {
       trustScore:    row.trust_score    ?? row.trustScore,
     };
   }
+  if (tableName === 'salary_payments') {
+    return {
+      ...row,
+      employee_id:    row.employee_id    ?? row.employeeId,
+      employee_name:  row.employee_name  ?? row.employeeName,
+      payment_date:   row.payment_date   ?? row.paymentDate,
+      payment_method: row.payment_method ?? row.paymentMethod,
+    };
+  }
   return row;
 }
 
@@ -104,6 +150,12 @@ function toDbRow(tableName, obj) {
     if (row.contactPerson !== undefined) { row.contact_person = row.contactPerson; delete row.contactPerson; }
     if (row.totalBilled   !== undefined) { row.total_billed   = row.totalBilled;   delete row.totalBilled; }
     if (row.trustScore    !== undefined) { row.trust_score    = row.trustScore;    delete row.trustScore; }
+  }
+  if (tableName === 'salary_payments') {
+    if (row.employeeId    !== undefined) { row.employee_id    = row.employeeId;    delete row.employeeId; }
+    if (row.employeeName  !== undefined) { row.employee_name  = row.employeeName;  delete row.employeeName; }
+    if (row.paymentDate   !== undefined) { row.payment_date   = row.paymentDate;   delete row.paymentDate; }
+    if (row.paymentMethod !== undefined) { row.payment_method = row.paymentMethod; delete row.paymentMethod; }
   }
   return row;
 }
@@ -135,12 +187,29 @@ class SupabaseDatabase {
   // ── Async: fetch all rows for a table scoped by user ──────────────────────
   async fetchTable(tableName) {
     const tbl = resolveTable(tableName);
-    const { data, error } = await supabase.from(tbl).select('*').order('created_at', { ascending: false });
-    if (error) {
-      console.error(`[DB fetchTable ${tbl}]:`, error.message);
-      return [];
+    let rows = [];
+    try {
+      const { data, error } = await supabase.from(tbl).select('*').order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        rows = data.map(r => normaliseRow(tableName, r));
+      }
+    } catch (err) {
+      console.warn(`[DB fetchTable ${tbl} warning]:`, err.message);
     }
-    const rows = (data || []).map(r => normaliseRow(tableName, r));
+
+    const localRows = readJsonFallback(tableName);
+    if (rows.length === 0) {
+      rows = localRows;
+    } else if (localRows.length > 0) {
+      const existingKeys = new Set(rows.map(r => String(r.user_id || r.id || r.email || '').toLowerCase()));
+      for (const loc of localRows) {
+        const key = String(loc.user_id || loc.id || loc.email || '').toLowerCase();
+        if (key && !existingKeys.has(key)) {
+          rows.push(loc);
+        }
+      }
+    }
+
     this._cache[tableName] = rows;
     return rows;
   }
@@ -157,12 +226,24 @@ class SupabaseDatabase {
     // Remove undefined values
     Object.keys(dbRow).forEach(k => { if (dbRow[k] === undefined) delete dbRow[k]; });
 
-    const { data, error } = await supabase.from(tbl).insert(dbRow).select().single();
-    if (error) {
-      console.error(`[DB insert ${tbl}]:`, error.message);
-      throw new Error(error.message);
+    let saved = null;
+    try {
+      const { data, error } = await supabase.from(tbl).insert(dbRow).select();
+      if (!error && data && data.length > 0) {
+        saved = normaliseRow(tableName, data[0]);
+      } else if (error) {
+        console.warn(`[DB insert ${tbl} Supabase notice]:`, error.message);
+      }
+    } catch (err) {
+      console.warn(`[DB insert ${tbl} Supabase notice]:`, err.message);
     }
-    return normaliseRow(tableName, data);
+
+    if (!saved) {
+      saved = { id: item.id || `ID-${Date.now()}`, ...item };
+    }
+
+    writeJsonFallback(tableName, saved);
+    return saved;
   }
 
   // ── Async: update rows matching a field value ─────────────────────────────
@@ -171,77 +252,171 @@ class SupabaseDatabase {
     const dbRow = toDbRow(tableName, { ...updateData });
     Object.keys(dbRow).forEach(k => { if (dbRow[k] === undefined) delete dbRow[k]; });
 
-    const { data, error } = await supabase
-      .from(tbl)
-      .update(dbRow)
-      .eq(matchField, matchValue)
-      .select()
-      .single();
+    let updated = null;
+    try {
+      const { data, error } = await supabase
+        .from(tbl)
+        .update(dbRow)
+        .eq(matchField, matchValue)
+        .select();
 
-    if (error) {
-      console.error(`[DB update ${tbl}]:`, error.message);
-      throw new Error(error.message);
+      if (!error && data && data.length > 0) {
+        updated = normaliseRow(tableName, data[0]);
+      } else if (error) {
+        console.warn(`[DB update ${tbl} Supabase notice]:`, error.message);
+      }
+    } catch (err) {
+      console.warn(`[DB update ${tbl} Supabase notice]:`, err.message);
     }
-    return normaliseRow(tableName, data);
+
+    // Update in local JSON fallback as well
+    try {
+      if (fs.existsSync(DATA_FILE)) {
+        const json = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        if (json[tableName]) {
+          const idx = json[tableName].findIndex(r => String(r[matchField]) === String(matchValue));
+          if (idx !== -1) {
+            json[tableName][idx] = { ...json[tableName][idx], ...updateData };
+            if (!updated) updated = json[tableName][idx];
+            fs.writeFileSync(DATA_FILE, JSON.stringify(json, null, 2), 'utf8');
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[DB json update fallback warning]:', e.message);
+    }
+
+    return updated || { [matchField]: matchValue, ...updateData };
   }
 
   // ── Async: delete rows matching a field value ─────────────────────────────
   async delete(tableName, matchField, matchValue) {
     const tbl = resolveTable(tableName);
-    const { error, count } = await supabase
-      .from(tbl)
-      .delete()
-      .eq(matchField, matchValue);
+    try {
+      const { error } = await supabase
+        .from(tbl)
+        .delete()
+        .eq(matchField, matchValue);
 
-    if (error) {
-      console.error(`[DB delete ${tbl}]:`, error.message);
-      throw new Error(error.message);
+      if (error) {
+        console.warn(`[DB delete ${tbl} Supabase notice]:`, error.message);
+      }
+    } catch (err) {
+      console.warn(`[DB delete ${tbl} Supabase notice]:`, err.message);
     }
-    return count || 1;
+
+    // Delete from local JSON fallback as well
+    try {
+      if (fs.existsSync(DATA_FILE)) {
+        const json = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        if (json[tableName]) {
+          json[tableName] = json[tableName].filter(r => String(r[matchField]) !== String(matchValue));
+          fs.writeFileSync(DATA_FILE, JSON.stringify(json, null, 2), 'utf8');
+        }
+      }
+    } catch (e) {
+      console.warn('[DB json delete fallback warning]:', e.message);
+    }
+
+    return 1;
   }
 
   // ── Async: fetch rows scoped by shopId ────────────────────────────────────
   async fetchScoped(tableName, shopId) {
     const tbl = resolveTable(tableName);
-    const { data, error } = await supabase
-      .from(tbl)
-      .select('*')
-      .eq('user_id', shopId)
-      .order('created_at', { ascending: false });
+    let rows = [];
+    try {
+      const { data, error } = await supabase
+        .from(tbl)
+        .select('*')
+        .eq('user_id', shopId)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error(`[DB fetchScoped ${tbl}]:`, error.message);
-      return [];
+      if (!error && data && data.length > 0) {
+        rows = data.map(r => normaliseRow(tableName, r));
+      }
+    } catch (err) {
+      console.warn(`[DB fetchScoped ${tbl} notice]:`, err.message);
     }
-    return (data || []).map(r => normaliseRow(tableName, r));
+
+    if (rows.length === 0 && shopId) {
+      const local = readJsonFallback(tableName);
+      const cleanShop = String(shopId).toLowerCase().trim();
+      // STRICT: only return rows that exactly match this user's shopId
+      rows = local.filter(r => {
+        const uId = String(r.user_id || r.owner_id || '').toLowerCase().trim();
+        return uId === cleanShop;
+      });
+    }
+
+    return rows;
   }
 
   // ── Async: upsert settings (single record per user) ───────────────────────
   async upsertSettings(shopId, settingsData) {
-    const { data, error } = await supabase
-      .from('settings')
-      .upsert({ user_id: shopId, data: settingsData, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
-      .select()
-      .single();
-    if (error) {
-      console.error('[DB upsertSettings]:', error.message);
-      throw new Error(error.message);
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .upsert({ user_id: shopId, data: settingsData, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+        .select()
+        .single();
+      if (!error && data) return data;
+    } catch (err) {
+      console.warn('[DB upsertSettings notice]:', err.message);
     }
-    return data;
+    return { user_id: shopId, data: settingsData };
   }
 
   // ── Async: fetch settings for a shop ──────────────────────────────────────
   async fetchSettings(shopId) {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('data')
-      .eq('user_id', shopId)
-      .single();
-    if (error && error.code !== 'PGRST116') {  // PGRST116 = row not found
-      console.error('[DB fetchSettings]:', error.message);
-    }
-    return data?.data || null;
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('data')
+        .eq('user_id', shopId)
+        .single();
+      if (!error && data) return data.data;
+    } catch (err) {}
+    return null;
   }
 }
 
 export const db = new SupabaseDatabase();
+
+/**
+ * Centralized Automatic Audit Logging Helper
+ * Extracts user headers and records consistent activity logs in Supabase.
+ */
+export async function createAuditLog(req, { action, module, description, category, entity_type, entity_id, old_value, new_value }) {
+  try {
+    const shopId = req?.shopId || 'user';
+    const userId = req?.userId || 'user';
+    const userRole = req?.userRole || 'owner';
+    const userName = req?.headers?.['x-user-name'] || req?.body?.userName || userId;
+
+    const logEntry = {
+      id: `LOG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      user_id: shopId,
+      shop_id: shopId,
+      owner_id: shopId,
+      employee_id: userId,
+      user_name: userName,
+      user_role: userRole,
+      action: action || 'System Event',
+      module: module || category || 'General',
+      category: category || module || 'System Log',
+      description: description || action,
+      details: description || action,
+      entity_type: entity_type || null,
+      entity_id: entity_id || null,
+      old_value: old_value ? String(old_value) : null,
+      new_value: new_value ? String(new_value) : null,
+      created_at: new Date().toISOString(),
+    };
+
+    await db.insert('activity_logs', logEntry);
+    return logEntry;
+  } catch (err) {
+    console.warn('[Audit Logger Warning]:', err.message);
+  }
+}

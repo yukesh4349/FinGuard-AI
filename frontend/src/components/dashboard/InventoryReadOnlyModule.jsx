@@ -48,22 +48,38 @@ export default function InventoryReadOnlyModule() {
   const loadData = async () => {
     setLoading(true);
     try {
+      // 1. Check user-scoped local cache ONLY (never fall back to global shared key)
       const stockKey = `finsight_stock_inventory_${activeUserKey}`;
-      const local = JSON.parse(localStorage.getItem(stockKey) || localStorage.getItem('finsight_stock_inventory') || '[]');
-      if (local.length > 0) setInventoryList(consolidateStock(local));
-
-      const supa = await getInventoryFromSupabase(activeUserId);
-      if (supa && supa.length > 0) {
-        setInventoryList(consolidateStock(supa));
+      const local = JSON.parse(localStorage.getItem(stockKey) || '[]');
+      if (local.length > 0) {
+        setInventoryList(consolidateStock(local));
+        setLoading(false);
         return;
       }
 
+      // 2. Try Supabase (strictly scoped to this user's ID)
+      const supa = await getInventoryFromSupabase(activeUserId);
+      if (supa && supa.length > 0) {
+        // Cache into user-scoped key
+        localStorage.setItem(stockKey, JSON.stringify(supa));
+        setInventoryList(consolidateStock(supa));
+        setLoading(false);
+        return;
+      }
+
+      // 3. Try Express backend (which already enforces shopId isolation)
       const res = await apiGetInventory();
-      if (res && res.inventory) {
+      if (res && res.inventory && res.inventory.length > 0) {
+        // Cache into user-scoped key
+        localStorage.setItem(stockKey, JSON.stringify(res.inventory));
         setInventoryList(consolidateStock(res.inventory));
+      } else {
+        // New user — empty inventory, nothing to show
+        setInventoryList([]);
       }
     } catch (e) {
       console.warn('Read-only stock notice:', e.message);
+      setInventoryList([]);
     } finally {
       setLoading(false);
     }

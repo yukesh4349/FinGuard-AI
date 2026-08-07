@@ -54,22 +54,31 @@ export default function PosBillingModule({ companyName = 'Metro Superstore Ltd',
 
   const loadStock = async () => {
     try {
+      // Only load from user-scoped key — never fall back to global shared keys
       const stockKey = `finsight_stock_inventory_${activeUserKey}`;
-      const localStock = JSON.parse(localStorage.getItem(stockKey) || localStorage.getItem('finsight_stock_inventory') || '[]');
-      if (localStock.length > 0) setAvailableStock(consolidateStock(localStock));
+      const localStock = JSON.parse(localStorage.getItem(stockKey) || '[]');
+      if (localStock.length > 0) {
+        setAvailableStock(consolidateStock(localStock));
+        return;
+      }
 
       const supaStock = await getInventoryFromSupabase(activeUserId);
       if (supaStock && supaStock.length > 0) {
+        localStorage.setItem(stockKey, JSON.stringify(supaStock));
         setAvailableStock(consolidateStock(supaStock));
         return;
       }
 
       const res = await apiGetInventory();
-      if (res && res.inventory) {
+      if (res && res.inventory && res.inventory.length > 0) {
+        localStorage.setItem(stockKey, JSON.stringify(res.inventory));
         setAvailableStock(consolidateStock(res.inventory));
+      } else {
+        setAvailableStock([]);
       }
     } catch (e) {
       console.warn('POS stock load notice:', e.message);
+      setAvailableStock([]);
     }
   };
 

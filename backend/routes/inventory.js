@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db } from '../db.js';
+import { db, createAuditLog } from '../db.js';
 import { requireRoles } from '../middleware/rbac.js';
 
 const router = Router();
@@ -89,6 +89,83 @@ router.put('/:id', requireRoles(['owner', 'store_manager']), async (req, res) =>
   }
 });
 
+// POST /api/inventory/:id/return-to-vendor (Owner & Store Manager)
+router.post('/:id/return-to-vendor', requireRoles(['owner', 'store_manager']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { returnQty, unitPrice, vendorName, reason } = req.body;
+
+    const inv = await db.fetchScoped('inventory', req.shopId);
+    const existing = inv.find(i => String(i.id) === String(id));
+    if (!existing) {
+      return res.status(404).json({ success: false, error: 'Product not found in store inventory.' });
+    }
+
+    const currentQty = parseInt(existing.stockQty ?? existing.stock_qty ?? 0);
+    const qtyToReturn = parseInt(returnQty || 0);
+
+    if (qtyToReturn <= 0) {
+      return res.status(400).json({ success: false, error: 'Return quantity must be greater than zero.' });
+    }
+
+    if (qtyToReturn > currentQty) {
+      return res.status(400).json({ success: false, error: `Cannot return ${qtyToReturn} units. Current stock is only ${currentQty} units.` });
+    }
+
+    const priceVal = parseFloat(String(unitPrice || existing.costPrice || existing.cost_price || existing.unitPrice || existing.unit_price || '0').replace(/[^0-9.]/g, '')) || 50;
+    const returnTotal = qtyToReturn * priceVal;
+    const newQty = currentQty - qtyToReturn;
+    const threshold = parseInt(existing.minAlertThreshold ?? existing.min_alert_threshold ?? 15);
+    const newStatus = newQty <= threshold ? 'Low Stock Alert' : 'Healthy Stock';
+
+    // 1. Update inventory stock quantity
+    const updatedItem = await db.update('inventory', 'id', id, {
+      stock_qty: newQty,
+      status: newStatus,
+      updated_at: new Date().toISOString(),
+    });
+
+    // 2. Create financial transaction (Vendor Return Outflow Refund / Credit IN)
+    const targetVendor = vendorName || existing.supplierName || existing.supplier || 'Vendor Supplier';
+    const txn = await db.insert('transactions', {
+      id: `TRX-${Math.floor(1000 + Math.random() * 9000)}`,
+      user_id: req.shopId,
+      owner_id: req.shopId,
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      type: 'IN',
+      transaction_type: 'vendor_return',
+      category: 'vendor_return',
+      amount: `+₹ ${returnTotal.toLocaleString('en-IN')}`,
+      reference_id: existing.id,
+      description: `Vendor Return: Returned ${qtyToReturn} ${existing.name} units to ${targetVendor}${reason ? ` (${reason})` : ''}`,
+      balance: '—',
+    });
+
+    // 3. Create Audit Log entry
+    await createAuditLog(req, {
+      action: 'Product Returned to Vendor',
+      module: 'Inventory',
+      description: `Returned ${qtyToReturn} units of ${existing.name} (Value: ₹ ${returnTotal.toLocaleString('en-IN')}) to ${targetVendor}. Reason: ${reason || 'Stock Return'}`,
+      entity_type: 'Product',
+      entity_id: existing.id,
+      old_value: `${currentQty} units`,
+      new_value: `${newQty} units`,
+    });
+
+    const refreshedInventory = await db.fetchScoped('inventory', req.shopId);
+    res.json({
+      success: true,
+      message: `Successfully returned ${qtyToReturn} units of ${existing.name} to ${targetVendor}.`,
+      returnTotal,
+      item: updatedItem,
+      inventory: refreshedInventory,
+      transaction: txn,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // DELETE /api/inventory/:id
 router.delete('/:id', requireRoles(['owner']), async (req, res) => {
   try {
@@ -99,12 +176,12 @@ router.delete('/:id', requireRoles(['owner']), async (req, res) => {
 
     await db.delete('inventory', 'id', id);
 
-    await db.insert('activity_logs', {
-      id: `LOG-${Date.now()}`,
-      user_id: req.shopId,
-      action: '🗑️ Deleted Inventory SKU',
-      details: `Removed '${item.name}' from store database.`,
-      category: 'Inventory',
+    await createAuditLog(req, {
+      action: 'Deleted Inventory SKU',
+      module: 'Inventory',
+      description: `Removed '${item.name}' from store database.`,
+      entity_type: 'Product',
+      entity_id: item.id,
     });
 
     const inventory = await db.fetchScoped('inventory', req.shopId);

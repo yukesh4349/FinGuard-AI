@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { db } from '../db.js';
+import { db, createAuditLog } from '../db.js';
 import { requireRoles } from '../middleware/rbac.js';
 
 const router = Router();
@@ -58,6 +58,14 @@ router.post('/', requireRoles(['owner', 'cashier']), async (req, res) => {
         balance: '—',
       });
     }
+
+    await createAuditLog(req, {
+      action: 'Customer Bill Created',
+      module: 'Billing',
+      description: `Created POS bill #${billNo} for ${customer_name} (Amount: ₹ ${parseFloat(grand_total).toLocaleString('en-IN')}, Status: ${billStatus})`,
+      entity_type: 'Bill',
+      entity_id: billNo,
+    });
 
     res.status(201).json({ success: true, bill: saved });
   } catch (err) {

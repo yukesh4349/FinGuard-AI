@@ -9,16 +9,22 @@ const API_BASE_URL = (import.meta.env && import.meta.env.VITE_API_URL) || 'http:
 function getActiveUserAuthHeaders() {
   try {
     const active = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
+    const userId = active.user_id || active.email || 'user';
+    // For owners: shopId is their own user_id (= owner_id)
+    // For employees: shopId is the owner_id they belong to
+    const shopId = (active.role === 'owner' || !active.role)
+      ? userId
+      : (active.owner_id || userId);
     return {
       'x-user-role': active.role || 'owner',
-      'x-user-id': active.user_id || active.email || 'user',
-      'x-shop-id': active.owner_id || active.user_id || 'OWNER-METRO-8492',
+      'x-user-id': userId,
+      'x-shop-id': shopId,
     };
   } catch (e) {
     return {
       'x-user-role': 'owner',
       'x-user-id': 'user',
-      'x-shop-id': 'OWNER-METRO-8492',
+      'x-shop-id': 'user',
     };
   }
 }
@@ -50,10 +56,10 @@ async function request(endpoint, options = {}) {
 }
 
 // Authentication API
-export const apiLogin = (userId, password, role) =>
+export const apiLogin = (userId, password, role, mobileNumber) =>
   request('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ userId, password, role }),
+    body: JSON.stringify({ userId, password, role, mobileNumber }),
   });
 
 export const apiSignup = (userData) =>
@@ -243,4 +249,14 @@ export const apiSendReminders = () =>
 
 export const apiGetGrowthAdvice = () =>
   request('/reports/growth-advice', { method: 'POST', body: JSON.stringify({}) });
+
+// Vendor Stock Return API
+export const apiReturnVendorItem = (id, returnData) =>
+  request(`/inventory/${id}/return-to-vendor`, {
+    method: 'POST',
+    body: JSON.stringify(returnData),
+  });
+
+// Audit Logs API
+export const apiGetAuditLogs = () => request('/reports/audit-logs');
 

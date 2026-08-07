@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { triggerWebhookNode, triggerStockWebhookNode, saveStockItemToPostgres } from './postgresDb';
 
 // Supabase Environment Credentials (Configured in .env file)
-const supabaseUrl = (import.meta.env && import.meta.env.VITE_SUPABASE_URL) || 'https://lmsiipuvxewlqpxdshgt.supabase.co';
+const supabaseUrl = (import.meta.env && import.meta.env.VITE_SUPABASE_URL) || 'https://npvceqmyxddcfegpwauf.supabase.co';
 const supabaseAnonKey = (import.meta.env && import.meta.env.VITE_SUPABASE_ANON_KEY) || 'sb_publishable_1vj4oGFG77XC5HGL5Vn_cg_CDD6kEgU';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -18,17 +18,17 @@ export const isSupabaseConfigured = () => {
 /**
  * Register a new user in Supabase public.users table with store address & OTP status
  */
-export async function registerUserInSupabase({ companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role = 'owner' }) {
-  const userId = `USR-${Math.floor(1000 + Math.random() * 9000)}`;
+export async function registerUserInSupabase({ companyName, companyAddress, businessType, employeeCount, mobileNumber, email, password, role = 'owner', userId }) {
+  const finalUserId = userId || `USR-${Math.floor(1000 + Math.random() * 9000)}`;
   const newUser = {
-    user_id: userId,
+    user_id: finalUserId,
     company_name: companyName,
     company_address: companyAddress || '',
     business_type: businessType || 'General Retail',
-    employee_count: employeeCount || '5',
-    mobile_number: mobileNumber,
-    email: email.toLowerCase().trim(),
-    password_hash: password,
+    employee_count: String(employeeCount || '5'),
+    mobile_number: String(mobileNumber).trim(),
+    email: email ? String(email).toLowerCase().trim() : `${mobileNumber}@finguard.ai`,
+    password_hash: String(password).trim(),
     role: role,
     verified_email: true,
     created_at: new Date().toISOString(),
@@ -62,8 +62,8 @@ export async function registerUserInSupabase({ companyName, companyAddress, busi
   // Dispatch webhook notification
   triggerWebhookNode({
     event: 'user_signup',
-    login_id: userId,
-    main_id: userId,
+    login_id: finalUserId,
+    main_id: finalUserId,
     mobile_number: mobileNumber,
     name: companyName,
     company_address: companyAddress,
@@ -76,29 +76,34 @@ export async function registerUserInSupabase({ companyName, companyAddress, busi
 }
 
 /**
- * Authenticate User in Supabase (Strictly verifies User ID/Email AND Password AND Registered Mobile Number)
+ * Authenticate User in Supabase (Verifies User ID/Email/Mobile Number AND Password case-insensitively)
  */
 export async function authenticateUserInSupabase(identifier = '', password = '', mobileNumber = '') {
   const cleanId = String(identifier).toLowerCase().trim();
   const cleanMobile = String(mobileNumber).trim();
+  const cleanPass = String(password).trim();
 
   // 1. Query Supabase public.users table if configured
   if (isSupabaseConfigured()) {
     try {
       const { data: users, error } = await supabase
         .from('users')
-        .select('*')
-        .or(`email.eq.${cleanId},user_id.eq.${cleanId}`);
+        .select('*');
 
       if (!error && users && users.length > 0) {
-        const foundUser = users[0];
-        if (foundUser.password_hash !== password) {
-          return { success: false, message: 'Invalid Password. Please check your password and try again.' };
+        const foundUser = users.find(u => {
+          const uId = String(u.user_id || '').toLowerCase().trim();
+          const uEmail = String(u.email || '').toLowerCase().trim();
+          const uMobile = String(u.mobile_number || '').trim();
+          return (uId === cleanId || uEmail === cleanId || (cleanMobile && uMobile === cleanMobile) || uMobile === cleanId);
+        });
+
+        if (foundUser) {
+          if (String(foundUser.password_hash || '').trim() !== cleanPass) {
+            return { success: false, message: 'Invalid Password. Please check your password and try again.' };
+          }
+          return { success: true, user: foundUser, isSuperAdmin: foundUser.role === 'super_admin' };
         }
-        if (cleanMobile && foundUser.mobile_number !== cleanMobile) {
-          return { success: false, message: 'Mobile Number mismatch: The mobile number entered does not match the number saved for this Email account.' };
-        }
-        return { success: true, user: foundUser, isSuperAdmin: foundUser.role === 'super_admin' };
       }
     } catch (err) {
       console.warn('[Supabase Auth Notice]:', err.message);
@@ -108,22 +113,22 @@ export async function authenticateUserInSupabase(identifier = '', password = '',
   // 2. Fallback local memory authentication if Supabase is offline/unconfigured
   try {
     const localUsers = JSON.parse(localStorage.getItem('finsight_postgres_users') || '[]');
-    const user = localUsers.find(u =>
-      (u.email?.toLowerCase() === cleanId || u.user_id === cleanId)
-    );
+    const user = localUsers.find(u => {
+      const uId = String(u.user_id || '').toLowerCase().trim();
+      const uEmail = String(u.email || '').toLowerCase().trim();
+      const uMobile = String(u.mobile_number || '').trim();
+      return (uId === cleanId || uEmail === cleanId || (cleanMobile && uMobile === cleanMobile) || uMobile === cleanId);
+    });
 
     if (user) {
-      if (user.password_hash !== password) {
+      if (String(user.password_hash || '').trim() !== cleanPass) {
         return { success: false, message: 'Invalid Password. Please check your password and try again.' };
-      }
-      if (cleanMobile && user.mobile_number !== cleanMobile) {
-        return { success: false, message: 'Mobile Number mismatch: The mobile number entered does not match the number saved for this Email account.' };
       }
       return { success: true, user, isSuperAdmin: user.role === 'super_admin' };
     }
   } catch (e) {}
 
-  return { success: false, message: 'No registered business owner account found with provided Email / User ID.' };
+  return { success: false, message: 'No registered business owner account found with provided Email / User ID / Mobile Number.' };
 }
 
 /* ─────────────────────────────────────────────────────────────
