@@ -68,7 +68,7 @@ export default function ArchitectureSection() {
             Finora System Architecture
           </h2>
           <p style={{ color: '#6E675F', fontSize: 16, lineHeight: 1.6, maxWidth: 680, margin: '0 auto' }}>
-            Smart Finance, Smarter Business. Clean separation between Frontend React Client, Express REST API Backend, and Supabase PostgreSQL Cloud Database.
+            Smart Finance, Safer Business. Clean separation between Frontend React Client, Express REST API Backend, and Supabase PostgreSQL Cloud Database.
           </p>
         </div>
 

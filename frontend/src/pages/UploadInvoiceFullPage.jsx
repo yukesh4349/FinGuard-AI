@@ -214,8 +214,45 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
   };
 
   /* ─────────────────────────────────────────────────────────────
-     Document Data Parser
+     Dynamic Totals Calculation Engine
      ───────────────────────────────────────────────────────────── */
+  const computeDynamicTotals = (itemList = []) => {
+    let subtotalVal = 0;
+    let totalTaxVal = 0;
+
+    const computedItems = itemList.map(it => {
+      const qtyVal = parseInt(String(it.qty || '1').replace(/[^0-9]/g, '')) || 1;
+      const rateVal = parseFloat(String(it.rate || it.cost || '0').replace(/[^0-9.]/g, '')) || 0;
+      const gstPct = parseFloat(String(it.gst || '5').replace(/[^0-9.]/g, '')) || 0;
+
+      const lineTotal = qtyVal * rateVal;
+      const lineGst = lineTotal * (gstPct / 100);
+
+      subtotalVal += lineTotal;
+      totalTaxVal += lineGst;
+
+      return {
+        ...it,
+        total: `₹ ${Math.round(lineTotal).toLocaleString('en-IN')}`,
+        sellingPrice: it.sellingPrice || `₹ ${Math.round(rateVal * 1.20).toLocaleString('en-IN')}`,
+      };
+    });
+
+    const subtotalRounded = Math.round(subtotalVal);
+    const taxValRounded = Math.round(totalTaxVal);
+    const grandTotalVal = subtotalRounded + taxValRounded;
+
+    return {
+      items: computedItems,
+      subtotalVal: subtotalRounded,
+      taxVal: taxValRounded,
+      grandTotalVal,
+      formattedSubtotal: `₹ ${subtotalRounded.toLocaleString('en-IN')}`,
+      formattedTaxGst: `₹ ${taxValRounded.toLocaleString('en-IN')}`,
+      formattedGrandTotal: `₹ ${grandTotalVal.toLocaleString('en-IN')}`,
+    };
+  };
+
   /* ─────────────────────────────────────────────────────────────
      Document Data Parser (High Precision & Accuracy)
      ───────────────────────────────────────────────────────────── */
@@ -361,9 +398,8 @@ export default function UploadInvoiceFullPage({ onBack, onInvoiceSaved }) {
       }
     }
 
-    const subtotalVal = items.reduce((acc, it) => acc + (parseFloat(it.total.replace(/[^0-9.]/g, '')) || 0), 0);
-    const taxVal = Math.round(subtotalVal * 0.05);
-    const grandTotalVal = subtotalVal + taxVal;
+    const totals = computeDynamicTotals(items);
+    items = totals.items;
 
     const formattedRawText = text && text.length > 20 ? text : `${supplierName}
 GSTIN: 29ABCDE1234F1Z5
@@ -376,18 +412,18 @@ Store Inventory Manager
 Items Extracted:
 ${items.map(it => `${it.name.padEnd(25)} Qty: ${it.qty.padEnd(10)} Rate: ${it.rate.padEnd(10)} Total: ${it.total}`).join('\n')}
 
-Subtotal: ₹ ${subtotalVal.toLocaleString('en-IN')}
-GST Tax: ₹ ${taxVal.toLocaleString('en-IN')}
-Grand Total: ₹ ${grandTotalVal.toLocaleString('en-IN')}`;
+Subtotal: ${totals.formattedSubtotal}
+GST Tax: ${totals.formattedTaxGst}
+Grand Total: ${totals.formattedGrandTotal}`;
 
     setRawDocumentText(formattedRawText);
 
     setEditSupplier(supplierName);
     setEditInvoiceNo(invoiceNo);
     setEditDate(invoiceDate);
-    setEditSubtotal(`₹ ${subtotalVal.toLocaleString('en-IN')}`);
-    setEditTaxGst(`₹ ${taxVal.toLocaleString('en-IN')}`);
-    setEditGrandTotal(`₹ ${grandTotalVal.toLocaleString('en-IN')}`);
+    setEditSubtotal(totals.formattedSubtotal);
+    setEditTaxGst(totals.formattedTaxGst);
+    setEditGrandTotal(totals.formattedGrandTotal);
     setEditItems(items);
 
     setScanResult({
@@ -395,9 +431,9 @@ Grand Total: ₹ ${grandTotalVal.toLocaleString('en-IN')}`;
       invoiceNo,
       date: invoiceDate,
       items,
-      subtotal: `₹ ${subtotalVal.toLocaleString('en-IN')}`,
-      taxGst: `₹ ${taxVal.toLocaleString('en-IN')}`,
-      grandTotal: `₹ ${grandTotalVal.toLocaleString('en-IN')}`,
+      subtotal: totals.formattedSubtotal,
+      taxGst: totals.formattedTaxGst,
+      grandTotal: totals.formattedGrandTotal,
     });
 
     // Run AI Duplicate Invoice & Fraud Interceptor Check
@@ -408,7 +444,7 @@ Grand Total: ₹ ${grandTotalVal.toLocaleString('en-IN')}`;
       supplierName,
       invoiceNumber: invoiceNo,
       invoiceDate,
-      grandTotal: `₹ ${grandTotalVal.toLocaleString('en-IN')}`,
+      grandTotal: totals.formattedGrandTotal,
     }, activeUserId);
 
     setDuplicateAlert(dupCheck.isDuplicate ? dupCheck.alert : null);
@@ -418,37 +454,37 @@ Grand Total: ₹ ${grandTotalVal.toLocaleString('en-IN')}`;
     setEditItems(prev => {
       const copy = [...prev];
       copy[index] = { ...copy[index], [field]: value };
-
-      if (field === 'rate') {
-        const costVal = parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
-        copy[index].sellingPrice = `₹ ${Math.round(costVal * 1.20).toLocaleString('en-IN')}`;
-      }
-
-      let sub = copy.reduce((acc, it) => {
-        const num = parseFloat(it.total.replace(/[^0-9.]/g, '')) || 0;
-        return acc + num;
-      }, 0);
-
-      const tax = Math.round(sub * 0.05);
-      const grand = sub + tax;
-
-      setEditSubtotal(`₹ ${sub.toLocaleString()}`);
-      setEditTaxGst(`₹ ${tax.toLocaleString()}`);
-      setEditGrandTotal(`₹ ${grand.toLocaleString()}`);
-
-      return copy;
+      const totals = computeDynamicTotals(copy);
+      setEditSubtotal(totals.formattedSubtotal);
+      setEditTaxGst(totals.formattedTaxGst);
+      setEditGrandTotal(totals.formattedGrandTotal);
+      return totals.items;
     });
   };
 
   const handleAddItemRow = () => {
-    setEditItems(prev => [
-      ...prev,
-      { id: `item-${Date.now()}`, name: 'New Purchased Product', qty: '1 Unit', rate: '₹ 1,000', sellingPrice: '₹ 1,200', gst: '5%', total: '₹ 1,000' }
-    ]);
+    setEditItems(prev => {
+      const updated = [
+        ...prev,
+        { id: `item-${Date.now()}`, name: 'New Purchased Product', qty: '1 Unit', rate: '₹ 1,000', sellingPrice: '₹ 1,200', gst: '5%', total: '₹ 1,000' }
+      ];
+      const totals = computeDynamicTotals(updated);
+      setEditSubtotal(totals.formattedSubtotal);
+      setEditTaxGst(totals.formattedTaxGst);
+      setEditGrandTotal(totals.formattedGrandTotal);
+      return totals.items;
+    });
   };
 
   const handleDeleteItemRow = (index) => {
-    setEditItems(prev => prev.filter((_, i) => i !== index));
+    setEditItems(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      const totals = computeDynamicTotals(updated);
+      setEditSubtotal(totals.formattedSubtotal);
+      setEditTaxGst(totals.formattedTaxGst);
+      setEditGrandTotal(totals.formattedGrandTotal);
+      return totals.items;
+    });
   };
 
   const handleVerifyGstWithPostgres = () => {
@@ -1083,7 +1119,7 @@ Grand Total: ₹ ${grandTotalVal.toLocaleString('en-IN')}`;
                           color: paymentStatus === 'Paid' ? 'var(--fg-success)' : 'var(--fg-text-muted)',
                         }}
                       >
-                        ✓ Paid Now
+                        ✓ Paid
                       </button>
                       <button
                         type="button"
@@ -1095,7 +1131,7 @@ Grand Total: ₹ ${grandTotalVal.toLocaleString('en-IN')}`;
                           color: paymentStatus === 'Pending' ? 'var(--fg-warning)' : 'var(--fg-text-muted)',
                         }}
                       >
-                        ⏳ Time to Pay
+                        ⏳ Not Paid
                       </button>
                     </div>
 

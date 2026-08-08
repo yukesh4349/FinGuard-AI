@@ -54,7 +54,7 @@ export default function Navbar({ onOpenModal }) {
               Finora
             </div>
             <div style={{ fontSize: 9, color: '#B4781C', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 800 }}>
-              Smart Finance, Smarter Business
+              Smart Finance, Safer Business
             </div>
           </div>
         </button>

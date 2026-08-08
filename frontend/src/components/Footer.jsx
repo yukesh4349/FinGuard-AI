@@ -113,7 +113,7 @@ export default function Footer({ onOpenModal }) {
               </span>
             </div>
             <p style={{ color: '#334155', fontSize: 14, lineHeight: 1.6, marginBottom: 20, maxWidth: 360, fontWeight: 500 }}>
-              Smart Finance, Smarter Business. Built for retail stores, shops, and growing businesses.
+              Smart Finance, Safer Business. Built for retail stores, shops, and growing businesses.
             </p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
@@ -164,7 +164,7 @@ export default function Footer({ onOpenModal }) {
           paddingTop: 24, borderTop: '1px solid rgba(243,205,151,0.3)', gap: 14,
         }}>
           <p style={{ color: '#334155', fontSize: 13, fontWeight: 500 }}>
-            © {new Date().getFullYear()} Finora Platform. Smart Finance, Smarter Business. All rights reserved.
+            © {new Date().getFullYear()} Finora Platform. Smart Finance, Safer Business. All rights reserved.
           </p>
           <div style={{ display: 'flex', gap: 20 }}>
             {['Privacy Policy', 'Terms of Service', 'Security Audit'].map((item) => (

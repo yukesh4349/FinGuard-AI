@@ -131,7 +131,12 @@ export default function SettingsModule({ companyName = 'Metro Superstore Ltd', o
     setActionState('growth', true);
     try {
       const res = await apiGetGrowthAdvice();
-      setActionState('growth', false, { success: true, message: res.message || 'Growth advice generated!', detail: res.advice });
+      setActionState('growth', false, {
+        success: true,
+        message: res.message || 'Growth advice & vendor comparison sent to Webhook!',
+        detail: res.advice,
+        vendorComparison: res.vendorComparison,
+      });
     } catch (err) {
       setActionState('growth', false, { success: false, message: err.message || 'Failed to generate advice.' });
     }
@@ -1044,6 +1049,21 @@ export default function SettingsModule({ companyName = 'Metro Superstore Ltd', o
                         }}>
                           {reportActions.growth.result.success ? '✓' : '✗'} {reportActions.growth.result.message}
                         </div>
+                        {reportActions.growth.result.vendorComparison && reportActions.growth.result.vendorComparison.length > 0 && (
+                          <div style={{
+                            background: 'rgba(243,205,151,0.06)', borderRadius: 8, padding: '8px 10px',
+                            border: '1px solid var(--fg-border-accent)', fontSize: 11,
+                          }}>
+                            <div style={{ fontWeight: 800, color: 'var(--fg-accent)', marginBottom: 4 }}>
+                              📊 Vendor Comparison Analysis (Sent to Webhook):
+                            </div>
+                            {reportActions.growth.result.vendorComparison.map((v, i) => (
+                              <div key={i} style={{ marginBottom: 3, color: 'var(--fg-text-primary)', lineHeight: 1.4 }}>
+                                • <strong>{v.vendorName}</strong>: Total Billed ₹ {v.totalBilled.toLocaleString('en-IN')} (Trust Score: {v.trustScore}%) → <em style={{ color: 'var(--fg-text-secondary)' }}>{v.growthAdvice}</em>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         {reportActions.growth.result.detail && (
                           <div style={{
                             fontSize: 11, color: 'var(--fg-text-secondary)', lineHeight: 1.7,

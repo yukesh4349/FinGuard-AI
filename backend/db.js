@@ -325,10 +325,11 @@ class SupabaseDatabase {
     const tbl = resolveTable(tableName);
     let rows = [];
     try {
+      const cleanShop = String(shopId || '').trim();
       const { data, error } = await supabase
         .from(tbl)
         .select('*')
-        .eq('user_id', shopId)
+        .or(`user_id.eq.${cleanShop},shop_id.eq.${cleanShop},owner_id.eq.${cleanShop}`)
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {

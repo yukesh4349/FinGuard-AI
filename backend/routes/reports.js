@@ -360,56 +360,111 @@ router.post('/growth-advice', requireRoles(['owner']), async (req, res) => {
     const shopId = req.shopId;
     const ctx = await getFullStoreContext(shopId);
 
+    // 1. Fetch vendor invoices & vendor data
+    const [invoices, vendors] = await Promise.all([
+      db.fetchScoped('invoices', shopId),
+      db.fetchScoped('vendors', shopId),
+    ]);
+
+    // 2. Perform Vendor Comparison & Analytics
+    const vendorMap = new Map();
+    invoices.forEach(inv => {
+      const vName = (inv.supplier_name || inv.vendor || 'General Supplier').trim();
+      const vKey = vName.toLowerCase();
+      const amt = cleanNum(inv.grand_total);
+      if (!vendorMap.has(vKey)) {
+        vendorMap.set(vKey, {
+          name: vName,
+          totalBilled: 0,
+          billCount: 0,
+          invoices: [],
+          flaggedCount: 0,
+        });
+      }
+      const item = vendorMap.get(vKey);
+      item.totalBilled += amt;
+      item.billCount += 1;
+      if (inv.status === 'Flagged High Risk' || inv.duplicateReason) item.flaggedCount += 1;
+      item.invoices.push(inv);
+    });
+
+    const vendorComparison = Array.from(vendorMap.values()).map(v => {
+      const dbVendor = vendors.find(dbV => (dbV.name || dbV.contact_person || '').toLowerCase() === v.name.toLowerCase());
+      const trustScore = dbVendor ? (dbVendor.trust_score || dbVendor.trustScore || 85) : 85;
+      const avgBill = v.billCount > 0 ? (v.totalBilled / v.billCount) : 0;
+      let recommendation = 'Primary reliable vendor with steady pricing.';
+      if (v.flaggedCount > 0) recommendation = `⚠️ High Risk: ${v.flaggedCount} duplicate/flagged bill(s) detected. Recommend audit before settlement.`;
+      else if (v.totalBilled > 100000) recommendation = `💡 High Volume Supplier (₹ ${v.totalBilled.toLocaleString('en-IN')} total). Negotiate 5-8% bulk discount or extended 30-day payment terms.`;
+      else if (trustScore < 75) recommendation = `⚡ Lower Trust Score (${trustScore}%). Compare item prices with alternate suppliers.`;
+
+      return {
+        vendorName: v.name,
+        totalBilled: v.totalBilled,
+        billCount: v.billCount,
+        avgBillAmount: Math.round(avgBill),
+        trustScore,
+        flaggedDuplicates: v.flaggedCount,
+        growthAdvice: recommendation,
+      };
+    }).sort((a, b) => b.totalBilled - a.totalBilled);
+
+    // 3. AI Advisory Prompt with explicit Vendor Comparison
     let advice = '';
+    const vendorSummaryText = vendorComparison.length > 0
+      ? vendorComparison.map(v => `- ${v.vendorName}: Total Billed Rs.${v.totalBilled.toLocaleString('en-IN')}, Trust Score ${v.trustScore}%, Bills: ${v.billCount}. Advice: ${v.growthAdvice}`).join('\n')
+      : 'No recorded vendor purchases yet.';
+
     try {
       advice = await callGroqAI(
         GROQ_KEYS.fraud_growth,
-        `You are the Finora AI Business Growth Advisor for Indian retail/supermarket businesses. Analyze the store's data and give 5 specific, actionable, high-impact growth strategies. Format as numbered list. Be direct, practical, and tailored to the actual data provided.`,
-        `Store Performance Overview:
-- Total All-Time Sales: Rs.${ctx.totalSales.toLocaleString('en-IN')}
-- Total All-Time Expenses: Rs.${ctx.totalExpenses.toLocaleString('en-IN')}
+        `You are the Finora AI Business Growth & Vendor Optimization Advisor for Indian retail stores. Analyze the store's sales, expenses, and vendor comparison data. Provide 5 strategic, practical growth recommendations including vendor price optimization, stock turnover, and cashflow strategies. Format as numbered points.`,
+        `Store Financial Snapshot:
+- All-Time Sales: Rs.${ctx.totalSales.toLocaleString('en-IN')}
+- All-Time Expenses: Rs.${ctx.totalExpenses.toLocaleString('en-IN')}
 - Net Profit: Rs.${ctx.netProfit.toLocaleString('en-IN')} (${ctx.netMargin}% margin)
 - Active Inventory SKUs: ${ctx.inventoryCount}
 - Low Stock Items: ${ctx.lowStockCount}
 - Pending Credit Bills: ${ctx.pendingBillsCount} (Rs.${ctx.pendingBillsTotal.toLocaleString('en-IN')} outstanding)
-- Total Employees: ${ctx.employees.length}
-- Active Vendors/Suppliers: ${ctx.vendorCount}
-- Salaries Due Soon: ${ctx.salariesDueSoon.length} employees
-Generate 5 specific actionable growth strategies for this store. Keep it concise and practical.`,
-        700
+- Active Vendors: ${ctx.vendorCount}
+
+Vendor Comparison Data:
+${vendorSummaryText}
+
+Generate 5 actionable Growth & Vendor Optimization Strategies tailored to this store's real data.`,
+        750
       );
     } catch (err) {
       console.error('[Growth Advice] Groq AI failed:', err.message);
-      advice = `1. Optimize Low Stock Management: ${ctx.lowStockCount} items are near reorder threshold. Automate reorder alerts to avoid stock-out and lost sales.
-2. Recover Pending Receivables: ${ctx.pendingBillsCount} credit bills worth Rs.${ctx.pendingBillsTotal.toLocaleString('en-IN')} are outstanding. Set a 7-day payment reminder cycle to improve cash flow.
-3. Bundle Promotions: Identify your top 5 fast-moving items and create combo bundle offers to increase average order value by 15-20%.
-4. Vendor Consolidation: Consolidate orders with your top suppliers for better bulk pricing and terms.
-5. Staff Performance Tracking: Add monthly sales-per-employee KPIs to incentivize performance and identify top contributors.`;
+      advice = `1. Vendor Pricing & Bulk Discount Optimization:\nCompare top suppliers. ${vendorComparison[0] ? `Your largest supplier is '${vendorComparison[0].vendorName}' (Rs. ${vendorComparison[0].totalBilled.toLocaleString('en-IN')} billed). Negotiate 5-8% bulk discounts on fast-moving SKUs.` : 'Consolidate supplier orders for better bulk discounts.'}\n\n2. Low Stock Protection:\n${ctx.lowStockCount} inventory items are below reorder threshold. Set automated 3-day buffer alerts to avoid out-of-stock revenue loss.\n\n3. Credit Bill Recovery:\n${ctx.pendingBillsCount} customer bills worth Rs.${ctx.pendingBillsTotal.toLocaleString('en-IN')} are pending. Implement a automated 7-day payment reminder cycle.\n\n4. High-Margin Fast Movers:\nIdentify top 5 profitable SKUs and offer bundle deals to increase average customer cart value by 15%.\n\n5. Supplier Risk Audit:\nRegularly cross-check vendor invoice line items against official GST rates to prevent overbilling.`;
     }
 
     const payload = {
       type: 'GROWTH_ADVICE',
-      title: 'Finora — AI Business Growth Advisory',
+      title: 'Finora — AI Business Growth & Vendor Comparison Advisory',
       generatedAt: new Date().toISOString(),
       shopId,
       storeSnapshot: {
         totalSales: ctx.totalSales,
+        totalExpenses: ctx.totalExpenses,
         netProfit: ctx.netProfit,
         netMargin: `${ctx.netMargin}%`,
         pendingBillsCount: ctx.pendingBillsCount,
+        pendingBillsTotal: ctx.pendingBillsTotal,
         lowStockCount: ctx.lowStockCount,
       },
+      vendorComparison,
       aiGrowthAdvice: advice,
-      generatedBy: 'Finora AI Growth Model (Groq llama-3.1-8b-instant)',
+      generatedBy: 'Finora AI Growth & Vendor Comparison Model (Groq llama-3.1-8b-instant)',
     };
 
     const webhookResult = await sendToWebhook(payload);
     res.json({
       success: true,
       message: webhookResult.ok
-        ? 'Growth advice generated and sent to your workflow!'
+        ? 'Growth advice and vendor comparison generated and sent to your workflow!'
         : 'Growth advice generated. Webhook delivery failed — check your webhook URL.',
       advice,
+      vendorComparison,
       report: payload,
       webhookStatus: webhookResult,
     });

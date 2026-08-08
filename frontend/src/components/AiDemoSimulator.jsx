@@ -83,7 +83,7 @@ export default function AiDemoSimulator() {
             Ask Finora AI Chatbot Anything
           </h2>
           <p style={{ color: '#334155', fontSize: 16, lineHeight: 1.65, maxWidth: 580, margin: '0 auto', fontWeight: 500 }}>
-            Smart Finance, Smarter Business. Click sample questions below to test how Finora answers questions in plain English.
+            Smart Finance, Safer Business. Click sample questions below to test how Finora answers questions in plain English.
           </p>
         </div>
 

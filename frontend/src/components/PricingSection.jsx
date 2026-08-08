@@ -65,7 +65,7 @@ export default function PricingSection({ onOpenModal }) {
             Set Up Finora for Your Business
           </h2>
           <p style={{ color: '#334155', fontSize: 16, lineHeight: 1.65, maxWidth: 580, margin: '0 auto', fontWeight: 500 }}>
-            Smart Finance, Smarter Business. Create a new account for your store or log in directly to your workspace.
+            Smart Finance, Safer Business. Create a new account for your store or log in directly to your workspace.
           </p>
         </div>
 

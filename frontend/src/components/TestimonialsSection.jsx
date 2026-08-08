@@ -7,7 +7,7 @@ const testimonials = [
     id: 1,
     name: 'Rajesh Patel',
     role: 'Owner, Metro Superstore (3 Locations)',
-    text: "Finora's bill photo scanner saved our store 18 hours every week. Smart Finance, Smarter Business! The vendor price matcher automatically flagged a 14% cheaper bulk supplier for our top-selling items.",
+    text: "Finora's bill photo scanner saved our store 18 hours every week. Smart Finance, Safer Business! The vendor price matcher automatically flagged a 14% cheaper bulk supplier for our top-selling items.",
     stars: 5,
     tag: 'Retail & Grocery',
   },
@@ -61,7 +61,7 @@ export default function TestimonialsSection() {
             Real Results for Small Business
           </h2>
           <p style={{ color: '#94A3B8', fontSize: 16, lineHeight: 1.6, maxWidth: 640, margin: '0 auto' }}>
-            Discover how owners, accountants, and inventory managers get Smart Finance, Smarter Business with Finora.
+            Discover how owners, accountants, and inventory managers get Smart Finance, Safer Business with Finora.
           </p>
         </div>
 

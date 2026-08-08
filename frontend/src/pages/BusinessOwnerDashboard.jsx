@@ -91,7 +91,7 @@ export default function BusinessOwnerDashboard({
   const [moduleSearch, setModuleSearch] = useState('');
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [aiMessages, setAiMessages] = useState([
-    { sender: 'ai', text: `Hello ${ownerName}! I am your Finora Smart Assistant for ${companyName}. Smart Finance, Smarter Business! Ask me anything about your profits, sales, GST taxes, or duplicate bill alerts!` }
+    { sender: 'ai', text: `Hello ${ownerName}! I am your Finora Smart Assistant for ${companyName}. Smart Finance, Safer Business! Ask me anything about your profits, sales, GST taxes, or duplicate bill alerts!` }
   ]);
   const [inputQuery, setInputQuery] = useState('');
   const [notificationCount, setNotificationCount] = useState(3);
@@ -250,7 +250,7 @@ export default function BusinessOwnerDashboard({
             <img src="/favcon_logo.png" alt="Finora Logo" style={{ width: 34, height: 34, objectFit: 'contain', borderRadius: 8 }} />
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--fg-text-primary)', letterSpacing: '-0.01em' }}>Finora</div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--fg-accent)', letterSpacing: '0.04em' }}>SMART FINANCE &amp; BUSINESS</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--fg-accent)', letterSpacing: '0.04em' }}>SMART FINANCE, SAFER BUSINESS</div>
             </div>
           </div>
         </div>
@@ -1175,12 +1175,15 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
     }).catch(err => console.error(err));
   }, []);
 
-  const liveTotalRevenue = liveSales;
-  const liveNetProfit = liveSales - liveExpenses;
+  const liveTotalRevenue = stats.totalSales !== undefined && stats.totalSales > 0 ? stats.totalSales : liveSales;
+  const liveSalesVsExpenses = stats.totalExpenses !== undefined && stats.totalExpenses > 0 ? stats.totalExpenses : liveExpenses;
+  const liveNetProfit = (stats.totalSales !== undefined && stats.totalExpenses !== undefined)
+    ? (stats.totalSales - stats.totalExpenses)
+    : (liveSales - liveExpenses);
+
   // Use backend stats for pending bills (authoritative source — same as PendingBillsModule)
   const livePendingBillsCount = stats.pendingBillsCount || 0;
   const livePendingBillsAmount = stats.pendingBillsAmount || 0;
-  const liveSalesVsExpenses = liveExpenses;
   const livePendingBills = livePending;
 
   return (
@@ -1193,9 +1196,23 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
           <div className="lc-glass-card fg-kpi-1" style={{ padding: 18 }}>
             <div>
               <div style={{ fontSize: 11, color: 'var(--fg-text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Profit &amp; Loss</div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--fg-success)', marginTop: 6, fontFamily: "'Inter', sans-serif" }}>+₹ {liveNetProfit.toLocaleString('en-IN')}</div>
-              <div style={{ fontSize: 11, color: 'var(--fg-success)', fontWeight: 700, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <ArrowUpRight size={12} /> +18.8% Net Margin
+              <div style={{
+                fontSize: 24, fontWeight: 800,
+                color: liveNetProfit >= 0 ? 'var(--fg-success)' : 'var(--fg-danger)',
+                marginTop: 6, fontFamily: "'Inter', sans-serif"
+              }}>
+                {liveNetProfit >= 0 ? `+₹ ${liveNetProfit.toLocaleString('en-IN')}` : `-₹ ${Math.abs(liveNetProfit).toLocaleString('en-IN')}`}
+              </div>
+              <div style={{
+                fontSize: 11,
+                color: liveNetProfit >= 0 ? 'var(--fg-success)' : 'var(--fg-danger)',
+                fontWeight: 700, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4
+              }}>
+                {liveNetProfit >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                {liveNetProfit >= 0
+                  ? `+${liveTotalRevenue > 0 ? ((liveNetProfit / liveTotalRevenue) * 100).toFixed(1) : '0'}% Net Margin`
+                  : `-${liveTotalRevenue > 0 ? ((Math.abs(liveNetProfit) / liveTotalRevenue) * 100).toFixed(1) : '0'}% Net Loss`
+                }
               </div>
             </div>
           </div>
@@ -1404,19 +1421,19 @@ function OverviewModule({ companyName, onNavigate, empList, dbUsersList, onOpenA
           </button>
         </div>
         <TableCard
-          headers={['Ref ID', 'Date & Time', 'Type', 'Description', 'Category', 'Amount (₹)', 'Running Balance']}
+          headers={['Ref ID / Bill #', 'Date & Time', 'Type', 'Description', 'Category', 'Amount (₹)', 'Running Balance']}
           rows={liveTransactions.map(t => [
-            t.id,
-            t.date || t.timestamp || '2026-08-03',
+            t.invoice_number || t.billNo || t.bill_number || t.id,
+            t.date || t.timestamp || new Date().toISOString().split('T')[0],
             <span style={{ color: t.type === 'IN' ? 'var(--fg-success)' : 'var(--fg-danger)', fontWeight: 800 }}>
               {t.type}
             </span>,
             t.description,
             t.category || 'General Store',
             <strong style={{ color: t.type === 'IN' ? 'var(--fg-success)' : 'var(--fg-text-primary)' }}>
-              {t.amount}
+              {typeof t.amount === 'number' ? `₹ ${t.amount.toLocaleString('en-IN')}` : (t.amount || '₹ 0')}
             </strong>,
-            t.balance || '₹ 14,80,000',
+            t.balance || t.runningBalance || `₹ ${cleanNum(t.amount).toLocaleString('en-IN')}`,
           ])}
         />
       </div>
@@ -2297,7 +2314,7 @@ function VendorManagementModule() {
                   `₹ ${(b.tax_gst || 1582).toLocaleString()}`,
                   <strong style={{ color: 'var(--fg-success)' }}>₹ {(b.grand_total || b.grandTotal || 33222).toLocaleString('en-IN')}</strong>,
                   <span style={{ color: (b.payment_status === 'Pending' || b.status === 'Pending') ? 'var(--fg-warning)' : 'var(--fg-success)', fontWeight: 800 }}>
-                    {b.payment_status === 'Pending' ? `⏳ Credit Due (${b.due_date || '15 Days'})` : '✓ Paid Now'}
+                    {b.payment_status === 'Pending' ? `⏳ Not Paid (${b.due_date || '15 Days Credit'})` : '✓ Paid'}
                   </span>,
                   <button
                     onClick={() => setSelectedBillForReceipt(b)}

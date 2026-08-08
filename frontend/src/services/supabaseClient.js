@@ -713,12 +713,17 @@ export async function updateStockMrpInSupabase(userId, itemName, newMRP) {
 export async function addActivityLog({ userId, action, details, category = 'System Log' }) {
   const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
   const targetId = userId || activeUser.user_id || activeUser.email || 'user';
+  const ownerId = activeUser.owner_id || targetId;
   const userKey = String(targetId).toLowerCase().replace(/[^a-z0-9]/g, '');
   const localKey = `finsight_activity_logs_${userKey}`;
 
   const logEntry = {
     id: `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     user_id: targetId,
+    shop_id: targetId,
+    owner_id: ownerId,
+    user_role: activeUser.role || 'owner',
+    user_name: activeUser.company_name || activeUser.user_id || 'User',
     action: action || 'Activity Logged',
     details: details || 'Store data modified',
     category: category,
@@ -733,7 +738,6 @@ export async function addActivityLog({ userId, action, details, category = 'Syst
     const existing = JSON.parse(localStorage.getItem(localKey) || '[]');
     existing.unshift(logEntry);
     localStorage.setItem(localKey, JSON.stringify(existing.slice(0, 100)));
-    localStorage.setItem('finsight_activity_logs', JSON.stringify(existing.slice(0, 100)));
   } catch (e) {}
 
   if (isSupabaseConfigured()) {
@@ -741,6 +745,8 @@ export async function addActivityLog({ userId, action, details, category = 'Syst
       await supabase.from('activity_logs').insert([{
         id: logEntry.id,
         user_id: targetId,
+        shop_id: targetId,
+        owner_id: ownerId,
         action: logEntry.action,
         details: logEntry.details,
         category: logEntry.category,
@@ -755,11 +761,12 @@ export async function addActivityLog({ userId, action, details, category = 'Syst
 }
 
 /**
- * Fetch System Activity Logs from Supabase Cloud Database & LocalStorage
+ * Fetch System Activity Logs from Supabase Cloud Database & LocalStorage (Scoped strictly per user)
  */
 export async function getActivityLogsFromSupabase(userId) {
   const activeUser = JSON.parse(localStorage.getItem('finsight_active_user') || '{}');
   const targetId = userId || activeUser.user_id || activeUser.email || 'user';
+  const targetOwnerId = activeUser.owner_id || targetId;
   const userKey = String(targetId).toLowerCase().replace(/[^a-z0-9]/g, '');
   const localKey = `finsight_activity_logs_${userKey}`;
 
@@ -768,16 +775,24 @@ export async function getActivityLogsFromSupabase(userId) {
       const { data, error } = await supabase
         .from('activity_logs')
         .select('*')
-        .eq('user_id', targetId)
+        .or(`user_id.eq.${targetId},shop_id.eq.${targetId},owner_id.eq.${targetOwnerId}`)
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         localStorage.setItem(localKey, JSON.stringify(data));
         return data;
       }
-    } catch (err) {}
+    } catch (err) {
+      console.warn('[Supabase Audit Log Fetch Error]:', err.message);
+    }
   }
 
-  return JSON.parse(localStorage.getItem(localKey) || localStorage.getItem('finsight_activity_logs') || '[]');
+  const cached = localStorage.getItem(localKey);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
 }
 

@@ -34,8 +34,19 @@ router.get('/stats', async (req, res) => {
       return isNaN(parsed) || !isFinite(parsed) ? 0 : parsed;
     };
 
-    const totalInvoicesVal = invoices.reduce((acc, inv) => acc + cleanNum(inv.grand_total || 0), 0);
-    const totalTaxGst = invoices.reduce((acc, inv) => acc + cleanNum(inv.tax_gst || 0), 0);
+    // Customer Sales (Revenue)
+    const paidCustomerBills = customerBills.filter(b => b.status === 'Paid' || !b.status || b.status === 'SUCCESS');
+    const totalSales = paidCustomerBills.reduce((acc, b) => acc + cleanNum(b.grand_total || b.grandTotal || 0), 0);
+
+    // Vendor Invoices + Store Expenses (Expenses)
+    const totalVendorPurchases = invoices.reduce((acc, inv) => acc + cleanNum(inv.grand_total || inv.grandTotal || 0), 0);
+    const totalOtherExpenses = expenses.reduce((acc, exp) => acc + cleanNum(exp.amount || 0), 0);
+    const totalExpenses = totalVendorPurchases + totalOtherExpenses;
+
+    const netProfit = totalSales - totalExpenses;
+    const netMarginPct = totalSales > 0 ? ((netProfit / totalSales) * 100).toFixed(1) : '0';
+
+    const totalTaxGst = invoices.reduce((acc, inv) => acc + cleanNum(inv.tax_gst || inv.taxGst || 0), 0);
     const lowStockCount = inventory.filter(i => {
       const qty = parseInt(String(i.stockQty !== undefined ? i.stockQty : i.stock_qty || 0).replace(/[^0-9]/g, '')) || 0;
       const thresh = parseInt(String(i.minAlertThreshold || i.min_alert_threshold || 15)) || 15;
@@ -46,14 +57,20 @@ router.get('/stats', async (req, res) => {
 
     const pendingCustomerBills = customerBills.filter(b => b.status === 'Pending' || b.status === 'Pending Payment (Credit)');
     const pendingBillsCount = pendingCustomerBills.length;
-    const pendingBillsAmount = pendingCustomerBills.reduce((acc, b) => acc + (parseFloat(b.grand_total) || 0), 0);
+    const pendingBillsAmount = pendingCustomerBills.reduce((acc, b) => acc + cleanNum(b.grand_total || b.grandTotal || 0), 0);
 
     res.json({
       success: true,
       stats: {
-        totalMonthlyRevenue: `₹ ${(totalInvoicesVal / 100000).toFixed(2)}L`,
-        totalInvoicesVal,
+        totalSales,
+        totalExpenses,
+        totalVendorPurchases,
+        netProfit,
+        netMarginPct,
+        totalMonthlyRevenue: `₹ ${(totalSales / 100000).toFixed(2)}L`,
+        totalInvoicesVal: totalVendorPurchases,
         totalInvoicesCount: invoices.length,
+        totalCustomerBillsCount: customerBills.length,
         estimatedGstClaimable: `₹ ${totalTaxGst.toLocaleString('en-IN')}`,
         lowStockItemsCount: lowStockCount,
         highRiskInvoicesCount: highRiskCount,
@@ -61,9 +78,9 @@ router.get('/stats', async (req, res) => {
         pendingBillsCount,
         pendingBillsAmount,
         sparklines: {
-          revenue: invoices.length > 0 ? [40, 55, 70, 60, 85, 95] : [0, 0, 0, 0, 0, 0],
-          profit:  invoices.length > 0 ? [20, 25, 38, 42, 50, 64] : [0, 0, 0, 0, 0, 0],
-          gst:     invoices.length > 0 ? [12, 18, 22, 28, 32, 48] : [0, 0, 0, 0, 0, 0],
+          revenue: totalSales > 0 ? [40, 55, 70, 60, 85, 95] : [0, 0, 0, 0, 0, 0],
+          profit:  netProfit > 0 ? [20, 25, 38, 42, 50, 64] : [0, 0, 0, 0, 0, 0],
+          gst:     totalTaxGst > 0 ? [12, 18, 22, 28, 32, 48] : [0, 0, 0, 0, 0, 0],
         },
       },
     });
