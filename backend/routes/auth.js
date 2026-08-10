@@ -14,6 +14,7 @@ export function verifyPassword(plainText, storedHash) {
   if (!plainText || !storedHash) return false;
   const cleanInput = String(plainText).trim();
   const cleanStored = String(storedHash).trim();
+  // Support plain-text stored passwords (legacy / data.json) AND SHA-256 hashes (Supabase)
   if (cleanStored === cleanInput) return true;
   return hashPassword(cleanInput) === cleanStored;
 }

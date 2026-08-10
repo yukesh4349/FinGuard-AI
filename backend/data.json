@@ -1,6 +1,20 @@
 {
   "users": [
     {
+      "id": 3,
+      "user_id": "EMP-165",
+      "company_name": "dhar",
+      "company_address": "cbe",
+      "business_type": "Grocery & Supermarket",
+      "employee_count": "1",
+      "mobile_number": "8300051442",
+      "email": "yukeshkanna5@gmail.com",
+      "password_hash": "8300051442",
+      "role": "store_management",
+      "owner_id": "USR-1260",
+      "created_at": "2026-08-10T04:46:46.774483+00:00"
+    },
+    {
       "id": 2,
       "user_id": "EMP-800",
       "company_name": "dhar",
@@ -187,6 +201,22 @@
     }
   ],
   "employees": [
+    {
+      "id": "EMP-165",
+      "user_id": "USR-1260",
+      "name": "yukesh Kanna U",
+      "role": "Store Management",
+      "phone": "8300051442",
+      "email": "yukeshkanna5@gmail.com",
+      "salary": "₹ 12,000",
+      "salary_date": "5",
+      "payment_status": "Unpaid",
+      "payment_history": [],
+      "status": "Active",
+      "joined_date": "10 Aug 2026",
+      "created_at": "2026-08-10T04:46:46.162439+00:00",
+      "joinedDate": "10 Aug 2026"
+    },
     {
       "id": "EMP-800",
       "user_id": "USR-1260",
@@ -4754,6 +4784,44 @@
     }
   ],
   "activity_logs": [
+    {
+      "id": "LOG-1786337366944-258",
+      "user_id": "OWNER-3697",
+      "shop_id": "OWNER-3697",
+      "owner_id": "OWNER-3697",
+      "employee_id": "OWNER-3697",
+      "user_name": "OWNER-3697",
+      "user_role": "owner",
+      "action": "User Login",
+      "module": "Authentication",
+      "category": "Authentication",
+      "description": "User OWNER-3697 (owner) logged in successfully to yukesh kanna.",
+      "details": "User OWNER-3697 (owner) logged in successfully to yukesh kanna.",
+      "entity_type": "User",
+      "entity_id": "OWNER-3697",
+      "old_value": null,
+      "new_value": null,
+      "created_at": "2026-08-10T04:49:26.944Z"
+    },
+    {
+      "id": "LOG-1786337341853-137",
+      "user_id": "OWNER-3697",
+      "shop_id": "OWNER-3697",
+      "owner_id": "OWNER-3697",
+      "employee_id": "OWNER-3697",
+      "user_name": "OWNER-3697",
+      "user_role": "owner",
+      "action": "User Login",
+      "module": "Authentication",
+      "category": "Authentication",
+      "description": "User OWNER-3697 (owner) logged in successfully to yukesh kanna.",
+      "details": "User OWNER-3697 (owner) logged in successfully to yukesh kanna.",
+      "entity_type": "User",
+      "entity_id": "OWNER-3697",
+      "old_value": null,
+      "new_value": null,
+      "created_at": "2026-08-10T04:49:01.853Z"
+    },
     {
       "id": "LOG-1786335998154",
       "user_id": "USR-1260",
