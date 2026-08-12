@@ -24,6 +24,14 @@ By combining **NVIDIA Nemotron Vision AI** server-side OCR, **automated duplicat
 
 ---
 
+## 📐 System Design & Technical Architecture
+
+For an in-depth technical analysis of all **System Design concepts, data pipelines, RBAC security, API mapping, and database schemas**, refer to:
+* 📄 **System Design Guide**: [docs/SYSTEM_DESIGN_CONCEPTS.md](docs/SYSTEM_DESIGN_CONCEPTS.md)
+* 🗺️ **Visual Architecture & Customer Flow SVG**: [docs/system_architecture_and_customer_flow.svg](docs/system_architecture_and_customer_flow.svg)
+
+---
+
 ## ✨ Key Features
 
 ### ⚡ 1. Neural OCR & Vendor Invoice Scanner

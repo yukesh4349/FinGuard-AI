@@ -1,0 +1,283 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1150" width="100%" height="100%" style="background-color: #0b0f17; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#EC4899" />
+    </linearGradient>
+
+    <linearGradient id="cardGradFrontend" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <linearGradient id="cardGradBackend" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+
+    <linearGradient id="cardGradAI" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#064e3b" />
+      <stop offset="100%" stop-color="#022c22" />
+    </linearGradient>
+
+    <linearGradient id="cardGradDB" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#14532d" />
+      <stop offset="100%" stop-color="#052e16" />
+    </linearGradient>
+
+    <linearGradient id="cardGradWebhook" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#701a75" />
+      <stop offset="100%" stop-color="#4a044e" />
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+
+    <filter id="glowBlue" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Markers -->
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#60A5FA" />
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#34D399" />
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#C084FC" />
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#FBBF24" />
+    </marker>
+  </defs>
+
+  <!-- ================= HEADER SECTION ================= -->
+  <rect x="40" y="30" width="1520" height="90" rx="16" fill="#161e2e" stroke="#1f2937" filter="url(#shadow)"/>
+  <text x="70" y="70" font-size="28" font-weight="800" fill="url(#headerGrad)">FINGUARD AI (FINORA) — SYSTEM ARCHITECTURE &amp; DATA FLOW</text>
+  <text x="70" y="98" font-size="14" font-weight="500" fill="#9CA3AF">Visual Mapping of User Interactions, REST API Endpoints, Dual OCR AI Engines, Supabase PostgreSQL Persistence &amp; Webhooks</text>
+
+  <!-- ================= CONTAINER 1: FRONTEND LAYER ================= -->
+  <rect x="40" y="150" width="1520" height="230" rx="16" fill="url(#cardGradFrontend)" stroke="#3B82F6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="40" y="150" width="220" height="34" rx="12" fill="#2563EB"/>
+  <text x="55" y="172" font-size="14" font-weight="700" fill="#FFFFFF">1. FRONTEND CLIENT (React 18 / Vite)</text>
+
+  <!-- Frontend Sub-Modules -->
+  <!-- Auth Module -->
+  <g transform="translate(70, 205)">
+    <rect x="0" y="0" width="310" height="150" rx="12" fill="#1e293b" stroke="#38BDF8" stroke-width="1.2"/>
+    <text x="15" y="30" font-size="15" font-weight="700" fill="#38BDF8">🔑 Auth &amp; RBAC Control</text>
+    <text x="15" y="55" font-size="12" fill="#94A3B8">• User Login / Signup (JWT)</text>
+    <text x="15" y="75" font-size="12" fill="#94A3B8">• Roles: Owner, Accountant, Cashier</text>
+    <text x="15" y="95" font-size="12" fill="#94A3B8">• Session Persistence &amp; Guard</text>
+    <rect x="15" y="112" width="280" height="24" rx="6" fill="#0F172A"/>
+    <text x="25" y="128" font-size="11" font-weight="600" fill="#38BDF8">Trigger: POST /api/auth/login</text>
+  </g>
+
+  <!-- POS Billing Module -->
+  <g transform="translate(420, 205)">
+    <rect x="0" y="0" width="340" height="150" rx="12" fill="#1e293b" stroke="#34D399" stroke-width="1.2"/>
+    <text x="15" y="30" font-size="15" font-weight="700" fill="#34D399">🛒 POS Cashier Checkout</text>
+    <text x="15" y="55" font-size="12" fill="#94A3B8">• Fast SKU Search &amp; Item Cart</text>
+    <text x="15" y="75" font-size="12" fill="#94A3B8">• Auto Discount &amp; GST Calculation</text>
+    <text x="15" y="95" font-size="12" fill="#94A3B8">• Customer Invoice &amp; Print Receipt</text>
+    <rect x="15" y="112" width="310" height="24" rx="6" fill="#0F172A"/>
+    <text x="25" y="128" font-size="11" font-weight="600" fill="#34D399">Trigger: POST /api/customer-bills</text>
+  </g>
+
+  <!-- OCR Scanner Module -->
+  <g transform="translate(800, 205)">
+    <rect x="0" y="0" width="350" height="150" rx="12" fill="#1e293b" stroke="#FBBF24" stroke-width="1.2"/>
+    <text x="15" y="30" font-size="15" font-weight="700" fill="#FBBF24">📄 Neural Invoice Scanner</text>
+    <text x="15" y="55" font-size="12" fill="#94A3B8">• Drag &amp; Drop Bill (PDF/PNG/JPG)</text>
+    <text x="15" y="75" font-size="12" fill="#94A3B8">• Instant Extraction &amp; Preview</text>
+    <text x="15" y="95" font-size="12" fill="#94A3B8">• Auto Stock Increment &amp; Fraud Screen</text>
+    <rect x="15" y="112" width="320" height="24" rx="6" fill="#0F172A"/>
+    <text x="25" y="128" font-size="11" font-weight="600" fill="#FBBF24">Trigger: POST /api/invoices/scan-file</text>
+  </g>
+
+  <!-- AI Assistant Module -->
+  <g transform="translate(1190, 205)">
+    <rect x="0" y="0" width="330" height="150" rx="12" fill="#1e293b" stroke="#C084FC" stroke-width="1.2"/>
+    <text x="15" y="30" font-size="15" font-weight="700" fill="#C084FC">🤖 AI Financial Assistant</text>
+    <text x="15" y="55" font-size="12" fill="#94A3B8">• Natural Language Financial Q&amp;A</text>
+    <text x="15" y="75" font-size="12" fill="#94A3B8">• Profit Margin &amp; Revenue Analytics</text>
+    <text x="15" y="95" font-size="12" fill="#94A3B8">• Expense Anomaly Advisory</text>
+    <rect x="15" y="112" width="300" height="24" rx="6" fill="#0F172A"/>
+    <text x="25" y="128" font-size="11" font-weight="600" fill="#C084FC">Trigger: POST /api/ai/query</text>
+  </g>
+
+
+  <!-- ================= DOWNWARD FLOW ARROWS (FRONTEND -> BACKEND) ================= -->
+  <path d="M 225 355 L 225 425" stroke="#38BDF8" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrowBlue)"/>
+  <path d="M 590 355 L 590 425" stroke="#34D399" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrowGreen)"/>
+  <path d="M 975 355 L 975 425" stroke="#FBBF24" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrowAmber)"/>
+  <path d="M 1355 355 L 1355 425" stroke="#C084FC" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrowPurple)"/>
+
+
+  <!-- ================= CONTAINER 2: BACKEND REST API GATEWAY ================= -->
+  <rect x="40" y="430" width="1520" height="230" rx="16" fill="url(#cardGradBackend)" stroke="#6366F1" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="40" y="430" width="260" height="34" rx="12" fill="#4F46E5"/>
+  <text x="55" y="452" font-size="14" font-weight="700" fill="#FFFFFF">2. BACKEND REST API (Express.js / Node.js)</text>
+
+  <!-- Route Controller Modules -->
+  <!-- Auth Controller -->
+  <g transform="translate(70, 480)">
+    <rect x="0" y="0" width="310" height="150" rx="12" fill="#0f172a" stroke="#6366F1" stroke-width="1"/>
+    <text x="15" y="30" font-size="14" font-weight="700" fill="#818CF8">/api/auth Router</text>
+    <text x="15" y="55" font-size="11.5" fill="#94A3B8">• authMiddleware (JWT Verification)</text>
+    <text x="15" y="75" font-size="11.5" fill="#94A3B8">• verifyRole('owner', 'accountant')</text>
+    <text x="15" y="95" font-size="11.5" fill="#94A3B8">• Bcrypt Password Hash Verification</text>
+    <rect x="15" y="112" width="280" height="22" rx="6" fill="#1E1B4B"/>
+    <text x="25" y="127" font-size="11" font-weight="600" fill="#A5B4FC">Output: JWT Token &amp; User Profile</text>
+  </g>
+
+  <!-- POS Controller -->
+  <g transform="translate(420, 480)">
+    <rect x="0" y="0" width="340" height="150" rx="12" fill="#0f172a" stroke="#10B981" stroke-width="1"/>
+    <text x="15" y="30" font-size="14" font-weight="700" fill="#34D399">/api/customer-bills Router</text>
+    <text x="15" y="55" font-size="11.5" fill="#94A3B8">• Atomic Inventory Stock Deduction</text>
+    <text x="15" y="75" font-size="11.5" fill="#94A3B8">• Activity Audit Log Insertion</text>
+    <text x="15" y="95" font-size="11.5" fill="#94A3B8">• Payment Method Ledger Recording</text>
+    <rect x="15" y="112" width="310" height="22" rx="6" fill="#064E3B"/>
+    <text x="25" y="127" font-size="11" font-weight="600" fill="#6EE7B7">Output: Customer Receipt &amp; Stock Decrement</text>
+  </g>
+
+  <!-- Invoices Controller -->
+  <g transform="translate(800, 480)">
+    <rect x="0" y="0" width="350" height="150" rx="12" fill="#0f172a" stroke="#F59E0B" stroke-width="1"/>
+    <text x="15" y="30" font-size="14" font-weight="700" fill="#FBBF24">/api/invoices Router</text>
+    <text x="15" y="55" font-size="11.5" fill="#94A3B8">• Multer File Memory Buffer Parsing</text>
+    <text x="15" y="75" font-size="11.5" fill="#94A3B8">• Dispatch to AI Dual OCR Processing</text>
+    <text x="15" y="95" font-size="11.5" fill="#94A3B8">• Fraud Screening &amp; Anomaly Alerting</text>
+    <rect x="15" y="112" width="320" height="22" rx="6" fill="#78350F"/>
+    <text x="25" y="127" font-size="11" font-weight="600" fill="#FDE68A">Output: Structured JSON &amp; Risk Alert</text>
+  </g>
+
+  <!-- AI & Reports Controller -->
+  <g transform="translate(1190, 480)">
+    <rect x="0" y="0" width="330" height="150" rx="12" fill="#0f172a" stroke="#A855F7" stroke-width="1"/>
+    <text x="15" y="30" font-size="14" font-weight="700" fill="#C084FC">/api/ai &amp; /api/reports Router</text>
+    <text x="15" y="55" font-size="11.5" fill="#94A3B8">• Financial Metric Calculation Engine</text>
+    <text x="15" y="75" font-size="11.5" fill="#94A3B8">• Context Injection Prompt Assembly</text>
+    <text x="15" y="95" font-size="11.5" fill="#94A3B8">• Financial Advisory Generation</text>
+    <rect x="15" y="112" width="300" height="22" rx="6" fill="#581C87"/>
+    <text x="25" y="127" font-size="11" font-weight="600" fill="#E9D5FF">Output: Financial Q&amp;A &amp; Insights</text>
+  </g>
+
+
+  <!-- ================= RIGHT CONTAINER 3: DUAL OCR AI ENGINE ================= -->
+  <g transform="translate(990, 710)">
+    <rect x="0" y="0" width="570" height="230" rx="16" fill="url(#cardGradAI)" stroke="#10B981" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="280" height="34" rx="12" fill="#059669"/>
+    <text x="15" y="22" font-size="14" font-weight="700" fill="#FFFFFF">3. DUAL AI OCR &amp; FRAUD ENGINE</text>
+
+    <!-- Primary NVIDIA Nemotron -->
+    <rect x="25" y="50" width="250" height="155" rx="10" fill="#022c22" stroke="#34D399" stroke-width="1"/>
+    <text x="40" y="75" font-size="13" font-weight="700" fill="#34D399">🟢 Primary AI Engine</text>
+    <text x="40" y="95" font-size="12" font-weight="600" fill="#FFFFFF">NVIDIA Nemotron Vision AI</text>
+    <text x="40" y="115" font-size="11" fill="#A7F3D0">llama-3.2-11b-vision-instruct</text>
+    <text x="40" y="135" font-size="11" fill="#94A3B8">• High Precision LLM Optical Parser</text>
+    <text x="40" y="152" font-size="11" fill="#94A3B8">• Base64 Image Prompt Processing</text>
+    <text x="40" y="170" font-size="11" fill="#94A3B8">• JSON Extraction (Items, Tax, MRP)</text>
+    <rect x="35" y="177" width="230" height="20" rx="4" fill="#064E3B"/>
+    <text x="45" y="191" font-size="10" fill="#6EE7B7">Latency: ~1.2s | High Accuracy</text>
+
+    <!-- Secondary Tesseract Fallback -->
+    <rect x="295" y="50" width="250" height="155" rx="10" fill="#022c22" stroke="#FBBF24" stroke-width="1"/>
+    <text x="310" y="75" font-size="13" font-weight="700" fill="#FBBF24">🟡 Fallback Engine</text>
+    <text x="310" y="95" font-size="12" font-weight="600" fill="#FFFFFF">Tesseract.js Neural Engine</text>
+    <text x="310" y="115" font-size="11" fill="#FDE68A">Local Node.js Neural Worker</text>
+    <text x="310" y="135" font-size="11" fill="#94A3B8">• Autonomous Offline Execution</text>
+    <text x="310" y="152" font-size="11" fill="#94A3B8">• Regex Rule-Based Text Extractor</text>
+    <text x="310" y="170" font-size="11" fill="#94A3B8">• High Reliability Fault Tolerance</text>
+    <rect x="305" y="177" width="230" height="20" rx="4" fill="#78350F"/>
+    <text x="315" y="191" font-size="10" fill="#FDE68A">Triggered if Vision API Fails</text>
+  </g>
+
+  <!-- Connect Invoices Router to AI Engine -->
+  <path d="M 975 630 L 975 670 L 1275 670 L 1275 710" stroke="#FBBF24" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrowAmber)"/>
+
+
+  <!-- ================= LEFT CONTAINER 4: DATABASE & PERSISTENCE LAYER ================= -->
+  <g transform="translate(40, 710)">
+    <rect x="0" y="0" width="910" height="230" rx="16" fill="url(#cardGradDB)" stroke="#10B981" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="340" height="34" rx="12" fill="#047857"/>
+    <text x="15" y="22" font-size="14" font-weight="700" fill="#FFFFFF">4. PERSISTENCE &amp; DATA MAPPER LAYER</text>
+
+    <!-- DB Adapter db.js -->
+    <rect x="25" y="50" width="270" height="155" rx="10" fill="#052e16" stroke="#34D399" stroke-width="1"/>
+    <text x="40" y="75" font-size="13" font-weight="700" fill="#34D399">⚙️ Data Mapper Adapter (db.js)</text>
+    <text x="40" y="98" font-size="11.5" fill="#A7F3D0">• Normalizes snake_case &lt;=&gt; camelCase</text>
+    <text x="40" y="118" font-size="11.5" fill="#A7F3D0">• Unified CRUD Interface (getTable, insert)</text>
+    <text x="40" y="138" font-size="11.5" fill="#A7F3D0">• Graceful JSON Fallback (data.json)</text>
+    <rect x="35" y="155" width="250" height="38" rx="6" fill="#14532D"/>
+    <text x="45" y="172" font-size="11" font-weight="600" fill="#6EE7B7">Supabase Client Available? Yes</text>
+    <text x="45" y="187" font-size="10" fill="#94A3B8">Fallback to Local JSON: Backup Mode</text>
+
+    <!-- Supabase PostgreSQL Tables -->
+    <rect x="320" y="50" width="560" height="155" rx="10" fill="#052e16" stroke="#6EE7B7" stroke-width="1"/>
+    <text x="335" y="75" font-size="13" font-weight="700" fill="#6EE7B7">🗄️ Supabase PostgreSQL Cloud Database</text>
+    
+    <!-- Table Grid -->
+    <g transform="translate(335, 90)">
+      <rect x="0" y="0" width="160" height="30" rx="6" fill="#14532D"/>
+      <text x="10" y="20" font-size="11" font-weight="600" fill="#FFFFFF">public.users (RLS)</text>
+
+      <rect x="175" y="0" width="160" height="30" rx="6" fill="#14532D"/>
+      <text x="185" y="20" font-size="11" font-weight="600" fill="#FFFFFF">public.inventory (RLS)</text>
+
+      <rect x="350" y="0" width="175" height="30" rx="6" fill="#14532D"/>
+      <text x="360" y="20" font-size="11" font-weight="600" fill="#FFFFFF">public.invoices (RLS)</text>
+
+      <rect x="0" y="40" width="160" height="30" rx="6" fill="#14532D"/>
+      <text x="10" y="60" font-size="11" font-weight="600" fill="#FFFFFF">public.customer_bills</text>
+
+      <rect x="175" y="40" width="160" height="30" rx="6" fill="#14532D"/>
+      <text x="185" y="60" font-size="11" font-weight="600" fill="#FFFFFF">public.activity_logs</text>
+
+      <rect x="350" y="40" width="175" height="30" rx="6" fill="#14532D"/>
+      <text x="360" y="60" font-size="11" font-weight="600" fill="#FFFFFF">public.fraud_alerts</text>
+    </g>
+    <text x="335" y="191" font-size="10.5" fill="#A7F3D0">Row Level Security (RLS) enabled on all tables ensuring multi-tenant user isolation (user_id = auth.uid())</text>
+  </g>
+
+  <!-- Connect Backend Controllers to DB Mapper -->
+  <path d="M 225 630 L 225 710" stroke="#34D399" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrowGreen)"/>
+  <path d="M 590 630 L 590 710" stroke="#34D399" stroke-width="2.5" stroke-dasharray="6 4" marker-end="url(#arrowGreen)"/>
+
+
+  <!-- ================= CONTAINER 5: EXTERNAL WEBHOOKS PIPELINE ================= -->
+  <g transform="translate(40, 970)">
+    <rect x="0" y="0" width="1520" height="130" rx="16" fill="url(#cardGradWebhook)" stroke="#E879F9" stroke-width="1.5" filter="url(#shadow)"/>
+    <rect x="0" y="0" width="300" height="34" rx="12" fill="#A21CAF"/>
+    <text x="15" y="22" font-size="14" font-weight="700" fill="#FFFFFF">5. EXTERNAL WEBHOOK EVENT PIPELINE</text>
+
+    <g transform="translate(30, 50)">
+      <rect x="0" y="0" width="440" height="60" rx="10" fill="#4a044e" stroke="#F0ABFC" stroke-width="1"/>
+      <text x="15" y="25" font-size="13" font-weight="700" fill="#F0ABFC">📡 Invoice Webhook Dispatch Node</text>
+      <text x="15" y="45" font-size="11" fill="#E9D5FF">VITE_WEBHOOK_URL → Base64 Image &amp; Invoice Metadata POST Dispatch</text>
+    </g>
+
+    <g transform="translate(500, 50)">
+      <rect x="0" y="0" width="460" height="60" rx="10" fill="#4a044e" stroke="#F0ABFC" stroke-width="1"/>
+      <text x="15" y="25" font-size="13" font-weight="700" fill="#F0ABFC">📦 Stock Event Webhook Dispatch Node</text>
+      <text x="15" y="45" font-size="11" fill="#E9D5FF">VITE_STOCK_WEBHOOK_URL → Real-time Stock Deduction &amp; Alert Event POST</text>
+    </g>
+
+    <g transform="translate(1000, 50)">
+      <rect x="0" y="0" width="490" height="60" rx="10" fill="#4a044e" stroke="#F0ABFC" stroke-width="1"/>
+      <text x="15" y="25" font-size="13" font-weight="700" fill="#F0ABFC">⚡ External Agent Automation Framework</text>
+      <text x="15" y="45" font-size="11" fill="#E9D5FF">Automated Stock Replenishment, Accounting Sync &amp; SMS Vendor Alerts</text>
+    </g>
+  </g>
+
+  <!-- Connect Invoices Router to Webhook -->
+  <path d="M 975 630 L 975 670 L 730 670 L 730 970" stroke="#F0ABFC" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrowPurple)"/>
+
+</svg>
