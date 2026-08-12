@@ -9,7 +9,7 @@
 [![React](https://img.shields.io/badge/Frontend-React%2018%20%7C%20Vite-61DAFB?style=flat-square&logo=react)](https://react.dev/)
 [![Express](https://img.shields.io/badge/Backend-Express.js%20REST%20API-000000?style=flat-square&logo=express)](https://expressjs.com/)
 [![Supabase](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E?style=flat-square&logo=supabase)](https://supabase.com/)
-[![AI Engine](https://img.shields.io/badge/AI Engine-NVIDIA%20Nemotron%20Vision%20%2B%20Tesseract.js-76B900?style=flat-square&logo=nvidia)](https://build.nvidia.com/)
+[![AI Engine](https://img.shields.io/badge/AI_Engine-NVIDIA_Nemotron_Vision_%2B_Tesseract.js-76B900?style=flat-square&logo=nvidia)](https://build.nvidia.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 </div>
@@ -195,7 +195,7 @@ NVIDIA_AI_KEY=your_nvidia_ai_api_key
 
 ## 🗄️ Database Schema Setup (Supabase PostgreSQL)
 
-Execute the complete SQL setup script located in [`backend/supabase_schema.sql`](file:///d:/SNS%20-%20cohart%20pp/Finora%20AI/backend/supabase_schema.sql) in your Supabase SQL Editor:
+Execute the complete SQL setup script located in [backend/supabase_schema.sql](backend/supabase_schema.sql) in your Supabase SQL Editor:
 
 ```sql
 -- Inventory Master Table
